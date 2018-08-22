@@ -23,7 +23,12 @@ def calc_vasp(phonon, verbose = False):
         print("******* There is no saved pickle file. ********".center(80))
         print("******* Vasp calc will be carried. ********".center(80))
 
-        pwd = str((sp.check_output("pwd"))[:-1]) # differ for python 2 & 3
+        try:
+            print "checking python type(2,3)"
+        except SyntaxError:
+            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+        else:
+            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
             ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
@@ -33,8 +38,14 @@ def calc_vasp(phonon, verbose = False):
             sp.call(["mkdir", "-p", "calcs/"+ndir])
             sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
             sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd = pwd+"/calcs/"+ndir, shell = True)
-            sp.call(["mpiexec.hydra -np $NSLOTS vasp_std > "+ pwd+"/calcs/"+ndir+"/out"], \
-                     cwd = pwd+"/calcs/"+ndir, shell = True) # differ for python 2 & 3
+            try:
+                print "checking python type(2,3)"
+            except SyntaxError:
+                sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ pwd+"/calcs/"+ndir+"/out"], \
+                         cwd = pwd+"/calcs/"+ndir, shell = True)
+            else:
+                sp.call(["mpiexec.hydra -np $NSLOTS vasp_std > "+ pwd+"/calcs/"+ndir+"/out"], \
+                         cwd = pwd+"/calcs/"+ndir, shell = True)
             with io.open(pwd+"/calcs/"+ndir+"/vasprun.xml", "rb") as xmlfile:
                 vasprun = VasprunxmlExpat(xmlfile)
                 if vasprun.parse():
@@ -108,7 +119,12 @@ def calc_dpmd(phonon, verbose = False):
         print("******* There is no saved pickle file. ********".center(80))
         print("******* DPMD calc will be carried. ********".center(80))
 
-        pwd = str((sp.check_output("pwd"))[:-1]) # differ for python 2 & 3
+        try:
+            print "checking python type(2,3)"
+        except SyntaxError:
+            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+        else:
+            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
             ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
@@ -172,7 +188,12 @@ def calc_amp(phonon, nn, verbose = False):
         print("******* There is no saved pickle file. ********".center(80))
         print("******* AMP calc will be carried. ********".center(80))
 
-        pwd = str((sp.check_output("pwd"))[:-1]) # differ for python 2 & 3
+        try:
+            print "checking python type(2,3)"
+        except SyntaxError:
+            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+        else:
+            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
             ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
