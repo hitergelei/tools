@@ -1,0 +1,83 @@
+ &control
+   calculation = 'vc-relax',		! default : scf
+   restart_mode = 'from_scratch',		! default : from_scratch
+   verbosity = 'low',		! default : low
+   wf_collect = .true.,			! default : .FALSE.
+   disk_io = 'default',
+   outdir = './tmp/', wfcdir = './tmp/', pseudo_dir = './',
+   prefix = 'graphene',
+   tstress = .TRUE.,
+   tprnfor = .TRUE.,
+   nstep = 500,			! default: 1 if calculation is 'scf', 'nscf', 'bands' ! 50 for the other cases
+   etot_conv_thr = 1.0D-8,		! default : 1.0D-4 (a.u)
+   forc_conv_thr = 0.5D-4,		! default : 1.0D-3 (a.u)
+   
+ /
+ &system
+   ibrav = 0,		! need CELL_PARAMETERS options
+   nat = 2,			! # of atoms in unit cell
+   ntyp = 1,		! # of types of atoms in unit cell (different magneti for same atom -> count each)
+   nbnd = 8,		! # of electronic states (bands) to be calculated (spin-polarized *2)(metal *1.2)
+   ecutwfc = 50,		! kinetic energy cutoff (Ry) for wavefunctions (1 Ry ~ 13.6 eV)
+   ecutrho = 200,		! default : 4*ecutwfc
+   occupations = 'smearing',	! smearing(Gaussian), tetrahedra ...etc.
+   smearing = 'gaussian',		! default : gaussian
+   degauss = 0.02,			! default : 0.D0 (Ry)
+   noncolin = .FALSE.,		! default : .FALSE.
+   lspinorb = .false.,		! non-collinear code can use pseudopotentials with SOC
+   nspin = 1,		! default : 1 (non-polarized) , 2 : spin-polarized along z-direc, 4 : non-collinear
+   starting_magnetization(1) = 0.0,		! default : 0 # for type (1) atom, from -1 to +1
+   
+ /
+ &electrons
+   electron_maxstep = 200, ! default : 100 ! maximum number of iterations in a scf step
+   conv_thr = 1.0D-10,		! default : 1.D-6
+   mixing_mode = 'plain',	! default : 'plain'
+   mixing_beta = 0.7,		! default : 0.7D0
+   mixing_ndim = 8,			! default : 8
+   diagonalization = 'david',		! default : 'david'  !'david', 'cg', ...etc.
+   diago_full_acc = .true.,			! default : .FALSE. 
+   startingwfc = 'random',		! default : 'atomic+random'
+
+ /
+ &ions
+   ion_dynamics = 'bfgs',		! 'bfgs' : quasi-newton algorithm, ...etc.
+
+ /
+ &cell
+   cell_dynamics = 'bfgs',		! 'bfgs' : quasi-newton algorithm, ...etc.
+   press_conv_thr = 0.1D0,		! default : 0.5D0 (Kbar)
+   cell_dofree = '2Dxy',		! default : 'all' ! y, xy, xyz, shape (:volume fixed), volume, 2Dxy, 2Dshape...
+
+ /
+ ATOMIC_SPECIES
+   C	12.0107		C.UPF		! species # mass # pseudopotential file
+ CELL_PARAMETERS (angstrom)		! { bohr | angstrom | alat }
+   2.469648229   0.000000000   0.000000000
+   1.234824115   2.138778104   0.000000000
+   0.000000000   0.000000000  20.000000000
+ ATOMIC_POSITIONS (crystal)		!  alat, bohr, angstrom, crystal
+   C   0.000000000   0.000000000   0.500000000	0 0 0	! add 0 to fix, 1 to move (default : 1)
+   C   0.333333333   0.333333333   0.500000000	0 0 0 
+
+ K_POINTS automatic		! k-points automatically
+   9  9  1	 0 0 0		! k-points*3 & off-sets*3
+
+# e.g.) GYSXG		
+# K_POINTS crystal_b	! crystal means crystal coord. ! _b means for bands.
+#   5		! nks = # of supplied k-points
+#   0.000000 0.000000 0.000000 100		! k-points*3 & weight
+#   0.000000 0.500000 0.000000 100
+#   0.500000 0.500000 0.000000 100
+#   0.500000 0.000000 0.000000 100
+#   0.000000 0.000000 0.000000 1
+
+# K_POINTS crystal		! crystal means crystal coord.
+#   4		! nks = #of supplied k-points
+#   0.0 0.0 0.0 1		! k-points*3 & weight
+#   0.5 0.0 0.0 1
+#   0.0 0.5 0.0 1
+#   0.5 0.5 0.0 1
+
+# K_POINTS gamma
+

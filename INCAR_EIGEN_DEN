@@ -1,0 +1,46 @@
+ SYSTEM = Ca2N DOS
+
+Starting Parameters for this run :
+ ISTART = 2    job   : 0-new 1-cont 2-samecut
+ ICHARG = 11   charge: 0-wave 1-file 2-atom 10-const
+ INIWAV = 1    electr: 0-lowe 1-rand
+#ISPIN  = 2
+
+Electronic Relaxation :
+ ENCUT  = 520  eV
+ PREC   = high Normal | Single | Accurate  for DFT-TS, strongly recommend to use ACCURATE
+ EDIFF  = 1E-06   energy stopping-criterion for ELM
+ NELM   = 200
+#NELMIN = 2
+ LREAL  = .FALSE.
+#LREAL  = AUTO
+ IALGO  = 38
+
+Ionic Relaxation :
+ NSW  =   0    0-for DOS , >1 atomic relaxation
+#IBRION = 2    ionic relax: 0-MD, 1-quasi-Newton, 2-CG, 3-Damped MD
+#EDIFFG = -0.02
+#ISIF   = 2
+
+DOS related values :
+  ISMEAR = 0
+  SIGMA  = 0.05
+  EMIN   = -8
+  EMAX   =  8 
+  NEDOS  =  8000
+  LORBIT = 2
+  RWIGS = 0.741 1.323 
+
+##NPAR = 4
+  LPLANE = .TRUE.
+
+partial charge density :
+  LWAVE = .FALSE.
+  LPARD = .TRUE.
+  LCHARG= .TRUE.
+  LSEPB = .TRUE.
+  LSEPK = .TRUE.
+
+  KPUSE = 1 2 17
+##IBAND = 20 21 22 23 24 25 26 27 28 
+  IBAND = 10 11 12 13
