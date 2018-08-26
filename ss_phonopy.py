@@ -78,6 +78,7 @@ def calc_vasp(phonon, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
+        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
@@ -157,6 +158,7 @@ def calc_dpmd(phonon, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
+        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
@@ -249,6 +251,7 @@ def calc_amp(phonon, nn, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
+        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
@@ -340,6 +343,7 @@ def calc_amp_tf(phonon, nn, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
+        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
