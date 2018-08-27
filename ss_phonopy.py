@@ -37,6 +37,10 @@ def calc_vasp(phonon, verbose = False):
             sp.call(["mkdir", "-p", "calcs/"+ndir])
             sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
             sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd = pwd+"/calcs/"+ndir, shell = True)
+            sp.call(["rm -rf poscars"], shell = True)
+            sp.call(["mkdir poscars"], shell = True)
+            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
+            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
             if (sys.version_info > (3,0)):
                 sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ pwd+"/calcs/"+ndir+"/out"], \
                          cwd = pwd+"/calcs/"+ndir, shell = True)
@@ -63,10 +67,6 @@ def calc_vasp(phonon, verbose = False):
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
-        sp.call(["rm -rf poscars"], shell = True)
-        sp.call(["mkdir poscars"], shell = True)
-        sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
     
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -131,6 +131,10 @@ def calc_dpmd(phonon, verbose = False):
             sp.call(["mkdir", "-p", "calcs/"+ndir])
             sp.call(["cp","frozen_model.pb", "input.in", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
             sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"], cwd = pwd+"/calcs/"+ndir, shell = True)
+            sp.call(["rm -rf poscars"], shell = True)
+            sp.call(["mkdir poscars"], shell = True)
+            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
+            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
             sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"], cwd = pwd+"/calcs/"+ndir, shell = True)
             atoms = read_dump(pwd+"/calcs/"+ndir+"/out.dump", index=0, order=True)
             #print(atoms.__dict__)
@@ -143,10 +147,6 @@ def calc_dpmd(phonon, verbose = False):
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
-        sp.call(["rm -rf poscars"], shell = True)
-        sp.call(["mkdir poscars"], shell = True)
-        sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -199,6 +199,10 @@ def calc_amp(phonon, nn, verbose = False):
             sp.call(["mv", "calcs/"+ndir, "calcs/BU-"+ndir])
             sp.call(["mkdir", "-p", "calcs/"+ndir])
             sp.call(["cp", nn, "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
+            sp.call(["rm -rf poscars"], shell = True)
+            sp.call(["mkdir poscars"], shell = True)
+            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
+            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
@@ -236,10 +240,6 @@ def calc_amp(phonon, nn, verbose = False):
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
-        sp.call(["rm -rf poscars"], shell = True)
-        sp.call(["mkdir poscars"], shell = True)
-        sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -292,6 +292,10 @@ def calc_amp_tf(phonon, nn, verbose = False):
             sp.call(["mv", "calcs/"+ndir, "calcs/BU-"+ndir])
             sp.call(["mkdir", "-p", "calcs/"+ndir])
             sp.call(["cp", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
+            sp.call(["rm -rf poscars"], shell = True)
+            sp.call(["mkdir poscars"], shell = True)
+            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
+            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
@@ -328,10 +332,6 @@ def calc_amp_tf(phonon, nn, verbose = False):
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
-        sp.call(["rm -rf poscars"], shell = True)
-        sp.call(["mkdir poscars"], shell = True)
-        sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
