@@ -1,8 +1,7 @@
 def calc_vasp(phonon, verbose = False):
     """ Calculate Force Constant with Vasp """
+    ################### all same from now 
     import subprocess as sp
-    from phonopy.interface.vasp import VasprunxmlExpat
-    import io
     import numpy as np
     import pickle
     np.set_printoptions(threshold=np.nan)
@@ -14,40 +13,44 @@ def calc_vasp(phonon, verbose = False):
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    import sys
+    if (sys.version_info > (3,0)):
+        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+    else:
+        pwd = str((sp.check_output("pwd"))[:-1])
+    calc_dir = pwd + "/calcs/" + job_name
+    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
         phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
         if phonon.get_force_constants() is None:
             raise ValueError
+        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
         print("******* Vasp calc will be carried. ********".center(80))
 
-        import sys
-        if (sys.version_info > (3,0)):
-            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-        else:
-            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
-            ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", "calcs/BU-"+ndir])
-            sp.call(["mv", "calcs/"+ndir, "calcs/BU-"+ndir])
-            sp.call(["mkdir", "-p", "calcs/"+ndir])
-            sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
-            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd = pwd+"/calcs/"+ndir, shell = True)
-            sp.call(["rm -rf poscars"], shell = True)
-            sp.call(["mkdir poscars"], shell = True)
-            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
+            sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd = calc_dir+"/"+ndir, shell = True)
             if (sys.version_info > (3,0)):
                 sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ pwd+"/calcs/"+ndir+"/out"], \
                          cwd = pwd+"/calcs/"+ndir, shell = True)
             else:
                 sp.call(["mpiexec.hydra -np $NSLOTS vasp_std > "+ pwd+"/calcs/"+ndir+"/out"], \
                          cwd = pwd+"/calcs/"+ndir, shell = True)
-            with io.open(pwd+"/calcs/"+ndir+"/vasprun.xml", "rb") as xmlfile:
+            import io
+            with io.open(calc_dir+"/"+ndir+"/vasprun.xml", "rb") as xmlfile:
+                from phonopy.interface.vasp import VasprunxmlExpat
                 vasprun = VasprunxmlExpat(xmlfile)
                 if vasprun.parse():
                     force_now = (vasprun.get_forces()).tolist()
@@ -78,7 +81,6 @@ def calc_vasp(phonon, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
@@ -94,11 +96,10 @@ def calc_vasp(phonon, verbose = False):
 
 def calc_dpmd(phonon, verbose = False):
     """ Calculate Force Constant with DPMD """
+    ################### all same from now 
     import subprocess as sp
     import numpy as np
     import pickle
-    from ase.io.lammpsrun import read_lammps_dump as read_dump
-    from ase import Atoms, Atom
     np.set_printoptions(threshold=np.nan)
         
     delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
@@ -108,35 +109,38 @@ def calc_dpmd(phonon, verbose = False):
     tf = {0:'nonsym', 1:'sym'} 
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    import sys
+    if (sys.version_info > (3,0)):
+        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+    else:
+        pwd = str((sp.check_output("pwd"))[:-1])
+    calc_dir = pwd + "/calcs/" + job_name
+    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
         phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
         if phonon.get_force_constants() is None:
             raise ValueError
+        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
         print("******* DPMD calc will be carried. ********".center(80))
 
-        import sys
-        if (sys.version_info > (3,0)):
-            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-        else:
-            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
-            ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", "calcs/BU-"+ndir])
-            sp.call(["mv", "calcs/"+ndir, "calcs/BU-"+ndir])
-            sp.call(["mkdir", "-p", "calcs/"+ndir])
-            sp.call(["cp","frozen_model.pb", "input.in", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
-            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"], cwd = pwd+"/calcs/"+ndir, shell = True)
-            sp.call(["rm -rf poscars"], shell = True)
-            sp.call(["mkdir poscars"], shell = True)
-            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
-            sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"], cwd = pwd+"/calcs/"+ndir, shell = True)
-            atoms = read_dump(pwd+"/calcs/"+ndir+"/out.dump", index=0, order=True)
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
+            sp.call(["cp","frozen_model.pb", "input.in", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"], cwd = calc_dir+"/"+ndir, shell = True)
+            sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"], cwd = calc_dir+"/"+ndir, shell = True)
+            from ase.io.lammpsrun import read_lammps_dump as read_dump
+            atoms = read_dump(calc_dir+"/"+ndir+"/out.dump", index=0, order=True)
             #print(atoms.__dict__)
             force_now = [atoms.get_forces(apply_constraint=False).tolist()]
             forces.extend(force_now)
@@ -158,16 +162,15 @@ def calc_dpmd(phonon, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
 def calc_amp(phonon, nn, verbose = False):
     """ Calculate Force Constant with AMP """
+    ################### all same from now 
     import subprocess as sp
     import numpy as np
     import pickle
-    from ase import Atoms, Atom
     np.set_printoptions(threshold=np.nan)
         
     delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
@@ -177,32 +180,34 @@ def calc_amp(phonon, nn, verbose = False):
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    import sys
+    if (sys.version_info > (3,0)):
+        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+    else:
+        pwd = str((sp.check_output("pwd"))[:-1])
+    calc_dir = pwd + "/calcs/" + job_name
+    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
         phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
         if phonon.get_force_constants() is None:
             raise ValueError
+        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
         print("******* AMP calc will be carried. ********".center(80))
 
-        import sys
-        if (sys.version_info > (3,0)):
-            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-        else:
-            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
-            ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", "calcs/BU-"+ndir])
-            sp.call(["mv", "calcs/"+ndir, "calcs/BU-"+ndir])
-            sp.call(["mkdir", "-p", "calcs/"+ndir])
-            sp.call(["cp", nn, "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
-            sp.call(["rm -rf poscars"], shell = True)
-            sp.call(["mkdir poscars"], shell = True)
-            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
+            sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
@@ -229,7 +234,7 @@ def calc_amp(phonon, nn, verbose = False):
             forces.extend(force_now)
             #********** traj file gen ***********
             from ase.io.trajectory import Trajectory
-            traj = Trajectory("calcs/"+ndir+"/output.traj", "w")
+            traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
             traj.write(atoms)
             traj.close()
             
@@ -251,16 +256,15 @@ def calc_amp(phonon, nn, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
 def calc_amp_tf(phonon, nn, verbose = False):
     """ Calculate Force Constant with AMP with tensorflow """
+    ################### all same from now 
     import subprocess as sp
     import numpy as np
     import pickle
-    from ase import Atoms, Atom
     np.set_printoptions(threshold=np.nan)
         
     delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
@@ -270,36 +274,38 @@ def calc_amp_tf(phonon, nn, verbose = False):
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    import sys
+    if (sys.version_info > (3,0)):
+        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
+    else:
+        pwd = str((sp.check_output("pwd"))[:-1])
+    calc_dir = pwd + "/calcs/" + job_name
+    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
         phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
         if phonon.get_force_constants() is None:
             raise ValueError
+        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
         print("******* AMP calc will be carried. ********".center(80))
 
-        import sys
-        if (sys.version_info > (3,0)):
-            pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-        else:
-            pwd = str((sp.check_output("pwd"))[:-1])
         forces = []
         for i in range(image_num):
-            ndir = job_name + "_pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", "calcs/BU-"+ndir])
-            sp.call(["mv", "calcs/"+ndir, "calcs/BU-"+ndir])
-            sp.call(["mkdir", "-p", "calcs/"+ndir])
-            sp.call(["cp", "POSCAR-"+str(i+1).zfill(3), "calcs/"+ndir])
-            sp.call(["rm -rf poscars"], shell = True)
-            sp.call(["mkdir poscars"], shell = True)
-            sp.call(["cp POSCAR-* SPOSCAR poscars"], shell = True)
-            sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
+            sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
-            atoms = read("calcs/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
+            atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
                          format = "vasp")
             atoms.set_pbc(True)
             calc = nn
@@ -312,16 +318,16 @@ def calc_amp_tf(phonon, nn, verbose = False):
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
-            #energies_now = calc.get_atomic_potentials(atoms)
+            energies_now = calc.get_atomic_potentials(atoms)
             #********** force information restore ***********
             atoms._calc.results['forces'] = np.asarray(force_now[0])
             if verbose:
-                # print(energies_now)
+                print(energies_now)
                 print(atoms._calc.results['forces'])
             forces.extend(force_now)
             #********** traj file gen ***********
             from ase.io.trajectory import Trajectory
-            traj = Trajectory("calcs/"+ndir+"/output.traj", "w")
+            traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
             traj.write(atoms)
             traj.close()
             
@@ -343,7 +349,6 @@ def calc_amp_tf(phonon, nn, verbose = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-        sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     return phonon
 
