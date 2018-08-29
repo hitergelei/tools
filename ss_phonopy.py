@@ -225,7 +225,7 @@ def calc_amp(phonon, nn, verbose = False):
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
-            energies_now = calc.get_atomic_potentials(atoms)
+            energies_now = atoms.get_potential_energies()
             #********** force information restore ***********
             atoms._calc.results['forces'] = np.asarray(force_now[0])
             if verbose:
@@ -318,7 +318,7 @@ def calc_amp_tf(phonon, nn, verbose = False):
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
-            energies_now = calc.get_atomic_potentials(atoms)
+            energies_now = atoms.get_potential_energies()
             #********** force information restore ***********
             atoms._calc.results['forces'] = np.asarray(force_now[0])
             if verbose:
