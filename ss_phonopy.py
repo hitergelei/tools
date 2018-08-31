@@ -37,8 +37,8 @@ def calc_vasp(phonon, verbose = False):
         for i in range(image_num):
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
             sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd = calc_dir+"/"+ndir, shell = True)
@@ -133,8 +133,8 @@ def calc_dpmd(phonon, verbose = False):
         for i in range(image_num):
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp","frozen_model.pb", "input.in", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
             sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"], cwd = calc_dir+"/"+ndir, shell = True)
@@ -204,8 +204,8 @@ def calc_amp(phonon, nn, verbose = False):
         for i in range(image_num):
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
@@ -298,8 +298,8 @@ def calc_amp_tf(phonon, nn, verbose = False):
         for i in range(image_num):
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
@@ -391,8 +391,8 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False):
         for i in range(image_num):
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
                    str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
+            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
