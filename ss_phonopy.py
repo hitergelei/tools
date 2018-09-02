@@ -220,14 +220,14 @@ def calc_amp(phonon, nn, verbose = False):
             #print(atoms.__dict__)
 
             #********** numerical force must precede ***********
-            force_now = [(calc.calculate_numerical_forces(atoms)).tolist()] # alternative
+            force_now = calc.calculate_numerical_forces(atoms) # alternative
             #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
             energies_now = atoms.get_potential_energies()
             #********** force information restore ***********
-            atoms._calc.results['forces'] = np.asarray(force_now[0])
+            atoms._calc.results['forces'] = np.asarray(force_now)
             if verbose:
                 print(energies_now)
                 print(atoms._calc.results['forces'])
@@ -313,14 +313,14 @@ def calc_amp_tf(phonon, nn, verbose = False):
             #print(atoms.__dict__)
 
             #********** numerical force must precede ***********
-            force_now = [(np.squeeze(calc.calculate_numerical_forces(atoms), axis=2)).tolist()] # alternative
+            force_now = calc.calculate_numerical_forces(atoms) # alternative
             #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
             energies_now = atoms.get_potential_energies()
             #********** force information restore ***********
-            atoms._calc.results['forces'] = np.asarray(force_now[0])
+            atoms._calc.results['forces'] = np.asarray(force_now)
             if verbose:
                 print(energies_now)
                 print(atoms._calc.results['forces'])
