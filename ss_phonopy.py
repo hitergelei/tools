@@ -19,9 +19,9 @@ def calc_vasp(phonon, verbose = False):
     else:
         pwd = str((sp.check_output("pwd"))[:-1])
     calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
@@ -35,13 +35,15 @@ def calc_vasp(phonon, verbose = False):
 
         forces = []
         for i in range(image_num):
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
-                   str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
+                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
-            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd = calc_dir+"/"+ndir, shell = True)
+            sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", 
+                calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], 
+                cwd = calc_dir+"/"+ndir, shell = True)
             if (sys.version_info > (3,0)):
                 sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ pwd+"/calcs/"+ndir+"/out"], \
                          cwd = pwd+"/calcs/"+ndir, shell = True)
@@ -115,9 +117,9 @@ def calc_dpmd(phonon, verbose = False):
     else:
         pwd = str((sp.check_output("pwd"))[:-1])
     calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
@@ -131,14 +133,17 @@ def calc_dpmd(phonon, verbose = False):
 
         forces = []
         for i in range(image_num):
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
-                   str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
+                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp","frozen_model.pb", "input.in", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
-            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"], cwd = calc_dir+"/"+ndir, shell = True)
-            sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"], cwd = calc_dir+"/"+ndir, shell = True)
+            sp.call(["cp","frozen_model.pb", "input.in", 
+                calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"],
+                cwd = calc_dir+"/"+ndir, shell = True)
+            sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"],
+                cwd = calc_dir+"/"+ndir, shell = True)
             from ase.io.lammpsrun import read_lammps_dump as read_dump
             atoms = read_dump(calc_dir+"/"+ndir+"/out.dump", index=0, order=True)
             #print(atoms.__dict__)
@@ -165,7 +170,7 @@ def calc_dpmd(phonon, verbose = False):
 
     return phonon
 
-def calc_amp(phonon, nn, verbose = False):
+def calc_amp(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
     """ Calculate Force Constant with AMP """
     ################### all same from now 
     import subprocess as sp
@@ -186,9 +191,9 @@ def calc_amp(phonon, nn, verbose = False):
     else:
         pwd = str((sp.check_output("pwd"))[:-1])
     calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
@@ -202,12 +207,12 @@ def calc_amp(phonon, nn, verbose = False):
 
         forces = []
         for i in range(image_num):
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
-                   str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
+                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["cp", calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
@@ -217,17 +222,25 @@ def calc_amp(phonon, nn, verbose = False):
             from amp import Amp
             calc = Amp.load(nn)
             atoms.set_calculator(calc)
-            #print(atoms.__dict__)
+            from amp.utilities import Logger
+            log = atoms._calc._log
+            log("**********************************************")
+            log(str(i+1)+" th image calculation start", tic = 'image')
+            log("**********************************************")
 
             #********** numerical force must precede ***********
-            force_now = calc.calculate_numerical_forces(atoms) # alternative
+            force_now = [calc.calculate_numerical_forces(
+                atoms,
+                d = numeric_F_dx,
+                parallel = parallel,
+                )] # alternative
             #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
             energies_now = atoms.get_potential_energies()
             #********** force information restore ***********
-            atoms._calc.results['forces'] = np.asarray(force_now)
+            atoms._calc.results['forces'] = np.asarray(force_now[0])
             if verbose:
                 print(energies_now)
                 print(atoms._calc.results['forces'])
@@ -237,9 +250,12 @@ def calc_amp(phonon, nn, verbose = False):
             traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
             traj.write(atoms)
             traj.close()
-            
             if verbose:
                 print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
+            log("**********************************************")
+            log(str(i+1)+" th image calculated", toc = 'image')
+            log("**********************************************")
+            
         forces_arr = np.asarray(forces)
         if verbose:
             print("\n\n"+"forces"+"\n"+str(forces_arr))
@@ -259,7 +275,7 @@ def calc_amp(phonon, nn, verbose = False):
 
     return phonon
 
-def calc_amp_tf(phonon, nn, verbose = False):
+def calc_amp_tf(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
     """ Calculate Force Constant with AMP with tensorflow """
     ################### all same from now 
     import subprocess as sp
@@ -280,9 +296,9 @@ def calc_amp_tf(phonon, nn, verbose = False):
     else:
         pwd = str((sp.check_output("pwd"))[:-1])
     calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
@@ -296,12 +312,12 @@ def calc_amp_tf(phonon, nn, verbose = False):
 
         forces = []
         for i in range(image_num):
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
-                   str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
+                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["cp", calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
@@ -310,17 +326,25 @@ def calc_amp_tf(phonon, nn, verbose = False):
             atoms.set_pbc(True)
             calc = nn
             atoms.set_calculator(calc)
-            #print(atoms.__dict__)
+            from amp.utilities import Logger
+            log = atoms._calc._log
+            log("**********************************************")
+            log(str(i+1)+" th image calculation start", tic = 'image')
+            log("**********************************************")
 
             #********** numerical force must precede ***********
-            force_now = calc.calculate_numerical_forces(atoms) # alternative
+            force_now = [calc.calculate_numerical_forces(
+                atoms,
+                d = numeric_F_dx,
+                parallel = parallel,
+                )] # alternative
             #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
             energies_now = atoms.get_potential_energies()
             #********** force information restore ***********
-            atoms._calc.results['forces'] = np.asarray(force_now)
+            atoms._calc.results['forces'] = force_now[0]
             if verbose:
                 print(energies_now)
                 print(atoms._calc.results['forces'])
@@ -330,9 +354,12 @@ def calc_amp_tf(phonon, nn, verbose = False):
             traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
             traj.write(atoms)
             traj.close()
-            
             if verbose:
                 print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
+            log("**********************************************")
+            log(str(i+1)+" th image calculated", toc = 'image')
+            log("**********************************************")
+
         forces_arr = np.asarray(forces)
         if verbose:
             print("\n\n"+"forces"+"\n"+str(forces_arr))
@@ -352,7 +379,7 @@ def calc_amp_tf(phonon, nn, verbose = False):
 
     return phonon
 
-def calc_amp_tf_bunch(phonon, nn, verbose = False):
+def calc_amp_tf_bunch(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     ################### all same from now 
     import subprocess as sp
@@ -373,9 +400,9 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False):
     else:
         pwd = str((sp.check_output("pwd"))[:-1])
     calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/poscars"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/poscars"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/poscars"], shell = True)
+    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
+    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
@@ -389,12 +416,12 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False):
 
         forces = []
         for i in range(image_num):
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + "_direc" + \
-                   str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/"+ndir+"-BU"])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/"+ndir+"-BU"])
+            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
+                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
+            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
+            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", calc_dir+"/poscars/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["cp", calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
@@ -403,10 +430,18 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False):
             atoms.set_pbc(True)
             calc = nn
             atoms.set_calculator(calc)
-            #print(atoms.__dict__)
+            from amp.utilities import Logger
+            log = atoms._calc._log
+            log("**********************************************")
+            log(str(i+1)+" th image calculation start", tic = 'image')
+            log("**********************************************")
 
             #********** numerical force must precede ***********
-            force_now = [(np.squeeze(calc.calculate_numerical_forces(atoms), axis=2)).tolist()] # alternative
+            force_now = [calc.calculate_numerical_forces(
+                atoms,
+                d = numeric_F_dx,
+                parallel = parallel,
+                )] # alternative
             #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
@@ -423,9 +458,12 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False):
             traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
             traj.write(atoms)
             traj.close()
-            
             if verbose:
                 print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
+            log("**********************************************")
+            log(str(i+1)+" th image calculated", toc = 'image')
+            log("**********************************************")
+            
         forces_arr = np.asarray(forces)
         if verbose:
             print("\n\n"+"forces"+"\n"+str(forces_arr))
