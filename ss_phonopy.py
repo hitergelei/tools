@@ -12,7 +12,7 @@ def calc_vasp(phonon, verbose = False):
     image_num = len(directions)
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
     import sys
     if (sys.version_info > (3,0)):
         pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
@@ -110,7 +110,7 @@ def calc_dpmd(phonon, verbose = False):
     image_num = len(directions)
     tf = {0:'nonsym', 1:'sym'} 
     sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
     import sys
     if (sys.version_info > (3,0)):
         pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
@@ -184,7 +184,7 @@ def calc_amp(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
     image_num = len(directions)
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
     import sys
     if (sys.version_info > (3,0)):
         pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
@@ -289,7 +289,7 @@ def calc_amp_tf(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True
     image_num = len(directions)
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
     import sys
     if (sys.version_info > (3,0)):
         pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
@@ -393,7 +393,7 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel 
     image_num = len(directions)
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str(delta) + "_" + sym
+    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
     import sys
     if (sys.version_info > (3,0)):
         pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
