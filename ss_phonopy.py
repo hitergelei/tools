@@ -45,11 +45,11 @@ def calc_vasp(phonon, verbose = False):
             sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], 
                 cwd = calc_dir+"/"+ndir, shell = True)
             if (sys.version_info > (3,0)):
-                sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ pwd+"/calcs/"+ndir+"/out"], \
-                         cwd = pwd+"/calcs/"+ndir, shell = True)
+                sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ calc_dir+"/"+ndir+"/out"], \
+                         cwd = calc_dir+"/"+ndir, shell = True)
             else:
-                sp.call(["mpiexec.hydra -np $NSLOTS vasp_std > "+ pwd+"/calcs/"+ndir+"/out"], \
-                         cwd = pwd+"/calcs/"+ndir, shell = True)
+                sp.call(["mpiexec.hydra -np $NSLOTS vasp_std > "+ calc_dir+"/"+ndir+"/out"], \
+                         cwd = calc_dir+"/"+ndir, shell = True)
             import io
             with io.open(calc_dir+"/"+ndir+"/vasprun.xml", "rb") as xmlfile:
                 from phonopy.interface.vasp import VasprunxmlExpat
@@ -170,7 +170,7 @@ def calc_dpmd(phonon, verbose = False):
 
     return phonon
 
-def calc_amp(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
+def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True):
     """ Calculate Force Constant with AMP """
     ################### all same from now 
     import subprocess as sp
@@ -216,11 +216,10 @@ def calc_amp(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
 
             ########### calculate forces & atomic energies with amp ############
             from ase.io import read
-            atoms = read("calcs/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
+            atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
                          format = "vasp")
             atoms.set_pbc(True)
             from amp import Amp
-            calc = Amp.load(nn)
             atoms.set_calculator(calc)
             from amp.utilities import Logger
             log = atoms._calc._log
@@ -275,7 +274,7 @@ def calc_amp(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
 
     return phonon
 
-def calc_amp_tf(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
+def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True):
     """ Calculate Force Constant with AMP with tensorflow """
     ################### all same from now 
     import subprocess as sp
@@ -324,7 +323,6 @@ def calc_amp_tf(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True
             atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
                          format = "vasp")
             atoms.set_pbc(True)
-            calc = nn
             atoms.set_calculator(calc)
             from amp.utilities import Logger
             log = atoms._calc._log
@@ -379,7 +377,7 @@ def calc_amp_tf(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True
 
     return phonon
 
-def calc_amp_tf_bunch(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel = True):
+def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     ################### all same from now 
     import subprocess as sp
@@ -428,7 +426,6 @@ def calc_amp_tf_bunch(phonon, nn, verbose = False, numeric_F_dx=0.001, parallel 
             atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
                          format = "vasp")
             atoms.set_pbc(True)
-            calc = nn
             atoms.set_calculator(calc)
             from amp.utilities import Logger
             log = atoms._calc._log
