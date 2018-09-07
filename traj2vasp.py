@@ -34,7 +34,6 @@ for image in traj:
 	poscar = open("./vasp_images_"+trajfile+"/POSCAR_%.5d"%imagenum, "w")
 	poscar.write("image "+str(imagenum)+"/"+str(steps-1)+"\n")
 	poscar.writelines(lines[1:5])
-	poscar.writelines(lines[0:1])
 	poscar.writelines(lines[5:])
 	poscar.close()
 	imagenum += 1
