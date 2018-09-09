@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 ##### CODE BY YOUNGJAE CHOI #####
 
 from ase import Atoms, Atom
@@ -161,7 +161,7 @@ def covalent_expect(input):
     
     tot_num = sum(species_dict.values())
     r_sum = 0
-    for key, value in species_dict.iteritems():
+    for key, value in species_dict.items():
         r_sum += covalent_radii[s2n([key])] * value
     expect_value = r_sum / tot_num
     return expect_value
