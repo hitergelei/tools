@@ -141,6 +141,16 @@ def list2count(list_inp):
         dict_out[i] += 1
     return dict_out
 
+def list2numlist(list_inp):
+    keys = list(set(list_inp))
+    dict_num = dict()
+    numlist = []
+    for i in range(len(keys)):
+        dict_num[keys[i]] = i
+    for ele in list_inp:
+        numlist.append(dict_num[ele])
+    return numlist
+
 
 def covalent_expect(input):
     """ Returns covalent bond expectation value of system 
