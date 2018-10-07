@@ -16,7 +16,7 @@ if __name__ == '__main__':
     print("    or ==> ./histogram.py 'file' 'colume of data' 'start line' 'end line' 'line interval' 'bin min' 'bin max'".center(100))
     print("note) interval 1 means every line".center(100))
     print("EXAMPLE) ./histogram.py log_gst.txt 3 1 -1 2          ".center(100))
-    print("      or ./histogram.py log_gst.txt 3 1 -1 2 -200 -250".center(100))
+    print("      or ./histogram.py log_gst.txt 3 1 -1 2 -250 -200".center(100))
     print("")
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(100))
     print("")
@@ -49,11 +49,13 @@ if __name__ == '__main__':
         n, bins, patches = plt.hist(data, bins=200, range=[bin_min, bin_max], facecolor='purple', alpha=0.70)
     else:
         n, bins, patches = plt.hist(data, bins=200, facecolor='purple', alpha=0.70)
+    max_height = np.amax(n)
     
     #### plot
     plt.title('histogram')
     plt.xlabel('%d data, average = %.3f, sigma = %.3f' % (len(data), average, std))
     plt.ylabel('population')
+    plt.barh(max_height/5, std, height=max_height/100, left=average, color='black')
     plt.grid(True)
     plt.show()
 

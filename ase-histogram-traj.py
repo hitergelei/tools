@@ -15,7 +15,7 @@ if __name__ == '__main__':
     print("useage ==> ./ase-histogram-traj.py 'traj file' 'data type(e/f)'                    ".center(100))
     print("    or ==> ./ase-histogram-traj.py 'traj file' 'data type(e/f)' 'bin min' 'bin max'".center(100))
     print("EXAMPLE) ./ase-histogram-traj.py gst.traj e          ".center(100))
-    print("      or ./ase-histogram-traj.py gst.traj e -200 -250".center(100))
+    print("      or ./ase-histogram-traj.py gst.traj e -250 -200".center(100))
     print("")
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(100))
     print("")
@@ -50,16 +50,17 @@ if __name__ == '__main__':
 
     average = np.average(data)
     std = np.std(data)
-
     if bin_range:
         n, bins, patches = plt.hist(data, bins=200, range=[bin_min, bin_max], facecolor='purple', alpha=0.70)
     else:
         n, bins, patches = plt.hist(data, bins=200, facecolor='purple', alpha=0.70)
+    max_height = np.amax(n)
     
     #### plot
     plt.title('histogram')
     plt.xlabel('%d data, average = %.3f, sigma = %.3f' % (len(data), average, std))
     plt.ylabel('population')
+    plt.barh(max_height/5, std, height=max_height/100, left=average, color='black')
     plt.grid(True)
     plt.show()
 
