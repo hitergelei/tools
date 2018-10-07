@@ -5,6 +5,36 @@ from ase import Atoms, Atom
 import random
 from ase.build import make_supercell
 from numpy import ndarray
+import numpy as np
+
+def E_FromTraj(traj):
+    energies = []
+    for atoms in traj:
+        energies.append(atoms.get_potential_energy())
+    return np.array(energies)
+
+def F_FromTraj(traj):
+    forces = []
+    for atoms in traj:
+        forces.append(atoms.get_forces())
+    return np.array(forces)
+
+def column2np(
+    txtfile,
+    column,
+    start_line = 1,
+    end_line   = -1,
+    interval   = 1,
+    ):
+    txt = open(txtfile, "r")
+    lines = txt.readlines()
+    if end_line == -1:
+        end_line = len(lines)
+    nums = []
+    for l in range(start_line, end_line, interval):
+        nums.append(float(lines[l].split()[column-1]))
+    array = np.array(nums)
+    return array
 
 def RanPoAtoms(cut_off_radius,
                symbols=None,
@@ -226,8 +256,6 @@ def random_position_generator(
 
     """
 
-    import numpy as np
-    
     atoms = atoms.copy()
     ############### collect species_spec 
     if species_spec is None:
