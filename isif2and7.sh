@@ -42,7 +42,7 @@ cat CONTCAR > CONTCARold
  fi
  
  for i in `seq 1 1 20`
-	 do
+     do
  cat > INCAR <<!
  SYSTEM=ptse2
 #

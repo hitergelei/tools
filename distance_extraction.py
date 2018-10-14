@@ -9,10 +9,10 @@ print("\n\n##################################################\n")
 print("useage ==> ./distance_extraction.py 'trajactory file'\n")
 print("##################################################\n")
 if len(sys.argv) is 2:
-	print(" ")
+    print(" ")
 else:
-	print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
-	sys.exit(1)
+    print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
+    sys.exit(1)
 
 trajfile = sys.argv[1]
 
@@ -34,29 +34,29 @@ logfile.write("\n\nAtom sequence :\n")
 
 i = 0
 for atom in traj[0]:
-	i += 1
-	logfile.write("\n"+str(i)+". "+atom.symbol+"(AN = "+str(atom.number)+")(AM = "+str(atom.mass)+")")
+    i += 1
+    logfile.write("\n"+str(i)+". "+atom.symbol+"(AN = "+str(atom.number)+")(AM = "+str(atom.mass)+")")
 
 a=0
 b=0
 c=0
 trajlist = []
 for atoms in traj:
-	a += 1
-	logfile.write("\n\n########################################################")
-	logfile.write("\nDistance matrix of image "+str(a)+"/"+str(len(traj)))
-	logfile.write("\n########################################################")
-	atoms.wrap(0)
-	logfile.write("\n\n"+str(atoms.get_all_distances()))
-	atomlist = []
-	for i in range(atomnum):
-		for j in range(atomnum):
-			if i < j:
-				atomlist.append(atoms.get_all_distances()[i][j])
-				trajlist.append(atoms.get_all_distances()[i][j])
-	atomlist.sort()
-	logfile.write("\n\n sorted distances for image "+str(a)+"/"+str(len(traj))+" :\n")
-	logfile.write(str(atomlist))
+    a += 1
+    logfile.write("\n\n########################################################")
+    logfile.write("\nDistance matrix of image "+str(a)+"/"+str(len(traj)))
+    logfile.write("\n########################################################")
+    atoms.wrap(0)
+    logfile.write("\n\n"+str(atoms.get_all_distances()))
+    atomlist = []
+    for i in range(atomnum):
+        for j in range(atomnum):
+            if i < j:
+                atomlist.append(atoms.get_all_distances()[i][j])
+                trajlist.append(atoms.get_all_distances()[i][j])
+    atomlist.sort()
+    logfile.write("\n\n sorted distances for image "+str(a)+"/"+str(len(traj))+" :\n")
+    logfile.write(str(atomlist))
 
 trajlist.sort()
 logfile.write("\n\n\n\n\n\n\n\n\n#######################################################")

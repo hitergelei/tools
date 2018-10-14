@@ -91,12 +91,12 @@ def readCifFile(cifFile):
                         + "  Warning: If the fractional coordinate "+p+" is a recurring decimal, such as 1/3,\n" \
                         + "    then it is necessary to specify this value to six decimal places to be sure of \n" \
                         + "    it being recognised correctly as a spcecial position.\n  ------------------" 
-		
-		
-		# The coordinates of the atom (_atom_site_fract_x/y/z) may have 
-		# a last digit in parenthesis, like "0.6636(7)". Therefore we
-		# extract the part consisting of only digits and a decimal separator:
-		p = re.compile('[0-9.]*');
+        
+        
+        # The coordinates of the atom (_atom_site_fract_x/y/z) may have 
+        # a last digit in parenthesis, like "0.6636(7)". Therefore we
+        # extract the part consisting of only digits and a decimal separator:
+        p = re.compile('[0-9.]*');
         atomX = float(p.match(atom._atom_site_fract_x).group())
         atomY = float(p.match(atom._atom_site_fract_y).group())
         atomZ = float(p.match(atom._atom_site_fract_z).group())
@@ -459,7 +459,7 @@ def prepareGulpInput(cifFile, gulpFile, jobName, verbose = False, auto_fractions
                             + "  !   has insufficient decimals to be recognized as so by GULP. If you want\n" \
                             + "  !   this coordinate to be recognized as a special high-symmetry position,\n" \
                             + "  !   you need to specify at least six digits. If you run cif2vasp with the \n" \
-                            + "  !   -f switch, cif2vasp will try to add the necessary decimals automaticly."		
+                            + "  !   -f switch, cif2vasp will try to add the necessary decimals automaticly."        
         
         atoms += "%s %s %s %s %f %f\n" % (atomType, atomPos[0], atomPos[1], atomPos[2], 0.0, occ)
         firstAtom = False
