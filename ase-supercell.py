@@ -11,8 +11,8 @@ from copy import deepcopy
 import numpy as np
 
 print("\n\n#######################################################################################\n")
-print("useage ==> ./supercell.py 'trajactory file' 'supercell integer matrix'\n")
-print("           EXAMPLE) ./supercell.py amp.traj 2 2 1\n")
+print("useage ==> ./ase-supercell.py 'trajactory file' 'supercell integer matrix'\n")
+print("           EXAMPLE) ./supercell.py traj 2 2 1\n")
 print("#######################################################################################")
 if len(sys.argv) is 5:
 	print(" ")

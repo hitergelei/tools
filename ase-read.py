@@ -19,7 +19,7 @@ print("")
 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(80))
 print("")
 if len(sys.argv) is 2 or len(sys.argv) is 3:
-    print(("The Number of arguments(= %d ) is correct." %(len(sys.argv)-1)).center(80))
+    print(("The Number of arguments(= %d) is correct." %(len(sys.argv)-1)).center(80))
     print("\n")
 else:
     print("*****ERROR***** The number of arguments is not correct *****ERROR*****".center(80))

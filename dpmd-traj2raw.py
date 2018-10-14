@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from ase.io.trajectory import Trajectory
 from ase import Atom, Atoms
 import datetime

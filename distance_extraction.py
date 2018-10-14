@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 from ase.io import read, write
 from ase.io.trajectory import Trajectory
