@@ -154,11 +154,11 @@ def RanPoAtoms_2(cut_off_radius,
 def count2list(dict_in):
     list_out = []
     for i in range(len(dict_in.keys())):
-        keys = dict_in.keys()[i]
+        key = list(dict_in.keys())[i]
         num = 0
-        itera = dict_in.values()[i]
+        itera = dict_in[key]
         for j in range(itera):
-            list_out.append(keys)
+            list_out.append(key)
             num += 1
     return list_out
 
