@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 from ase.io.trajectory import Trajectory
 from ase.io import read, write
 from ase.calculators import vasp
@@ -28,8 +28,8 @@ commands.getstatusoutput("mkdir vasp_images_"+trajfile)
 imagenum = 0
 for image in traj:
     write("./vasp_images_"+trajfile+"/POSCAR", image)
-     raw = open("./vasp_images_"+trajfile+"/POSCAR", "r")
-     lines = raw.readlines()
+    raw = open("./vasp_images_"+trajfile+"/POSCAR", "r")
+    lines = raw.readlines()
     raw.close()
     poscar = open("./vasp_images_"+trajfile+"/POSCAR_%.5d"%imagenum, "w")
     poscar.write("image "+str(imagenum)+"/"+str(steps-1)+"\n")
