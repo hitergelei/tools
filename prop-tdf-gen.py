@@ -9,10 +9,10 @@ print("           EXAMPLE) ./prop-tdf-gen.py ../data/ 0 10")
 print("                    OUTPUT file is 'training_data'")
 print("#######################################################################################")
 if len(sys.argv) is 4:
-	print("          The Number of arguments is correct.\n\n")
+    print("          The Number of arguments is correct.\n\n")
 else:
-	print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
-	sys.exit(1)
+    print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
+    sys.exit(1)
 
 dd = sys.argv[1]
 ni = int(sys.argv[2])
@@ -23,6 +23,6 @@ tdf.write('# start with a "data" statement. Data for this example were generated
 tdf.write("\n\ndata code=vasp density=Chg_density")
 
 for i in range(ni, nf + 1):
-	tdf.write("\n"+dd+"/"+str(i))
+    tdf.write("\n"+dd+"/"+str(i))
 
 tdf.close()

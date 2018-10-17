@@ -25,9 +25,9 @@ mapin.write(str(lx)+" "+str(ly)+" "+str(lz)+" "+str(nbasis)+"\n#l1 l2 l3 k atom_
 
 i=0
 for x in range(lx):
-	for y in range(ly):
-		for z in range(lz):
-			for b in range(nbasis):
-				i += 1
-				mapin.write(str(x)+" "+str(y)+" "+str(z)+" "+str(b)+" "+str(i)+"\n")
+    for y in range(ly):
+        for z in range(lz):
+            for b in range(nbasis):
+                i += 1
+                mapin.write(str(x)+" "+str(y)+" "+str(z)+" "+str(b)+" "+str(i)+"\n")
 

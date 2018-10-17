@@ -28,34 +28,34 @@ pres = []
 
 j = 0
 while True:
-	line = log.readline()
-	llist = line.split()
-	j += 1
-	print("Reading "+str(j)+"th line")
+    line = log.readline()
+    llist = line.split()
+    j += 1
+    print("Reading "+str(j)+"th line")
 
-	seq = {}
-	for (i, x) in enumerate(llist):
-		seq[x] = i
+    seq = {}
+    for (i, x) in enumerate(llist):
+        seq[x] = i
 
-	for word in llist:
-		if word == 'TotEng':
-			etot.append(llist[seq['TotEng']+2])
-		elif word == 'PotEng':
-			epot.append(llist[seq['PotEng']+2])
-		elif word == 'KinEng':
-			ekin.append(llist[seq['KinEng']+2])
-		elif word == 'Temp':
-			temp.append(llist[seq['Temp']+2])
-		elif word == 'Press':
-			pres.append(llist[seq['Press']+2])
-	if not line: break
+    for word in llist:
+        if word == 'TotEng':
+            etot.append(llist[seq['TotEng']+2])
+        elif word == 'PotEng':
+            epot.append(llist[seq['PotEng']+2])
+        elif word == 'KinEng':
+            ekin.append(llist[seq['KinEng']+2])
+        elif word == 'Temp':
+            temp.append(llist[seq['Temp']+2])
+        elif word == 'Press':
+            pres.append(llist[seq['Press']+2])
+    if not line: break
 
 log.close()
 log = open("thermo.log", "w")
 log.write("i     etot        epot     ekin  temperature   pressure")
 for i in range(len(etot)):
-	log.write("\n"+str(i)+"  "+etot[i]+"  "+epot[i]+"  "+ekin[i]+"  "+temp[i]+"  "+pres[i])
-	print("Writing "+str(i)+"th log data")
+    log.write("\n"+str(i)+"  "+etot[i]+"  "+epot[i]+"  "+ekin[i]+"  "+temp[i]+"  "+pres[i])
+    print("Writing "+str(i)+"th log data")
 
 
 print("\n\n#######################################################################################")
