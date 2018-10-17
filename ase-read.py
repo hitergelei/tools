@@ -15,6 +15,8 @@ print("     nlist   : len(alist)")
 print("     atoms   : alist[0]")
 print("     calc    : atoms._calc")
 print("     results : atoms._calc.results")
+print("     Traj    : ase.io.trajectory:Trajectiory == Traj")
+print("     traj    : =Traj('output.traj', 'w')")
 print("")
 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(80))
 print("")
@@ -27,6 +29,8 @@ else:
     sys.exit(1)
 
 from ase.io import read
+from ase.io.trajectory import Trajectory
+Traj = Trajectory
 
 alist = read(
     sys.argv[1],
