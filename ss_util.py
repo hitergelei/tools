@@ -208,6 +208,7 @@ def covalent_expect(input):
 
 def random_position_generator(
     atoms,
+    species_kinds     = None,
     species_spec      = None,
     cutoff_radi       = None,
     cutoff_frac       = None,
@@ -222,7 +223,10 @@ def random_position_generator(
 
     atoms : An ASE atoms object
         Which will be backbone position.
-    species_spec : Dict, list or None
+    species_kinds : list or None
+        List of species kinds
+        Identical to that of atoms object if None is provided.
+    species_spec : list of int or None
         Number of each species. Will be numbered sequently.
         Identical to that of atoms object if None is provided.
     cutoff_radi : Float
@@ -258,12 +262,16 @@ def random_position_generator(
 
     atoms = atoms.copy()
     ############### collect species_spec 
-    if species_spec is None:
+    if species_kinds is None and species_spec is None:
         species = atoms.get_chemical_symbols()
-    elif isinstance(species_spec, dict):
-        species = count2list(species_spec)
-    elif isinstance(species_spec, list):
-        species = species_spec
+    elif isinstance(species_kinds, list):
+        species = []
+        for i in range(len(species_kinds)):
+            for j in range(species_spec[i]):
+                species.append(species_kinds[i])
+    else:
+        raise ValueError('Somethings wrong with species_kinds and species_spec variables.'
+            ' Please Check')
 
     ############## covalent bond length expectation value
     coval_expect = covalent_expect(species)
