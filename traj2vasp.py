@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from ase.io.trajectory import Trajectory
 from ase.io import read, write
 from ase.calculators import vasp
 import sys
-import commands
+import subprocess as sp
 
 print("\n\n##################################################\n")
 print("useage ==> ./traj2vasp.py 'trajactory file'\n")
@@ -24,7 +24,7 @@ steps = len(traj)
 print("\nTotally, "+str(steps)+" images of each step will be writen\n")
 
 
-commands.getstatusoutput("mkdir vasp_images_"+trajfile)
+sp.call(["mkdir vasp_images_"+trajfile], shell=True)
 imagenum = 0
 for image in traj:
     write("./vasp_images_"+trajfile+"/POSCAR", image)
@@ -39,4 +39,4 @@ for image in traj:
     imagenum += 1
     
     
-commands.getstatusoutput("rm -rf ./vasp_images_"+trajfile+"/POSCAR")
+sp.call(["rm -rf ./vasp_images_"+trajfile+"/POSCAR"], shell=True)
