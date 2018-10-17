@@ -5,25 +5,32 @@ from ase.io import read
 import sys
 from numpy import array
 
-print("\n\n#######################################################################################")
-print("      %%%%%%%%%%% This code will covert lammps results to traj file %%%%%%%%%")
-print("         useage ==> ./lmp2traj.py 'dump file' 'energy logfile'")
-print("              e.g.) ./lmp2traj.py out.dump log.lammps")
-print("                The result file name will be lmp-result.traj")
-print("  *****NOTE***** There is some issue when ase.io.lammpsrun import dump file. *****NOTE*****")
-print("       Make sure that you revised it. (velocity-> vel /1000/units.fs, symbol issue)")
-print("#######################################################################################")
+print("\n")
+print("#######################################################################################".center(100))
+print("%%%%%%%%%%% This code will covert lammps results to traj file %%%%%%%%%".center(100))
+print("useage ==> ./lmp2traj.py 'dump file' 'energy logfile'".center(100))
+print("e.g.) ./lmp2traj.py out.dump log.lammps".center(100))
+print("The result file name will be lmp-result.traj".center(100))
+print("*****NOTE***** There is some issue when ase.io.lammpsrun import dump file. *****NOTE*****".center(100))
+print("Make sure that you revised it. (velocity-> vel /1000/units.fs, symbol issue)".center(100))
+print("#######################################################################################".center(100))
 if len(sys.argv) is 3:
-    print("                The Number of arguments is correct.\n\n")
+    print("The Number of arguments is correct (n=2).".center(100))
+    print("\n")
+    dump_inpf = sys.argv[1]
+    log_f = sys.argv[2]
+elif len(sys.argv) is 1:
+    print("No argument is provided. Load 'out.dump' & 'log.lammps' as arguments".center(100))
+    print("\n")
+    dump_inpf = 'out.dump'
+    log_f = 'log.lammps'
 else:
-    print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
+    print("*****ERROR***** The number of arguments is not correct *****ERROR*****".center(100))
+    print("\n")
     sys.exit(1)
 
-dump_inpf = sys.argv[1]
-log_f = sys.argv[2]
 dump_inp = read(dump_inpf,':')
 log = open(log_f, "r")
-
 epot = []
 
 j = 0
