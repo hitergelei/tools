@@ -172,13 +172,16 @@ def list2count(list_inp):
     return dict_out
 
 def list2numlist(list_inp):
-    keys = list(set(list_inp))
-    dict_num = dict()
     numlist = []
-    for i in range(len(keys)):
-        dict_num[keys[i]] = i
+    keys=dict()
+    i=0
     for ele in list_inp:
-        numlist.append(dict_num[ele])
+        if ele in keys:
+            numlist.append(keys[ele])
+        else:
+            keys[ele]=i
+            numlist.append(keys[ele])
+            i+=1
     return numlist
 
 
