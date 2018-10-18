@@ -37,7 +37,7 @@ f1_arr = np.array([])
 e2_arr = np.array([])
 f2_arr = np.array([])
 for i in range(nimage):
-    print(("reading "+str(i)+" th image / total "+str(nimage)+" images").center(80))
+    print(("reading "+str(i+1)+" th image / total "+str(nimage)+" images").center(80))
     e1_arr = np.append(e1_arr, traj1[i].get_potential_energy())
     f1_arr = np.append(f1_arr, traj1[i].get_forces())
     e2_arr = np.append(e2_arr, traj2[i].get_potential_energy())
