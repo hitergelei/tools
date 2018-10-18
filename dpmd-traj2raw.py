@@ -4,8 +4,8 @@ from ase import Atom, Atoms
 import datetime
 import sys
 from ase.io import read, write
-from commands import getstatusoutput
 from ase.calculators.calculator import PropertyNotImplementedError
+import subprocess as sp
 
 now = datetime.datetime.now()
 time = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -42,9 +42,9 @@ print("  *First frame's pbc :: "+str(traj[0].get_pbc()))
 print("  *First frame's lattice vectors ::")
 print(""+str(traj[0].get_cell()))
 print("\n")
-getstatusoutput("rm -rf raw-"+trajfile+".d.old")
-getstatusoutput("mv raw-"+trajfile+".d raw-"+trajfile+".d.old")
-getstatusoutput("mkdir raw-"+trajfile+".d")
+sp.call(["rm -rf raw-"+trajfile+".d.old"], shell=True)
+sp.call(["mv raw-"+trajfile+".d raw-"+trajfile+".d.old"], shell=True)
+sp.call(["mkdir raw-"+trajfile+".d"], shell=True)
 
 ################# box.raw ####################
 box_raw = open("raw-"+trajfile+".d/box.raw", "w")
@@ -74,29 +74,51 @@ for nums in symbols_num:
     type_raw.write(str(nums)+" ")
 
 ################# energy.raw #################
-E_raw = open("raw-"+trajfile+".d/energy.raw", "w")
-n=0
-print("energy.raw :: writing")
-for atoms in traj:
-    n+=1
-    # print("energy.raw :: writing "+str(n)+" th frame.")
-    E_raw.write(str(atoms._calc.results['energy'])+"\n")
-E_raw.close()
+try:
+    traj[0].get_potential_energy()
+except PropertyNotImplementedError:
+    print("#####################################################################")
+    print("        No energy matrix information in trajectory you gave")
+    print("#####################################################################")
+except:
+    print("\n#####################################################################")
+    print("\n        Something wrong with energy information")
+    print("\n#####################################################################")
+else:
+    E_raw = open("raw-"+trajfile+".d/energy.raw", "w")
+    n=0
+    print("energy.raw :: writing")
+    for atoms in traj:
+        n+=1
+        # print("energy.raw :: writing "+str(n)+" th frame.")
+        E_raw.write(str(atoms._calc.results['energy'])+"\n")
+    E_raw.close()
 
 ################# force.raw ##################
-F_raw = open("raw-"+trajfile+".d/force.raw", "w")
-n=0
-print("force.raw :: writing")
-for atoms in traj:
-    n+=1
-    # print("force.raw :: writing "+str(n)+" th frame.")
-    force_array = atoms._calc.results['forces']
-    for i in range(natom):
-        for j in range(3):
-            F_raw.write(str(force_array[i][j])+" ")
-        F_raw.write("    ")
-    F_raw.write("\n")
-F_raw.close()
+try:
+    traj[0].get_forces()
+except PropertyNotImplementedError:
+    print("#####################################################################")
+    print("        No forces matrix information in trajectory you gave")
+    print("#####################################################################")
+except:
+    print("\n#####################################################################")
+    print("\n        Something wrong with forces information")
+    print("\n#####################################################################")
+else:
+    F_raw = open("raw-"+trajfile+".d/force.raw", "w")
+    n=0
+    print("force.raw :: writing")
+    for atoms in traj:
+        n+=1
+        # print("force.raw :: writing "+str(n)+" th frame.")
+        force_array = atoms._calc.results['forces']
+        for i in range(natom):
+            for j in range(3):
+                F_raw.write(str(force_array[i][j])+" ")
+            F_raw.write("    ")
+        F_raw.write("\n")
+    F_raw.close()
 
 ################# virial.raw #################
 try:
