@@ -10,25 +10,25 @@ import subprocess as sp
 now = datetime.datetime.now()
 time = now.strftime('%Y-%m-%d %H:%M:%S')
 print("")
-print("***** Code by Youngjae Choi @ POSTECH *****".center(80))
-print(("code started time: "+time).center(80))
+print("***** Code by Youngjae Choi @ POSTECH *****".center(100))
+print(("code started time: "+time).center(100))
 print("")
-print("############################################################".center(80))
-print("useage ==> ./dpmd_traj2raw.py 'trajactory file'".center(80))
-print("############################################################".center(80))
+print("############################################################".center(100))
+print("useage ==> ./dpmd_traj2raw.py 'trajactory file'".center(100))
+print("############################################################".center(100))
 if len(sys.argv) is 2:
     print(" ")
 else:
-    print("*****ERROR***** The number of arguments is not correct *****ERROR*****".center(80))
+    print("*****ERROR***** The number of arguments is not correct *****ERROR*****".center(100))
     print("")
     print("")
     sys.exit(1)
 
 trajfile = sys.argv[1]
 
-print(("I'll extract informations from '"+trajfile+"' file.").center(80))
-print(("Raw files for DeePMD code will be writen in 'raw-"+trajfile+".d' directory.").center(80))
-print(" i.e.) `box.raw`, `coord.raw`, `force.raw`, `energy.raw` and `virial.raw`".center(80))
+print(("I'll extract informations from '"+trajfile+"' file.").center(100))
+print(("Raw files for DeePMD code will be writen in 'raw-"+trajfile+".d' directory.").center(100))
+print(" i.e.) `box.raw`, `coord.raw`, `force.raw`, `energy.raw` and `virial.raw`".center(100))
 
 traj = Trajectory(trajfile,"r")
 natom = len(traj[0])
@@ -68,7 +68,7 @@ from ss_util import list2numlist as l2nl
 symbols = traj[0].get_chemical_symbols()
 type_ref.write(str(symbols))
 if traj[-1].get_chemical_symbols() != symbols:
-    raise NotImplementedError("Chemical symbols seem to be not consistent. Please check")
+    raise ValueError("Chemical symbols seem to be not consistent. Please check")
 symbols_num = l2nl(list(symbols))
 for nums in symbols_num:
     type_raw.write(str(nums)+" ")
