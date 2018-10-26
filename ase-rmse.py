@@ -57,5 +57,5 @@ print("       ****** RESULTS ******")
 print("")
 print(("    Energy RMSE / atom            = "+str(ermse_per_atom*1000)+" meV/atom"))
 print(("    Energy difference RMSE / atom = "+str(edrmse_per_atom*1000)+" meV/atom"))
-print(("    Force RMSE                    = "+str(frmse*1000)+" meV\n\n"))
+print(("    Force RMSE                    = "+str(frmse*1000)+" meV/Ang\n\n"))
 
