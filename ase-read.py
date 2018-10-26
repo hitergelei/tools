@@ -48,3 +48,4 @@ results = calc.results
 forces = atoms.get_forces()
 energy = atoms.get_potential_energy()
 stress = atoms.get_stress()
+traj = Traj('output.traj','w')
