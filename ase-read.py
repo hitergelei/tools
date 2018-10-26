@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 
 print("\n\n")
 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(80))
@@ -17,6 +18,9 @@ print("     calc    : atoms._calc")
 print("     results : atoms._calc.results")
 print("     Traj    : ase.io.trajectory:Trajectiory == Traj")
 print("     traj    : =Traj('output.traj', 'w')")
+print("    forces   : =atoms.get_forces()")
+print("    energy   : =atoms.get_potential_energy()")
+print("    stress   : =atoms.get_stress()")
 print("")
 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(80))
 print("")
@@ -41,3 +45,6 @@ nlist = len(alist)
 atoms = alist[0]
 calc = atoms._calc
 results = calc.results
+forces = atoms.get_forces()
+energy = atoms.get_potential_energy()
+stress = atoms.get_stress()
