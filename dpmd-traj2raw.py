@@ -139,9 +139,9 @@ else:
         n+=1
         # print("virial.raw :: writing "+str(n)+" th frame.")
         stress_array = atoms._calc.results['stress']
-        for i in range(3):
-            for j in range(3):
-                V_raw.write(str(stress_array[i][j])+" ")
+        for i in [[0,5,4],[5,1,3],[4,3,2]]:
+            for j in i:
+                V_raw.write(str(stress_array[j])+" ")
             V_raw.write("    ")
         V_raw.write("\n")
 
