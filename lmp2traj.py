@@ -29,7 +29,7 @@ else:
     print("\n")
     sys.exit(1)
 
-dump_inp = read(dump_inpf,':')
+dump_inp = read(dump_inpf,':',format='lammps-dump')
 log = open(log_f, "r")
 epot = []
 
