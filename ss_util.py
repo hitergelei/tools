@@ -412,7 +412,6 @@ class Logger(object):
         File object or path to the file to write to.  Or set to None for
         a logger that does nothing.
     """
-
     def __init__(self, file):
         if file is None:
             self.file = None
@@ -431,6 +430,7 @@ class Logger(object):
         label : str
             Label for managing multiple timers.
         """
+        import time
         if self.file is None:
             return
         if label:
@@ -452,6 +452,7 @@ class Logger(object):
             If tic=True or tic=label, will start the generic timer or a timer
             associated with label. Equivalent to self.tic(label).
         """
+        import time
         if self.file is None:
             return
         dt = ''
