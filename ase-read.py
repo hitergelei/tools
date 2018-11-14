@@ -17,9 +17,11 @@ print("     atoms   : alist[0]")
 print("     calc    : atoms._calc")
 print("     results : atoms._calc.results")
 print("     Traj    : ase.io.trajectory:Trajectiory == Traj")
-print("    forces   : =atoms.get_forces()")
-print("    energy   : =atoms.get_potential_energy()")
-print("    stress   : =atoms.get_stress()")
+print("    coord    : atoms.get_positions()")
+print("     frac    : atoms.get_scaled_positions()")
+print("    forces   : atoms.get_forces()")
+print("    energy   : atoms.get_potential_energy()")
+print("    stress   : atoms.get_stress()")
 print("")
 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(80))
 print("")
@@ -40,10 +42,39 @@ alist = read(
     index  = ':',
     format = None if len(sys.argv) is 2 else sys.argv[2],
     )
-nlist = len(alist)
-atoms = alist[0]
-calc = atoms._calc
-results = calc.results
-forces = atoms.get_forces()
-energy = atoms.get_potential_energy()
-stress = atoms.get_stress()
+try:
+    nlist = len(alist)
+except:
+    pass
+try:
+    atoms = alist[0]
+except:
+    pass
+try:
+    calc = atoms._calc
+except:
+    pass
+try:
+    results = calc.results
+except:
+    pass
+try:
+    forces = atoms.get_forces()
+except:
+    pass
+try:
+    energy = atoms.get_potential_energy()
+except:
+    pass
+try:
+    stress = atoms.get_stress()
+except:
+    pass
+try:
+    coord = atoms.get_positions()
+except:
+    pass
+try:
+    frac = atoms.get_scaled_positions()
+except:
+    pass
