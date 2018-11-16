@@ -14,6 +14,7 @@ print("")
 print("     alist   : Atoms list you gave as an object")
 print("     nlist   : len(alist)")
 print("     atoms   : alist[0]")
+print("     atom    : atoms[0]")
 print("     calc    : atoms._calc")
 print("     results : atoms._calc.results")
 print("     Traj    : ase.io.trajectory:Trajectiory == Traj")
@@ -45,36 +46,40 @@ alist = read(
 try:
     nlist = len(alist)
 except:
-    pass
+    print('           ********* no atoms list in the file')
 try:
     atoms = alist[0]
 except:
-    pass
+    print('           ********* no an atoms object')
 try:
     calc = atoms._calc
 except:
-    pass
+    print('           ********* no a calc object')
 try:
     results = calc.results
 except:
-    pass
+    print('           ********* no a results object')
 try:
     forces = atoms.get_forces()
 except:
-    pass
+    print('           ********* no a force info')
 try:
     energy = atoms.get_potential_energy()
 except:
-    pass
+    print('           ********* no an energy info')
 try:
     stress = atoms.get_stress()
 except:
-    pass
+    print('           ********* no a stress info')
 try:
     coord = atoms.get_positions()
 except:
-    pass
+    print('           ********* no a position info')
 try:
     frac = atoms.get_scaled_positions()
 except:
-    pass
+    print('           ********* no a position info')
+try:
+    atom = atoms[0]
+except:
+    print('           ********* no an atom exsit')
