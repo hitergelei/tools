@@ -228,12 +228,12 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True)
             log("**********************************************")
 
             #********** numerical force must precede ***********
-            force_now = [calc.calculate_numerical_forces(
-                atoms,
-                d = numeric_F_dx,
-                parallel = parallel,
-                )] # alternative
-            #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
+            # force_now = [calc.calculate_numerical_forces(
+                # atoms,
+                # d = numeric_F_dx,
+                # parallel = parallel,
+                # )] # alternative
+            force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
             #stress_now = calc.calculate_numerical_stress(atoms) # just in case
             #********** energy calculation ***********
             energy_now = atoms.get_potential_energy()
