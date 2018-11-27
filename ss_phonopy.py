@@ -509,7 +509,7 @@ def plot_band(phonon, labels=None):
     phonon._band_structure.plot(plt, labels=labels)
     return plt
 
-def plot_band_and_dos(phonon, pdos_indices=None, labels=None):
+def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
     import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
@@ -527,11 +527,17 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None):
     ax1.xaxis.set_tick_params(which='both', direction='in')
     ax1.yaxis.set_tick_params(which='both', direction='in')
     phonon._band_structure.plot(plt, labels=labels)
-    plt.ylabel('Frequency(meV)', fontsize=18)
+    if unit == 'meV':
+        plt.ylabel('Frequency(meV)', fontsize=18)
+    elif unit == 'THz':
+        plt.ylabel('Frequency(THz)', fontsize=18)
     plt.xlabel('')
     plt.grid(True)
     plt.title('Phonon dispersion', fontsize=20)
-    plt.yticks(np.arange(0, 100, 10), fontsize=16)
+    if unit == 'meV':
+        plt.yticks(np.arange(0, 100, 1), fontsize=16)
+    elif unit == 'THz':
+        plt.yticks(np.arange(0, 10, 1), fontsize=16)
 
     ax2 = plt.subplot(gs[0, 1], sharey=ax1)
     ax2.xaxis.set_ticks_position('both')
