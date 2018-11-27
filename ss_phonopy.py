@@ -534,10 +534,7 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
     plt.xlabel('')
     plt.grid(True)
     plt.title('Phonon dispersion', fontsize=20)
-    if unit == 'meV':
-        plt.yticks(np.arange(0, 100, 1), fontsize=16)
-    elif unit == 'THz':
-        plt.yticks(np.arange(0, 10, 1), fontsize=16)
+    plt.yticks(fontsize=16)
 
     ax2 = plt.subplot(gs[0, 1], sharey=ax1)
     ax2.xaxis.set_ticks_position('both')
