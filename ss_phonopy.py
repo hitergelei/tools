@@ -170,7 +170,7 @@ def calc_dpmd(phonon, verbose = False):
 
     return phonon
 
-def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True):
+def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP """
     ################### all same from now 
     import subprocess as sp
@@ -260,6 +260,8 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True)
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
+        if acoustic_sum_rule:
+            phonon.symmetrize_force_constants()
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -528,13 +530,13 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
     ax1.yaxis.set_tick_params(which='both', direction='in')
     phonon._band_structure.plot(plt, labels=labels)
     if unit == 'meV':
-        plt.ylabel('Frequency(meV)', fontsize=18)
+        plt.ylabel('Frequency(meV)', fontsize=22)
     elif unit == 'THz':
-        plt.ylabel('Frequency(THz)', fontsize=18)
+        plt.ylabel('Frequency(THz)', fontsize=22)
     plt.xlabel('')
     plt.grid(True)
-    plt.title('Phonon dispersion', fontsize=20)
-    plt.yticks(fontsize=16)
+    plt.title('Phonon dispersion', fontsize=24)
+    plt.yticks(fontsize=20)
 
     ax2 = plt.subplot(gs[0, 1], sharey=ax1)
     ax2.xaxis.set_ticks_position('both')
@@ -557,7 +559,7 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
                           flip_xy=True)
 
     ax2.set_xlim((0, None))
-    plt.title('DOS', fontsize=20)
+    plt.title('DOS', fontsize=24)
     plt.xlabel('')
     plt.xticks([])
 
