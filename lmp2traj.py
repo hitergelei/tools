@@ -38,7 +38,6 @@ while True:
     line = log.readline()
     llist = line.split()
     j += 1
-    print("Reading "+str(j)+"th line")
 
     seq = {}
     for (i, x) in enumerate(llist):
