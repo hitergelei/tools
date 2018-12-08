@@ -1,3 +1,7 @@
+        ##### Code by YJ Choi of CNPL, Dep. of Phys. POSTECH, Korea #####
+        #####                 ssrokyz@postech.ac.kr                 #####
+        ##### Some codes are copied from phonopy
+
 def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     """ Calculate Force Constant with Vasp """
     ################### all same from now 
@@ -13,11 +17,8 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
-    import sys
-    if (sys.version_info > (3,0)):
-        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-    else:
-        pwd = str((sp.check_output("pwd"))[:-1])
+    import os
+    pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
@@ -98,7 +99,7 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
 #        ndir = str(delta) + "-" + str(directions[i][0]) + "-" + \
 #               str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
 
-def calc_dpmd(phonon, verbose = False, acoustic_sum_rule = False):
+def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = False):
     """ Calculate Force Constant with DPMD """
     ################### all same from now 
     import subprocess as sp
@@ -110,14 +111,11 @@ def calc_dpmd(phonon, verbose = False, acoustic_sum_rule = False):
     directions = phonon.get_displacement_directions()
     N = phonon.get_supercell_matrix()[0][0]
     image_num = len(directions)
-    tf = {0:'nonsym', 1:'sym'} 
+    tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
-    import sys
-    if (sys.version_info > (3,0)):
-        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-    else:
-        pwd = str((sp.check_output("pwd"))[:-1])
+    import os
+    pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
@@ -125,7 +123,10 @@ def calc_dpmd(phonon, verbose = False, acoustic_sum_rule = False):
     sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
 
     try:
-        phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
+        if load_path is None:
+            phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
+        else:
+            phonon = pickle.load(open(load_path+'/pickle-'+job_name+'.p', 'rb'))
         if phonon.get_force_constants() is None:
             raise ValueError
         ################### all same until now 
@@ -168,7 +169,14 @@ def calc_dpmd(phonon, verbose = False, acoustic_sum_rule = False):
             print(str(2*N**3)+" x "+str(2*N**3)+" x "+str(3)+" x "+str(3)+" matrix\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
+        if load_path is None:
+            pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
+        else:
+            sp.call(['rm -rf old_'+load_path], shell=True)
+            sp.call(['mkdir -p old_'+load_path], shell=True)
+            sp.call(['mkdir -p '+load_path], shell=True)
+            sp.call(['mv '+load_path+'/* old_'+load_path], shell=True)
+            pickle.dump(phonon, open(load_path+'/pickle-'+job_name+'.p', 'wb'))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
 
@@ -189,11 +197,8 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
-    import sys
-    if (sys.version_info > (3,0)):
-        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-    else:
-        pwd = str((sp.check_output("pwd"))[:-1])
+    import os
+    pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
@@ -295,11 +300,8 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
-    import sys
-    if (sys.version_info > (3,0)):
-        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-    else:
-        pwd = str((sp.check_output("pwd"))[:-1])
+    import os
+    pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
@@ -400,11 +402,8 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
     tf = {0:'nonsym', 1:'sym'}
     sym = tf[phonon._is_symmetry]
     job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
-    import sys
-    if (sys.version_info > (3,0)):
-        pwd = str((sp.check_output("pwd"))[:-1])[2:-1]
-    else:
-        pwd = str((sp.check_output("pwd"))[:-1])
+    import os
+    pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
