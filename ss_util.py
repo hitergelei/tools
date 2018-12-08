@@ -184,6 +184,9 @@ def list2numlist(list_inp):
             i+=1
     return numlist
 
+def ordered_unique(in_list):
+    tmp = set()
+    return [x for x in in_list if not (x in tmp or tmp.add(x))]
 
 def covalent_expect(input):
     """ Returns covalent bond expectation value of system 
