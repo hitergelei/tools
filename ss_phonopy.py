@@ -1,4 +1,4 @@
-def calc_vasp(phonon, verbose = False):
+def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     """ Calculate Force Constant with Vasp """
     ################### all same from now 
     import subprocess as sp
@@ -72,6 +72,8 @@ def calc_vasp(phonon, verbose = False):
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
+        if acoustic_sum_rule:
+            phonon.symmetrize_force_constants()
     
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -96,7 +98,7 @@ def calc_vasp(phonon, verbose = False):
 #        ndir = str(delta) + "-" + str(directions[i][0]) + "-" + \
 #               str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
 
-def calc_dpmd(phonon, verbose = False):
+def calc_dpmd(phonon, verbose = False, acoustic_sum_rule = False):
     """ Calculate Force Constant with DPMD """
     ################### all same from now 
     import subprocess as sp
@@ -156,6 +158,8 @@ def calc_dpmd(phonon, verbose = False):
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
+        if acoustic_sum_rule:
+            phonon.symmetrize_force_constants()
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -276,7 +280,7 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
 
     return phonon
 
-def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True):
+def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow """
     ################### all same from now 
     import subprocess as sp
@@ -365,6 +369,8 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
+        if acoustic_sum_rule:
+            phonon.symmetrize_force_constants()
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
@@ -379,7 +385,7 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
 
     return phonon
 
-def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True):
+def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     ################### all same from now 
     import subprocess as sp
@@ -468,6 +474,8 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
         phonon.produce_force_constants()
+        if acoustic_sum_rule:
+            phonon.symmetrize_force_constants()
  
         if verbose:
             print("\n\ndisplacement_dataset =>\n\n")
