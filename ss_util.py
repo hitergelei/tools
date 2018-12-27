@@ -7,6 +7,7 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
+def nospace(string): return string.replace(' ', '_')
 def E_FromTraj(traj):
     energies = []
     for atoms in traj:
@@ -441,7 +442,7 @@ class Logger(object):
         else:
             self._tic = time.time()
 
-    def __call__(self, message, toc=None, tic=False):
+    def __call__(self, message, toc=None, tic=False, no_space=None):
         """Writes message to the log file.
 
         Parameters
@@ -468,7 +469,10 @@ class Logger(object):
             dt = ' %.1f sec.' % dt # ssrokyz end
         if self.file.closed:
             self.file = open(self.filename, 'a')
-        self.file.write(message + dt + '\n')
+        if no_space or (no_space == None and toc):
+            self.file.write(nospace(message + dt) + '\n')
+        else:
+            self.file.write(message + dt + '\n')
         self.file.flush()
         if tic:
             if tic is True:
