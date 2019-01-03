@@ -62,7 +62,8 @@ for i in range(len(dump_inp)):
     atoms._calc.atoms.pbc = array([True, True, True])
     atoms._calc.results['energy'] = float(epot[i])
     traj.write(atoms)
-    print("Writing "+str(i)+"th image")
+    if i % 1000 == 0:
+        print("Writing "+str(i)+"th image")
 traj.close()
 
 
