@@ -2,12 +2,14 @@
         #####                 ssrokyz@postech.ac.kr                 #####
         ##### Some codes are copied from phonopy
 
+import numpy as np
+
 def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     """ Calculate Force Constant with Vasp """
     ################### all same from now 
     import subprocess as sp
-    import numpy as np
     import pickle
+    import sys
     np.set_printoptions(threshold=np.nan)
         
     delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
@@ -86,8 +88,8 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-
     return phonon
+
 
 #def get_fc(directions, delta):
 #    """ Get forces, FCs """
@@ -103,7 +105,6 @@ def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = Fal
     """ Calculate Force Constant with DPMD """
     ################### all same from now 
     import subprocess as sp
-    import numpy as np
     import pickle
     np.set_printoptions(threshold=np.nan)
         
@@ -179,14 +180,13 @@ def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = Fal
             pickle.dump(phonon, open(load_path+'/pickle-'+job_name+'.p', 'wb'))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-
     return phonon
+
 
 def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP """
     ################### all same from now 
     import subprocess as sp
-    import numpy as np
     import pickle
     np.set_printoptions(threshold=np.nan)
         
@@ -282,14 +282,13 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-
     return phonon
+
 
 def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow """
     ################### all same from now 
     import subprocess as sp
-    import numpy as np
     import pickle
     np.set_printoptions(threshold=np.nan)
         
@@ -384,14 +383,12 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-
     return phonon
 
 def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     ################### all same from now 
     import subprocess as sp
-    import numpy as np
     import pickle
     np.set_printoptions(threshold=np.nan)
         
@@ -486,11 +483,9 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
     else:
         print("******* Pickle file has been loaded. ********".center(80))
-
     return phonon
 
 def make_band(path, N_q):
-    import numpy as np
     bands = []
     for i in range(len(path)):
         q_start  = np.array(path[i][0])
@@ -501,25 +496,103 @@ def make_band(path, N_q):
         bands.append(band)
     return bands
 
-def plot_band(phonon, labels=None):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    if labels:
-        from matplotlib import rc
-        rc('font',**{'family':'serif','sans-serif':['Times']})
-        rc('text', usetex=False)
+# def plot_band(phonon, labels=None):
+    # import matplotlib.pyplot as plt
+    # if labels:
+        # from matplotlib import rc
+        # rc('font',**{'family':'serif','sans-serif':['Times']})
+        # rc('text', usetex=False)
 
-    fig, ax = plt.subplots()
-    ax.xaxis.set_ticks_position('both')
-    ax.yaxis.set_ticks_position('both')
-    ax.xaxis.set_tick_params(which='both', direction='in')
-    ax.yaxis.set_tick_params(which='both', direction='in')
+    # fig, ax = plt.subplots()
+    # ax.xaxis.set_ticks_position('both')
+    # ax.yaxis.set_ticks_position('both')
+    # ax.xaxis.set_tick_params(which='both', direction='in')
+    # ax.yaxis.set_tick_params(which='both', direction='in')
 
-    phonon._band_structure.plot(plt, labels=labels)
-    return plt
+    # phonon._band_structure.plot(plt, labels=labels)
+    # return plt
 
-def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
-    import numpy as np
+def set_projection(phonon, proj_eigvec):
+    self = phonon._band_structure
+    self._projections = {}
+    self._proj_freq = {}
+
+    for key in proj_eigvec.keys():
+        proj_tmp = []
+        freq_tmp = []
+        for _path in self._paths:
+            proj_tmp2 = []
+            freq_tmp2 = []
+            for _q in _path:
+                freq, eigvec = phonon.get_frequencies_with_eigenvectors(_q)
+                eigvec = eigvec.T   # numpy.linalg.eigh returns transposed eigen vector
+                #### Gather
+                proj_tmp2.append(eigvec)
+                freq_tmp2.append(freq)
+            #### Gather
+            proj_tmp.append(proj_tmp2)
+            freq_tmp.append(freq_tmp2)
+        #### Transform to array
+        proj_tmp = np.array(proj_tmp)
+        freq_tmp = np.array(freq_tmp)
+        #### calculate similarity
+        proj_tmp = np.square(np.absolute(np.squeeze(np.matmul(np.conj(proj_tmp), np.expand_dims(proj_eigvec[key], axis=-1)))))
+        self._projections[key] = proj_tmp
+        self._proj_freq[key]   = freq_tmp
+
+def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, labels=None):
+    if self._projections is not None:
+        #### Copy the list
+        color = proj_colors[:]
+        #### 
+        legend = []
+        #### Iter for projector eigenvectors
+        for key in self._projections.keys():
+            #### Iter for q_path fragments
+            for distances, frequencies, projections, proj_freq in zip(self._distances,
+                                                                      self._frequencies,
+                                                                      self._projections[key],
+                                                                      self._proj_freq[key]):
+                #### Iter for band lines
+                for i in range(len(frequencies.T)):
+                    plt.plot(distances, frequencies.T[i], 'k-')
+                    legend_tmp = plt.scatter(distances, proj_freq.T[i], proj_size_factor * projections.T[i], color[-1], alpha=proj_alpha, edgecolors='none', label=key)
+            #### Gather just the one sample legend
+            legend.append(legend_tmp)
+            #### Throw away used color
+            color.pop()
+        # Legend plot
+        plt.legend(legend, [key for key in self._projections.keys()])#, scatterpoints = 200)
+    else:
+        for distances, frequencies in zip(self._distances,
+                                          self._frequencies):
+            for freqs in frequencies.T:
+                plt.plot(distances, freqs, 'k-')
+
+    plt.ylabel('Frequency')
+    plt.xlabel('Wave vector')
+
+    if labels and len(labels) == len(self._special_points):
+        plt.xticks(self._special_points, labels, fontsize = 20) # ssrokyz
+    else:
+        plt.xticks(self._special_points, [''] * len(self._special_points))
+    plt.xlim(0, self._distance)
+    plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+
+def plot_band_and_dos(
+    phonon,
+    pdos_indices     = None,
+    labels           = None,
+    unit             = 'THz',
+    proj_eigvec      = None,
+    proj_size_factor = 1.,
+    proj_colors      = ['r', 'g', 'b', 'c', 'm', 'y'],
+    proj_alpha       = 0.5,
+    ):
+    """
+    proj_eigvec = (dict) = Eigenvectors that will be used for projection. Keys of dict will be used as label for pyplot.
+    proj_colors = (list) = Use colors sequently. Duplication is possible.
+    """
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     if labels:
@@ -527,6 +600,8 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
         rc('font',**{'family':'serif','sans-serif':['Times']})
         rc('text', usetex=False)
 
+    #### Variable setting
+    proj_colors.reverse()
 
     plt.figure(figsize=(10, 6))
     gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1])
@@ -535,7 +610,16 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
     ax1.yaxis.set_ticks_position('both')
     ax1.xaxis.set_tick_params(which='both', direction='in')
     ax1.yaxis.set_tick_params(which='both', direction='in')
-    phonon._band_structure.plot(plt, labels=labels)
+
+    #### projection
+    phonon._band_structure._projections = None
+    if proj_eigvec is not None:
+        # dtype managing
+        for key in proj_eigvec.keys():
+            proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
+        set_projection(phonon, proj_eigvec)
+
+    bs_plot(phonon._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, labels=labels)
     if unit == 'meV':
         plt.ylabel('Frequency(meV)', fontsize=22)
     elif unit == 'THz':
@@ -571,3 +655,4 @@ def plot_band_and_dos(phonon, pdos_indices=None, labels=None, unit='meV'):
     plt.xticks([])
 
     return plt
+
