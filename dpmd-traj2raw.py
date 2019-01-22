@@ -1,21 +1,16 @@
 #!/usr/bin/env python
-from ase.io.trajectory import Trajectory
-from ase import Atom, Atoms
-import datetime
-import sys
-from ase.io import read, write
-from ase.calculators.calculator import PropertyNotImplementedError
-import subprocess as sp
 
+import sys
+import datetime
 now = datetime.datetime.now()
 time = now.strftime('%Y-%m-%d %H:%M:%S')
 print("")
-print("***** Code by Youngjae Choi @ POSTECH *****".center(100))
+print(">>>>> Code by Youngjae Choi @ POSTECH <<<<<".center(100))
 print(("code started time: "+time).center(100))
 print("")
-print("############################################################".center(100))
+print("============================================================".center(100))
 print("useage ==> ./dpmd_traj2raw.py 'trajactory file'".center(100))
-print("############################################################".center(100))
+print("============================================================".center(100))
 if len(sys.argv) is 2:
     print(" ")
 else:
@@ -29,6 +24,12 @@ trajfile = sys.argv[1]
 print(("I'll extract informations from '"+trajfile+"' file.").center(100))
 print(("Raw files for DeePMD code will be writen in 'raw-"+trajfile+".d' directory.").center(100))
 print(" i.e.) `box.raw`, `coord.raw`, `force.raw`, `energy.raw` and `virial.raw`".center(100))
+
+from ase.io.trajectory import Trajectory
+from ase import Atom, Atoms
+from ase.io import read, write
+from ase.calculators.calculator import PropertyNotImplementedError
+import subprocess as sp
 
 traj = Trajectory(trajfile,"r")
 natom = len(traj[0])
