@@ -540,14 +540,20 @@ def set_projection(phonon, proj_eigvec):
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
-def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, labels=None):
+def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=None):
     if self._projections is not None:
-        #### Copy the list
-        color = proj_colors[:]
+        #### Define key list
+        key_list = list(self._projections.keys())
+        if reverse_seq:
+            key_list.reverse()
+        #### Pick colors
+        proj_colors = proj_colors[len(proj_colors)-len(key_list):]
+        if reverse_seq:
+            proj_colors.reverse()
         #### 
         legend = []
         #### Iter for projector eigenvectors
-        for key in self._projections.keys():
+        for key in key_list:
             #### Iter for q_path fragments
             for distances, frequencies, projections, proj_freq in zip(self._distances,
                                                                       self._frequencies,
@@ -556,13 +562,15 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, labels=Non
                 #### Iter for band lines
                 for i in range(len(frequencies.T)):
                     plt.plot(distances, frequencies.T[i], 'k-')
-                    legend_tmp = plt.scatter(distances, proj_freq.T[i], proj_size_factor * projections.T[i], color[-1], alpha=proj_alpha, edgecolors='none', label=key)
+                    legend_tmp = plt.scatter(distances, proj_freq.T[i], proj_size_factor * projections.T[i], proj_colors[-1], alpha=proj_alpha, edgecolors='none', label=key)
             #### Gather just the one sample legend
             legend.append(legend_tmp)
             #### Throw away used color
-            color.pop()
-        # Legend plot
-        plt.legend(legend, [key for key in self._projections.keys()])#, scatterpoints = 200)
+            proj_colors.pop()
+        #### Legend plot
+        if reverse_seq:
+            legend.reverse(); key_list.reverse()
+        plt.legend(legend, key_list)#, scatterpoints = 200)
     else:
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
@@ -577,7 +585,7 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, labels=Non
     else:
         plt.xticks(self._special_points, [''] * len(self._special_points))
     plt.xlim(0, self._distance)
-    plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+    plt.axhline(y=0, linestyle=':', linewidth=0.5, color='k')
 
 def plot_band_and_dos(
     phonon,
@@ -585,13 +593,17 @@ def plot_band_and_dos(
     labels           = None,
     unit             = 'THz',
     proj_eigvec      = None,
-    proj_size_factor = 1.,
+    proj_size_factor = 400.,
     proj_colors      = ['r', 'g', 'b', 'c', 'm', 'y'],
     proj_alpha       = 0.5,
+    ylim_lower       = None,
+    ylim_upper       = None,
+    reverse_seq      = False,
     ):
     """
     proj_eigvec = (dict) = Eigenvectors that will be used for projection. Keys of dict will be used as label for pyplot.
     proj_colors = (list) = Use colors sequently. Duplication is possible.
+    reverse_seq = (bool) = Change sequence of plotting scatters. (Decides which one goes up. Only esthetic purpose.)
     """
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
@@ -619,7 +631,7 @@ def plot_band_and_dos(
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(phonon, proj_eigvec)
 
-    bs_plot(phonon._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, labels=labels)
+    bs_plot(phonon._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=labels)
     if unit == 'meV':
         plt.ylabel('Frequency(meV)', fontsize=22)
     elif unit == 'THz':
@@ -653,6 +665,7 @@ def plot_band_and_dos(
     plt.title('DOS', fontsize=24)
     plt.xlabel('')
     plt.xticks([])
+    plt.ylim(ylim_lower, ylim_upper)
 
     return plt
 
