@@ -562,7 +562,15 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
                 #### Iter for band lines
                 for i in range(len(frequencies.T)):
                     plt.plot(distances, frequencies.T[i], 'k-')
-                    legend_tmp = plt.scatter(distances, proj_freq.T[i], proj_size_factor * projections.T[i], proj_colors[-1], alpha=proj_alpha, edgecolors='none', label=key)
+                    legend_tmp = plt.scatter(
+                        distances,
+                        proj_freq.T[i],
+                        proj_size_factor * projections.T[i],
+                        proj_colors[-1],
+                        alpha=proj_alpha,
+                        edgecolors='none',
+                        label=key,
+                        )
             #### Gather just the one sample legend
             legend.append(legend_tmp)
             #### Throw away used color
@@ -570,7 +578,7 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
         #### Legend plot
         if reverse_seq:
             legend.reverse(); key_list.reverse()
-        plt.legend(legend, key_list)#, scatterpoints = 200)
+        plt.legend(legend, key_list, scatterpoints = 1, fontsize='x-large')
     else:
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
