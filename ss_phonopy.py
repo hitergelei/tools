@@ -34,7 +34,7 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
         ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
-        print("******* Vasp calc will be carried. ********".center(80))
+        print("******* Vasp calc will be carried out. ********".center(80))
 
         forces = []
         for i in range(image_num):
@@ -133,7 +133,7 @@ def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = Fal
         ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
-        print("******* DPMD calc will be carried. ********".center(80))
+        print("******* DPMD calc will be carried out. ********".center(80))
 
         forces = []
         for i in range(image_num):
@@ -212,7 +212,7 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
         ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
-        print("******* AMP calc will be carried. ********".center(80))
+        print("******* AMP calc will be carried out. ********".center(80))
 
         forces = []
         for i in range(image_num):
@@ -314,7 +314,7 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
         ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
-        print("******* AMP calc will be carried. ********".center(80))
+        print("******* AMP calc will be carried out. ********".center(80))
 
         forces = []
         for i in range(image_num):
@@ -414,7 +414,7 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
         ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(80))
-        print("******* AMP calc will be carried. ********".center(80))
+        print("******* AMP calc will be carried out. ********".center(80))
 
         forces = []
         for i in range(image_num):
