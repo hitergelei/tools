@@ -33,11 +33,16 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
             raise ValueError
         ################### all same until now 
     except:
-        print("******* There is no saved pickle file. ********".center(80))
-        print("******* Vasp calc will be carried out. ********".center(80))
-
+        print("******* There is no saved pickle file. ********".center(120))
+        print("******* Vasp calc will be carried out. ********".center(120))
+        do_calc = True
+    else:
+        print("******* Pickle file has been loaded. ********".center(120))
+        do_calc = False
+    if do_calc:
         forces = []
         for i in range(image_num):
+            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
@@ -86,8 +91,6 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
             print(phonon.get_force_constants())
     
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
-    else:
-        print("******* Pickle file has been loaded. ********".center(80))
     return phonon
 
 
@@ -132,11 +135,16 @@ def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = Fal
             raise ValueError
         ################### all same until now 
     except:
-        print("******* There is no saved pickle file. ********".center(80))
-        print("******* DPMD calc will be carried out. ********".center(80))
-
+        print("******* There is no saved pickle file. ********".center(120))
+        print("******* DPMD calc will be carried out. ********".center(120))
+        do_calc = True
+    else:
+        print("******* Pickle file has been loaded. ********".center(120))
+        do_calc = False
+    if do_calc:
         forces = []
         for i in range(image_num):
+            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
@@ -178,8 +186,6 @@ def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = Fal
             sp.call(['mkdir -p '+load_path], shell=True)
             sp.call(['mv '+load_path+'/* old_'+load_path], shell=True)
             pickle.dump(phonon, open(load_path+'/pickle-'+job_name+'.p', 'wb'))
-    else:
-        print("******* Pickle file has been loaded. ********".center(80))
     return phonon
 
 
@@ -211,11 +217,16 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
             raise ValueError
         ################### all same until now 
     except:
-        print("******* There is no saved pickle file. ********".center(80))
-        print("******* AMP calc will be carried out. ********".center(80))
-
+        print("******* There is no saved pickle file. ********".center(120))
+        print("******* AMP calc will be carried out. ********".center(120))
+        do_calc = True
+    else:
+        print("******* Pickle file has been loaded. ********".center(120))
+        do_calc = False
+    if do_calc:
         forces = []
         for i in range(image_num):
+            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
@@ -280,8 +291,6 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
             print(phonon.get_force_constants())
  
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
-    else:
-        print("******* Pickle file has been loaded. ********".center(80))
     return phonon
 
 
@@ -313,11 +322,16 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
             raise ValueError
         ################### all same until now 
     except:
-        print("******* There is no saved pickle file. ********".center(80))
-        print("******* AMP calc will be carried out. ********".center(80))
-
+        print("******* There is no saved pickle file. ********".center(120))
+        print("******* AMP calc will be carried out. ********".center(120))
+        do_calc = True
+    else:
+        print("******* Pickle file has been loaded. ********".center(120))
+        do_calc = False
+    if do_calc:
         forces = []
         for i in range(image_num):
+            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
@@ -381,8 +395,6 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
             print(phonon.get_force_constants())
  
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
-    else:
-        print("******* Pickle file has been loaded. ********".center(80))
     return phonon
 
 def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
@@ -413,11 +425,16 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
             raise ValueError
         ################### all same until now 
     except:
-        print("******* There is no saved pickle file. ********".center(80))
-        print("******* AMP calc will be carried out. ********".center(80))
-
+        print("******* There is no saved pickle file. ********".center(120))
+        print("******* AMP calc will be carried out. ********".center(120))
+        do_calc = True
+    else:
+        print("******* Pickle file has been loaded. ********".center(120))
+        do_calc = False
+    if do_calc:
         forces = []
         for i in range(image_num):
+            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
@@ -481,8 +498,6 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
             print(phonon.get_force_constants())
  
         pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
-    else:
-        print("******* Pickle file has been loaded. ********".center(80))
     return phonon
 
 def make_band(path, N_q):
@@ -555,16 +570,16 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
         #### Iter for projector eigenvectors
         for key in key_list:
             #### Iter for q_path fragments
-            for distances, frequencies, projections, proj_freq in zip(self._distances,
-                                                                      self._frequencies,
-                                                                      self._projections[key],
-                                                                      self._proj_freq[key]):
+            # for distances, frequencies, projections, proj_freq in zip(self._distances,
+            for distances, projections, freq in zip(self._distances,
+                                                         self._projections[key],
+                                                         self._proj_freq[key]):
                 #### Iter for band lines
-                for i in range(len(frequencies.T)):
-                    plt.plot(distances, frequencies.T[i], 'k-')
+                for i in range(len(freq.T)):
+                    plt.plot(distances, freq.T[i], 'k-')
                     legend_tmp = plt.scatter(
                         distances,
-                        proj_freq.T[i],
+                        freq.T[i],
                         proj_size_factor * projections.T[i],
                         proj_colors[-1],
                         alpha=proj_alpha,
