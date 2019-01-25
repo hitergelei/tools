@@ -25,10 +25,12 @@ if __name__ == '__main__':
     print(("code started time: "+time).center(120))
     print("")
     print("===================================================================================".center(120))
+    print("")
     print("Useage ==> ./fc_mapping.py 'phonopy phonon object pckl file' 'vmin' 'vmax'".center(120))
     print("    Or ==> ./fc_mapping.py 'phonopy phonon object pckl file'              ".center(120))
     print("Note) set 'vmin' or 'vmax' as None to automatic setting".center(120))
     print("*** Note) Phonon object MUST HAVE self._force_constants array already ***".center(120))
+    print("")
     print("===================================================================================".center(120))
     if len(sys.argv) is 2:
         print("")
