@@ -5,7 +5,7 @@ import datetime
 now = datetime.datetime.now()
 time = now.strftime('%Y-%m-%d %H:%M:%S')
 print("")
-print(">>>>> Code by Youngjae Choi @ POSTECH <<<<<".center(100))
+print(">>>>> Code by Young Jae Choi @ POSTECH <<<<<".center(100))
 print(("code started time: "+time).center(100))
 print("")
 print("============================================================".center(100))

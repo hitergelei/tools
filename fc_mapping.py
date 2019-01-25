@@ -21,7 +21,7 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     time = now.strftime('%Y-%m-%d %H:%M:%S')
     print("")
-    print(">>>>> Code by Youngjae Choi @ POSTECH <<<<<".center(120))
+    print(">>>>> Code by Young Jae Choi @ POSTECH <<<<<".center(120))
     print(("code started time: "+time).center(120))
     print("")
     print("===================================================================================".center(120))

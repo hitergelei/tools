@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-##### CODE BY YOUNGJAE CHOI #####
+##### CODE BY YOUNG JAE CHOI #####
 
 from ase import Atoms, Atom
 import random
