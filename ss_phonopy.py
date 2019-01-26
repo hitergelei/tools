@@ -10,7 +10,7 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     import sys
     import subprocess as sp
     import pickle
-    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(threshold=sys.maxsize)
         
     delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
@@ -112,7 +112,7 @@ def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=True, verbose=Fals
     import sys
     import subprocess as sp
     import pickle
-    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(threshold=sys.maxsize)
         
     delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
@@ -201,7 +201,7 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
     import sys
     import subprocess as sp
     import pickle
-    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(threshold=sys.maxsize)
         
     delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
@@ -309,7 +309,7 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
     import sys
     import subprocess as sp
     import pickle
-    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(threshold=sys.maxsize)
         
     delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
@@ -415,7 +415,7 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
     import sys
     import subprocess as sp
     import pickle
-    np.set_printoptions(threshold=np.nan)
+    np.set_printoptions(threshold=sys.maxsize)
         
     delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
