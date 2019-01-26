@@ -6,40 +6,42 @@ import numpy as np
 
 def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     """ Calculate Force Constant with Vasp """
-    ################### all same from now 
+    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
     import subprocess as sp
     import pickle
-    import sys
     np.set_printoptions(threshold=np.nan)
         
-    delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
-    N = phonon.get_supercell_matrix()[0][0]
-    image_num = len(directions)
-    tf = {0:'nonsym', 1:'sym'}
-    sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
+    N1         = phonon.get_supercell_matrix()[0][0]
+    N2         = phonon.get_supercell_matrix()[1][1]
+    N3         = phonon.get_supercell_matrix()[2][2]
+    image_num  = len(directions)
+    sym_dict   = {0:'nonsym', 1:'sym'}
+    sym        = sym_dict[phonon._is_symmetry]
+    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
+    pckl_name  = 'pickle-'+job_name+'.p'
     import os
     pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
+    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
 
     try:
-        phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
+        phonon = pickle.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
             raise ValueError
-        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(120))
-        print("******* Vasp calc will be carried out. ********".center(120))
         do_calc = True
     else:
         print("******* Pickle file has been loaded. ********".center(120))
         do_calc = False
+    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
     if do_calc:
+        print("******* VASP calc will be carried out. ********".center(120))
         forces = []
         for i in range(image_num):
             print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
@@ -87,10 +89,9 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
             print("\n\ndisplacement_dataset =>\n\n")
             print(phonon.get_displacement_dataset())
             print("\n\nforce_constants =>\n\n")
-            print(str(2*N**3)+" x "+str(2*N**3)+" x "+str(3)+" x "+str(3)+" matrix\n\n")
             print(phonon.get_force_constants())
     
-        pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"))
     return phonon
 
 
@@ -104,70 +105,81 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
 #        ndir = str(delta) + "-" + str(directions[i][0]) + "-" + \
 #               str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
 
-def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = False):
+def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=True, verbose=False):
     """ Calculate Force Constant with DPMD """
-    ################### all same from now 
+    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
         
-    delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
-    N = phonon.get_supercell_matrix()[0][0]
-    image_num = len(directions)
-    tf = {0:'nonsym', 1:'sym'}
-    sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
+    N1         = phonon.get_supercell_matrix()[0][0]
+    N2         = phonon.get_supercell_matrix()[1][1]
+    N3         = phonon.get_supercell_matrix()[2][2]
+    image_num  = len(directions)
+    sym_dict   = {0:'nonsym', 1:'sym'}
+    sym        = sym_dict[phonon._is_symmetry]
+    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
+    pckl_name  = 'pickle-'+job_name+'.p'
     import os
     pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
+    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
 
     try:
-        if load_path is None:
-            phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
-        else:
-            phonon = pickle.load(open(load_path+'/pickle-'+job_name+'.p', 'rb'))
+        phonon = pickle.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
             raise ValueError
-        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(120))
-        print("******* DPMD calc will be carried out. ********".center(120))
         do_calc = True
     else:
         print("******* Pickle file has been loaded. ********".center(120))
         do_calc = False
+    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
     if do_calc:
+        print("******* DPMD calc will be carried out. ********".center(120))
         forces = []
-        for i in range(image_num):
-            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
+
+        from ase.io.lammpsrun import read_lammps_dump as read_dump
+        from ase.io import write
+        #### To get F_0 for F' ( F' = F - F_0 )
+        directions = [[0,0,0,0]] + directions
+        
+        for i in range(image_num+1):
+            print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
+            ndir = "pos" + str(i).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
             sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp","frozen_model.pb", "input.in", 
-                calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
-            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i+1).zfill(3)+" > structure.in"],
+                calc_dir+"/POSCARS/POSCAR-"+str(i).zfill(3), calc_dir+"/"+ndir])
+            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i).zfill(3)+" > structure.in"],
                 cwd = calc_dir+"/"+ndir, shell = True)
             sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"],
                 cwd = calc_dir+"/"+ndir, shell = True)
-            from ase.io.lammpsrun import read_lammps_dump as read_dump
             atoms = read_dump(calc_dir+"/"+ndir+"/out.dump", index=0, order=True)
-            #print(atoms.__dict__)
-            force_now = [atoms.get_forces(apply_constraint=False).tolist()]
-            forces.extend(force_now)
-            if verbose:
-                print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
+            if i == 0:
+                F_0 = atoms.get_forces(apply_constraint=False)
+            else:
+                if F_0_correction:
+                    atoms._calc.results['forces'] -= F_0
+                force_now = [atoms.get_forces(apply_constraint=False).tolist()]
+                forces.extend(force_now)
+                if verbose:
+                    print("force_now"+str(i)+"\n"+str(np.asarray(force_now)))
+            write(calc_dir+'/'+ndir+'/'+'atoms.traj', atoms)
+
         forces_arr = np.asarray(forces)
         if verbose:
             print("\n\n"+"forces"+"\n"+str(forces_arr))
         phonon.set_forces(forces_arr)
-        phonon.produce_force_constants()
+        phonon.produce_force_constants(forces_arr)
         if acoustic_sum_rule:
             phonon.symmetrize_force_constants()
  
@@ -175,55 +187,50 @@ def calc_dpmd(phonon, acoustic_sum_rule = False, load_path = None, verbose = Fal
             print("\n\ndisplacement_dataset =>\n\n")
             print(phonon.get_displacement_dataset())
             print("\n\nforce_constants =>\n\n")
-            print(str(2*N**3)+" x "+str(2*N**3)+" x "+str(3)+" x "+str(3)+" matrix\n\n")
             print(phonon.get_force_constants())
  
-        if load_path is None:
-            pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
-        else:
-            sp.call(['rm -rf old_'+load_path], shell=True)
-            sp.call(['mkdir -p old_'+load_path], shell=True)
-            sp.call(['mkdir -p '+load_path], shell=True)
-            sp.call(['mv '+load_path+'/* old_'+load_path], shell=True)
-            pickle.dump(phonon, open(load_path+'/pickle-'+job_name+'.p', 'wb'))
+        pickle.dump(phonon, open(pckl_name, "wb"))
     return phonon
 
 
 def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP """
-    ################### all same from now 
+    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
         
-    delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
-    N = phonon.get_supercell_matrix()[0][0]
-    image_num = len(directions)
-    tf = {0:'nonsym', 1:'sym'}
-    sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
+    N1         = phonon.get_supercell_matrix()[0][0]
+    N2         = phonon.get_supercell_matrix()[1][1]
+    N3         = phonon.get_supercell_matrix()[2][2]
+    image_num  = len(directions)
+    sym_dict   = {0:'nonsym', 1:'sym'}
+    sym        = sym_dict[phonon._is_symmetry]
+    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
+    pckl_name  = 'pickle-'+job_name+'.p'
     import os
     pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
+    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
 
     try:
-        phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
+        phonon = pickle.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
             raise ValueError
-        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(120))
-        print("******* AMP calc will be carried out. ********".center(120))
         do_calc = True
     else:
         print("******* Pickle file has been loaded. ********".center(120))
         do_calc = False
+    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
     if do_calc:
+        print("******* AMP calc will be carried out. ********".center(120))
         forces = []
         for i in range(image_num):
             print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
@@ -287,48 +294,50 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
             print("\n\ndisplacement_dataset =>\n\n")
             print(phonon.get_displacement_dataset())
             print("\n\nforce_constants =>\n\n")
-            print(str(2*N**3)+" x "+str(2*N**3)+" x "+str(3)+" x "+str(3)+" matrix\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"))
     return phonon
 
 
 def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow """
-    ################### all same from now 
+    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
         
-    delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
-    N = phonon.get_supercell_matrix()[0][0]
-    image_num = len(directions)
-    tf = {0:'nonsym', 1:'sym'}
-    sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
+    N1         = phonon.get_supercell_matrix()[0][0]
+    N2         = phonon.get_supercell_matrix()[1][1]
+    N3         = phonon.get_supercell_matrix()[2][2]
+    image_num  = len(directions)
+    sym_dict   = {0:'nonsym', 1:'sym'}
+    sym        = sym_dict[phonon._is_symmetry]
+    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
+    pckl_name  = 'pickle-'+job_name+'.p'
     import os
     pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
+    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
 
     try:
-        phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
+        phonon = pickle.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
             raise ValueError
-        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(120))
-        print("******* AMP calc will be carried out. ********".center(120))
         do_calc = True
     else:
         print("******* Pickle file has been loaded. ********".center(120))
         do_calc = False
+    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
     if do_calc:
+        print("******* AMP-TF calc will be carried out. ********".center(120))
         forces = []
         for i in range(image_num):
             print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
@@ -391,47 +400,49 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
             print("\n\ndisplacement_dataset =>\n\n")
             print(phonon.get_displacement_dataset())
             print("\n\nforce_constants =>\n\n")
-            print(str(2*N**3)+" x "+str(2*N**3)+" x "+str(3)+" x "+str(3)+" matrix\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"))
     return phonon
 
 def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
-    ################### all same from now 
+    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
         
-    delta = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
     directions = phonon.get_displacement_directions()
-    N = phonon.get_supercell_matrix()[0][0]
-    image_num = len(directions)
-    tf = {0:'nonsym', 1:'sym'}
-    sym = tf[phonon._is_symmetry]
-    job_name = "x" + str(N) + "_d" + str("%.3f" % delta) + "_" + sym
+    N1         = phonon.get_supercell_matrix()[0][0]
+    N2         = phonon.get_supercell_matrix()[1][1]
+    N3         = phonon.get_supercell_matrix()[2][2]
+    image_num  = len(directions)
+    sym_dict   = {0:'nonsym', 1:'sym'}
+    sym        = sym_dict[phonon._is_symmetry]
+    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
+    pckl_name  = 'pickle-'+job_name+'.p'
     import os
     pwd = os.getcwd()
     calc_dir = pwd + "/calcs/" + job_name
     sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
     sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["cp POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["rm -rf POSCAR-* SPOSCAR"], shell = True)
+    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
+    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
 
     try:
-        phonon = pickle.load(open("pickle-"+job_name+".p", "rb"))
+        phonon = pickle.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
             raise ValueError
-        ################### all same until now 
     except:
         print("******* There is no saved pickle file. ********".center(120))
-        print("******* AMP calc will be carried out. ********".center(120))
         do_calc = True
     else:
         print("******* Pickle file has been loaded. ********".center(120))
         do_calc = False
+    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
     if do_calc:
+        print("******* AMP-TF-bunch calc will be carried out. ********".center(120))
         forces = []
         for i in range(image_num):
             print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
@@ -494,10 +505,9 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
             print("\n\ndisplacement_dataset =>\n\n")
             print(phonon.get_displacement_dataset())
             print("\n\nforce_constants =>\n\n")
-            print(str(2*N**3)+" x "+str(2*N**3)+" x "+str(3)+" x "+str(3)+" matrix\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open("pickle-"+job_name+".p", "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"))
     return phonon
 
 def make_band(path, N_q):
