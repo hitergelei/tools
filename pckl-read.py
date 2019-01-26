@@ -27,7 +27,10 @@ if __name__ == '__main__':
     else:
         raise ValueError("*****ERROR***** The number of arguments is not correct *****ERROR*****")
 
-    import pickle as pckl
+    if sys.version_info[0] == 3:
+        import pickle as pckl
+    else:
+        import cPickle as pckl
     with open(pckl_file, 'rb') as f:
         obj = pckl.load(f)
     keys = obj.__dict__.keys()
