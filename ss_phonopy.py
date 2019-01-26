@@ -7,6 +7,7 @@ import numpy as np
 def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     """ Calculate Force Constant with Vasp """
     #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
+    import sys
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
@@ -108,6 +109,7 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
 def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=True, verbose=False):
     """ Calculate Force Constant with DPMD """
     #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
+    import sys
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
@@ -196,6 +198,7 @@ def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=True, verbose=Fals
 def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP """
     #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
+    import sys
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
@@ -303,6 +306,7 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
 def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow """
     #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
+    import sys
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
@@ -408,6 +412,7 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
 def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
+    import sys
     import subprocess as sp
     import pickle
     np.set_printoptions(threshold=np.nan)
