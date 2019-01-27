@@ -44,8 +44,10 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
     if do_calc:
         print("******* VASP calc will be carried out. ********".center(120))
         forces = []
+        ndir = ''
         for i in range(image_num):
             print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
+            ndir_prev = ndir
             ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
                 "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
             sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
@@ -53,8 +55,8 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
             sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
             sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", 
                 calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
-            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], 
-                cwd = calc_dir+"/"+ndir, shell = True)
+            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd=calc_dir+"/"+ndir, shell=True)
+            sp.call(['cp WAVECAR CHGCAR ../'+ndir], cwd=calc_dir+'/'+ndir_prev, shell=True)
             if (sys.version_info > (3,0)):
                 sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ calc_dir+"/"+ndir+"/out"], \
                          cwd = calc_dir+"/"+ndir, shell = True)
