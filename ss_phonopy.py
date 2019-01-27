@@ -709,3 +709,46 @@ def plot_band_and_dos(
 
     return plt
 
+def two_dos_plot(
+    phonon_dict,
+    color_dict = None,
+    ylim_upper = None,
+    ylim_lower = 0,
+    ):
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_tick_params(which='both', direction='in')
+    ax.yaxis.set_tick_params(which='both', direction='in')
+
+    for key in phonon_dict.keys():
+        if color_dict is not None:
+            phonon_dict[key]._total_dos.plot(plt, flip_xy=True, draw_grid=False, color=color_dict[key], legend=key)
+        else:
+            phonon_dict[key]._total_dos.plot(plt, flip_xy=True, draw_grid=False, color=None, legend=key)
+
+    ax.set_ylim((ylim_lower, ylim_upper))
+    plt.legend()
+
+    return plt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
