@@ -610,7 +610,7 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
         #### Legend plot
         if reverse_seq:
             legend.reverse(); key_list.reverse()
-        plt.legend(legend, key_list, scatterpoints = 1, fontsize='x-large', loc='upper right')
+        plt.legend(legend, key_list, scatterpoints = 1, fontsize='xx-large', loc='upper right')
     else:
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
