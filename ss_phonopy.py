@@ -108,7 +108,7 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
 #        ndir = str(delta) + "-" + str(directions[i][0]) + "-" + \
 #               str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
 
-def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=True, verbose=False):
+def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=False, verbose=False):
     """ Calculate Force Constant with DPMD """
     #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
     import sys
