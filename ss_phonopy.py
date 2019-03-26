@@ -645,69 +645,127 @@ def plot_band_and_dos(
     proj_colors = (list) = Use colors sequently. Duplication is possible.
     reverse_seq = (bool) = Change sequence of plotting scatters. (Decides which one goes up. Only esthetic purpose.)
     """
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
-    if labels:
-        from matplotlib import rc
-        rc('font',**{'family':'serif','sans-serif':['Times']})
-        rc('text', usetex=False)
 
     #### Variable setting
+    self = phonon
     proj_colors.reverse()
 
-    plt.figure(figsize=(10, 6))
-    gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1])
-    ax1 = plt.subplot(gs[0, 0])
-    ax1.xaxis.set_ticks_position('both')
-    ax1.yaxis.set_ticks_position('both')
-    ax1.xaxis.set_tick_params(which='both', direction='in')
-    ax1.yaxis.set_tick_params(which='both', direction='in')
+    import matplotlib.pyplot as plt
+    if self._band_structure.labels:
+        from matplotlib import rc
+        rc('font',**{'family':'serif','sans-serif':['Times']})
+        rc('text', usetex=True)
+
+    import matplotlib.gridspec as gridspec
+    plt.figure(figsize=(20, 6))
+    gs = gridspec.GridSpec(1, 3, width_ratios=[9,4,1])
+    ax2 = plt.subplot(gs[0, 2])
+    if pdos_indices is None:
+        self._total_dos.plot(ax2,
+                             ylabel="",
+                             draw_grid=True,
+                             flip_xy=True)
+    else:
+        self._pdos.plot(ax2,
+                        indices=pdos_indices,
+                        ylabel="",
+                        draw_grid=True,
+                        flip_xy=True)
+    ax2.set_xlim((0, None))
+    ax2.set_title('DOS', fontsize=24)
+    ax2.set_xlabel('')
+    ax2.set_xticklabels([])
+    plt.setp(ax2.get_yticklabels(), visible=False)
+
+    ax1 = plt.subplot(gs[0, 1], sharey=ax2)
 
     #### projection
-    phonon._band_structure._projections = None
+    self._band_structure._projections = None
     if proj_eigvec is not None:
         # dtype managing
         for key in proj_eigvec.keys():
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
-        set_projection(phonon, proj_eigvec)
-
-    bs_plot(phonon._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=labels)
+        set_projection(self, proj_eigvec)
+    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=labels)
     if unit == 'meV':
         plt.ylabel('Frequency(meV)', fontsize=22)
     elif unit == 'THz':
         plt.ylabel('Frequency(THz)', fontsize=22)
-    plt.xlabel('')
-    plt.grid(True)
-    plt.title('Phonon dispersion', fontsize=24)
+    ax1.set_title('Phonon dispersion', fontsize=24)
+    ax1.set_xlabel('')
+
     plt.yticks(fontsize=20)
-
-    ax2 = plt.subplot(gs[0, 1], sharey=ax1)
-    ax2.xaxis.set_ticks_position('both')
-    ax2.yaxis.set_ticks_position('both')
-    ax2.xaxis.set_tick_params(which='both', direction='in')
-    ax2.yaxis.set_tick_params(which='both', direction='in')
-    plt.subplots_adjust(wspace=0.08)
-    plt.setp(ax2.get_yticklabels(), visible=False)
-
-    if pdos_indices is None:
-        phonon._total_dos.plot(plt,
-                               ylabel="",
-                               draw_grid=True,
-                               flip_xy=True)
-    else:
-        phonon._pdos.plot(plt,
-                          indices=pdos_indices,
-                          ylabel="",
-                          draw_grid=True,
-                          flip_xy=True)
-
-    ax2.set_xlim((0, None))
-    plt.title('DOS', fontsize=24)
-    plt.xlabel('')
-    plt.xticks([])
+    plt.grid(True)
+    plt.subplots_adjust(wspace=0.0)
     plt.ylim(ylim_lower, ylim_upper)
+    plt.tight_layout()
 
     return plt
+
+    ################# old version backup (phonopy 1.13.2)
+    # import matplotlib.pyplot as plt
+    # import matplotlib.gridspec as gridspec
+    # if labels:
+        # from matplotlib import rc
+        # rc('font',**{'family':'serif','sans-serif':['Times']})
+        # rc('text', usetex=False)
+
+    # #### Variable setting
+    # proj_colors.reverse()
+
+    # plt.figure(figsize=(10, 6))
+    # gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1])
+    # ax1 = plt.subplot(gs[0, 0])
+    # ax1.xaxis.set_ticks_position('both')
+    # ax1.yaxis.set_ticks_position('both')
+    # ax1.xaxis.set_tick_params(which='both', direction='in')
+    # ax1.yaxis.set_tick_params(which='both', direction='in')
+
+    # #### projection
+    # phonon._band_structure._projections = None
+    # if proj_eigvec is not None:
+        # # dtype managing
+        # for key in proj_eigvec.keys():
+            # proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
+        # set_projection(phonon, proj_eigvec)
+
+    # bs_plot(phonon._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=labels)
+    # if unit == 'meV':
+        # plt.ylabel('Frequency(meV)', fontsize=22)
+    # elif unit == 'THz':
+        # plt.ylabel('Frequency(THz)', fontsize=22)
+    # plt.xlabel('')
+    # plt.grid(True)
+    # plt.title('Phonon dispersion', fontsize=24)
+    # plt.yticks(fontsize=20)
+
+    # ax2 = plt.subplot(gs[0, 1], sharey=ax1)
+    # ax2.xaxis.set_ticks_position('both')
+    # ax2.yaxis.set_ticks_position('both')
+    # ax2.xaxis.set_tick_params(which='both', direction='in')
+    # ax2.yaxis.set_tick_params(which='both', direction='in')
+    # plt.subplots_adjust(wspace=0.08)
+    # plt.setp(ax2.get_yticklabels(), visible=False)
+
+    # if pdos_indices is None:
+        # phonon._total_dos.plot(plt,
+                               # ylabel="",
+                               # draw_grid=True,
+                               # flip_xy=True)
+    # else:
+        # phonon._pdos.plot(plt,
+                          # indices=pdos_indices,
+                          # ylabel="",
+                          # draw_grid=True,
+                          # flip_xy=True)
+
+    # ax2.set_xlim((0, None))
+    # plt.title('DOS', fontsize=24)
+    # plt.xlabel('')
+    # plt.xticks([])
+    # plt.ylim(ylim_lower, ylim_upper)
+
+    # return plt
 
 def two_dos_plot(
     phonon_dict,
