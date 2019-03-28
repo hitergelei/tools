@@ -572,7 +572,7 @@ def set_projection(phonon, proj_eigvec):
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
-def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=None):
+def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, plot_legend, labels=None):
     if self._projections is not None:
         #### Define key list
         key_list = list(self._projections.keys())
@@ -610,7 +610,8 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
         #### Legend plot
         if reverse_seq:
             legend.reverse(); key_list.reverse()
-        plt.legend(legend, key_list, scatterpoints = 1, fontsize='xx-large', loc='upper right')
+        if plot_legend:
+            plt.legend(legend, key_list, scatterpoints = 1, fontsize='xx-large', loc='upper right')
     else:
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
@@ -621,7 +622,7 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
     plt.xlabel('Wave vector')
 
     if labels and len(labels) == len(self._special_points):
-        plt.xticks(self._special_points, labels, fontsize = 20) # ssrokyz
+        plt.xticks(self._special_points, labels) # ssrokyz
     else:
         plt.xticks(self._special_points, [''] * len(self._special_points))
     plt.xlim(0, self._distance)
@@ -636,6 +637,7 @@ def plot_band_and_dos(
     proj_size_factor = 400.,
     proj_colors      = ['r', 'g', 'b', 'c', 'm', 'y'],
     proj_alpha       = 0.5,
+    plot_legend      = False,
     ylim_lower       = None,
     ylim_upper       = None,
     reverse_seq      = False,
@@ -672,7 +674,7 @@ def plot_band_and_dos(
                         draw_grid=True,
                         flip_xy=True)
     ax2.set_xlim((0, None))
-    ax2.set_title('DOS', fontsize=24)
+    # ax2.set_title('DOS', fontsize=35)
     ax2.set_xlabel('')
     ax2.set_xticklabels([])
     plt.setp(ax2.get_yticklabels(), visible=False)
@@ -686,15 +688,16 @@ def plot_band_and_dos(
         for key in proj_eigvec.keys():
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
-    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=labels)
+    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, plot_legend, labels=labels)
     if unit == 'meV':
-        plt.ylabel('Frequency(meV)', fontsize=22)
+        plt.ylabel('Frequency(meV)', fontsize=35)
     elif unit == 'THz':
-        plt.ylabel('Frequency(THz)', fontsize=22)
-    ax1.set_title('Phonon dispersion', fontsize=24)
+        plt.ylabel('Frequency(THz)', fontsize=35)
+    # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')
 
-    plt.yticks(fontsize=20)
+    plt.yticks(fontsize=35)
+    plt.xticks(fontsize=35)
     plt.grid(True)
     plt.subplots_adjust(wspace=0.0)
     plt.ylim(ylim_lower, ylim_upper)
