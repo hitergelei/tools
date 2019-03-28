@@ -660,7 +660,7 @@ def plot_band_and_dos(
 
     import matplotlib.gridspec as gridspec
     plt.figure(figsize=(20, 6))
-    gs = gridspec.GridSpec(1, 3, width_ratios=[9,4,1])
+    gs = gridspec.GridSpec(1, 3, width_ratios=[7,4,1])
     ax2 = plt.subplot(gs[0, 2])
     if pdos_indices is None:
         self._total_dos.plot(ax2,
