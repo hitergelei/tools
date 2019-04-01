@@ -214,7 +214,7 @@ def covalent_expect(input):
     return expect_value
 
 def random_position_generator(
-    atoms,
+    backbone,
     species_kinds     = None,
     species_spec      = None,
     cutoff_radi       = None,
@@ -228,14 +228,14 @@ def random_position_generator(
     """ 
     generate randomly positioned image base on backbone structure
 
-    atoms : An ASE atoms object
+    backbone : An ASE atoms object
         Which will be backbone position.
     species_kinds : list or None
         List of species kinds
-        Identical to that of atoms object if None is provided.
+        Identical to that of backbone object if None is provided.
     species_spec : list of int or None
         Number of each species. Will be numbered sequently.
-        Identical to that of atoms object if None is provided.
+        Identical to that of backbone object if None is provided.
     cutoff_radi : Float
         Cutoff radius for minimal distance between atoms.
         If provided with cutoff_frac simultaneously, occurs error.
@@ -243,7 +243,7 @@ def random_position_generator(
         Set cutoff_radi as length scaled as 
         expectation value of covalent bonds of every atomic species.
         If provided with cutoff_radi simultaneously, occurs error.
-    radom_degree : Float
+    random_degree : Float
         Value of how much fraction of half of RDF nearest neighbor distance of backbone
         will be used as radius (from backbone) of generating new candidates.
     strain : List of three floats e.g. [0,0,5]
@@ -267,10 +267,10 @@ def random_position_generator(
 
     """
 
-    atoms = atoms.copy()
+    backbone = backbone.copy()
     ############### collect species_spec 
     if species_kinds is None and species_spec is None:
-        species = atoms.get_chemical_symbols()
+        species = backbone.get_chemical_symbols()
     elif isinstance(species_kinds, list):
         species = []
         for i in range(len(species_kinds)):
@@ -291,20 +291,20 @@ def random_position_generator(
         strain = np.array(strain)
         if strain.shape != (3,):
             raise ValueError("Somethings wrong with strain parameter. Please check.")
-        norm = np.linalg.norm(atoms.cell, axis=1)
+        norm = np.linalg.norm(backbone.cell, axis=1)
         strain_ratio = strain / norm + 1
     if strain_ratio is not None:
         strain_ratio = np.array(strain_ratio)
         if strain_ratio.shape != (3,):
             raise ValueError("Somethings wrong with strain_ratio parameter. Please check.")
-        atoms.set_cell(
-            atoms.cell * np.expand_dims(strain_ratio, axis=1),
+        backbone.set_cell(
+            backbone.cell * np.expand_dims(strain_ratio, axis=1),
             scale_atoms = True,
             )
     if strain_ratio is None and strain is None:
         strain_ratio = [1.,1.,1.]
-        atoms.set_cell(
-            atoms.cell * np.expand_dims(strain_ratio, axis=1),
+        backbone.set_cell(
+            backbone.cell * np.expand_dims(strain_ratio, axis=1),
             scale_atoms = True,
             )
 
@@ -316,20 +316,20 @@ def random_position_generator(
         vacuum = np.array(vacuum)
         if vacuum.shape != (3,):
             raise ValueError("Somethings wrong with vacuum parameter. Please check.")
-        norm = np.linalg.norm(atoms.cell, axis=1)
+        norm = np.linalg.norm(backbone.cell, axis=1)
         vacuum_ratio = vacuum / norm + 1
     if vacuum_ratio is not None:
         vacuum_ratio = np.array(vacuum_ratio)
         if vacuum_ratio.shape != (3,):
             raise ValueError("Somethings wrong with vacuum_ratio parameter. Please check.")
-        atoms.set_cell(
-            atoms.cell * np.expand_dims(vacuum_ratio, axis=1),
+        backbone.set_cell(
+            backbone.cell * np.expand_dims(vacuum_ratio, axis=1),
             scale_atoms = False,
             )
     if vacuum_ratio is None and vacuum is None:
         vacuum_ratio = [1.,1.,1.]
-        atoms.set_cell(
-            atoms.cell * np.expand_dims(vacuum_ratio, axis=1),
+        backbone.set_cell(
+            backbone.cell * np.expand_dims(vacuum_ratio, axis=1),
             scale_atoms = True,
             )
 
@@ -345,7 +345,7 @@ def random_position_generator(
         cutoff_r = coval_expect * 2 * 0.9
 
     ############### get random adjust radius
-    supercell = make_supercell(atoms,[[2,0,0],[0,2,0],[0,0,2]])
+    supercell = make_supercell(backbone,[[2,0,0],[0,2,0],[0,0,2]])
     from ase.optimize.precon.neighbors import estimate_nearest_neighbour_distance as rNN
     rdf_1st_peak = rNN(supercell)
     ran_radi = rdf_1st_peak / 2 * random_degree
@@ -364,12 +364,12 @@ def random_position_generator(
     print("")
 
     # ############### shuffle positions
-    # atoms.set_positions(
-        # np.random.permutation(atoms.get_positions()), apply_constraint = False)
+    # backbone.set_positions(
+        # np.random.permutation(backbone.get_positions()), apply_constraint = False)
 
     ############### Main
-    new_atoms = atoms.copy()
-    natoms = len(atoms)
+    new_atoms = backbone.copy()
+    natoms = len(backbone)
     from time import time
     for i in range(natoms):
         new_atoms.pop()
@@ -378,7 +378,7 @@ def random_position_generator(
     while len(new_atoms) < natoms:
         time_i = time()
         while True:
-            new_atoms.append(atoms.copy()[len(new_atoms)])
+            new_atoms.append(backbone.copy()[len(new_atoms)])
             posi = new_atoms.get_positions()
             posi[-1] += (np.random.rand(3)-0.5) * 2 * ran_radi
             new_atoms.set_positions(posi, apply_constraint = False)
