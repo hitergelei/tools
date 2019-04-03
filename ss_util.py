@@ -215,15 +215,15 @@ def covalent_expect(input):
 
 def random_position_generator(
     backbone,
-    species_kinds     = None,
-    species_spec      = None,
-    cutoff_radi       = None,
-    cutoff_frac       = None,
-    random_degree     = 0.9,
-    strain            = None,
-    strain_ratio      = [1.,1.,1.],
-    vacuum            = None,
-    vacuum_ratio      = None,
+    species_kinds = None,
+    species_spec  = None,
+    cutoff_radi   = None,
+    cutoff_frac   = None,
+    random_degree = 0.9,
+    strain        = None,
+    strain_ratio  = [1.,1.,1.],
+    vacuum        = None,
+    vacuum_ratio  = None,
     ):
     """ 
     generate randomly positioned image base on backbone structure
