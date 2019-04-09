@@ -17,7 +17,7 @@ def get_Euler_angles(vectors):
     a = np.arccos(-V[2,1] / np.sqrt(1. - V[2,2]**2))
     b = np.arccos(V[2,2])
     c = np.arccos(V[1,2] / np.sqrt(1. - V[2,2]**2))
-    return [a, b, c]
+    return np.array([a, b, c])
 
 def Euler_rotation(vectors, angles, inverse=False):
     """
@@ -36,5 +36,5 @@ def Euler_rotation(vectors, angles, inverse=False):
     from scipy.spatial.transform import Rotation as R
     rot = R.from_euler('zxz', A)
     # Get vectors
-    return(rot.apply(V_list, inverse))
+    return(np.array(rot.apply(V_list, inverse)))
 
