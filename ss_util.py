@@ -8,15 +8,15 @@ from numpy import ndarray
 import numpy as np
 
 def nospace(string): return string.replace(' ', '_')
-def E_FromTraj(traj):
+def E_fromAlist(alist):
     energies = []
-    for atoms in traj:
+    for atoms in alist:
         energies.append(atoms.get_potential_energy())
     return np.array(energies)
 
-def F_FromTraj(traj):
+def F_fromAlist(alist):
     forces = []
-    for atoms in traj:
+    for atoms in alist:
         forces.append(atoms.get_forces())
     return np.array(forces)
 
