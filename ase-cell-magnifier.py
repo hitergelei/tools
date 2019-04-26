@@ -46,11 +46,5 @@ if __name__ == '__main__':
         A_new = np.matmul(M, A)
         atoms.set_cell(A_new, scale_atoms=True)
 
-    try:
-        write(a_file+'_magnified', alist, format)
-    except:
-        write(a_file+'_magnified.traj', alist)
-        print('>>>> NOTE) File cannot be written in the original format. So saved as traj file <<<<'.center(120))
-    else:
-        pass
+    write(a_file+'_magnified.traj', alist)
 
