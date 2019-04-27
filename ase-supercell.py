@@ -38,7 +38,8 @@ print("I'll make supercell of '"+trajfile+"' file with "+str(frames)+" frames.")
 
 
 for i in range(frames):
-    print("Making supercell of "+str(i+1)+"th frame")
+    if i % 1000 == 999:
+        print("Making supercell of "+str(i+1)+"th frame")
     atoms = traj[i]
     super = make_supercell(atoms, matrix)
     calc = atoms._calc
