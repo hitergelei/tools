@@ -27,7 +27,7 @@ if __name__ == '__main__':
         print("\n")
         sys.exit(1)
     alist_file = sys.argv[1]
-    form ase.io import read
+    from ase.io import read
     alist = read(alist_file, ':')
     d_type = sys.argv[2]
     if len(sys.argv) == 5:
