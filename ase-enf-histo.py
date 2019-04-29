@@ -44,7 +44,7 @@ if __name__ == '__main__':
         data = E_fromAlist(alist)
     elif d_type == 'f':
         from ss_util import F_fromAlist
-        data = np.reshape(F_fromAlist(alist),-1)
+        data = np.linalg.norm(F_fromAlist(alist).reshape((-1,3)), axis=-1)
     else:
         raise ValueError('data type is wrong!!! Must be "e" or "f"')
 

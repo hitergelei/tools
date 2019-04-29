@@ -94,7 +94,7 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
             print("\n\nforce_constants =>\n\n")
             print(phonon.get_force_constants())
     
-        pickle.dump(phonon, open(pckl_name, "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
     return phonon
 
 
@@ -193,7 +193,7 @@ def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=False, verbose=Fal
             print("\n\nforce_constants =>\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open(pckl_name, "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
     return phonon
 
 
@@ -301,7 +301,7 @@ def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True,
             print("\n\nforce_constants =>\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open(pckl_name, "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
     return phonon
 
 
@@ -408,7 +408,7 @@ def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = Tr
             print("\n\nforce_constants =>\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open(pckl_name, "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
     return phonon
 
 def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
@@ -514,7 +514,7 @@ def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, paralle
             print("\n\nforce_constants =>\n\n")
             print(phonon.get_force_constants())
  
-        pickle.dump(phonon, open(pckl_name, "wb"))
+        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
     return phonon
 
 def make_band(path, N_q):
