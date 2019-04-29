@@ -653,7 +653,7 @@ def plot_band_and_dos(
     proj_colors.reverse()
 
     import matplotlib.pyplot as plt
-    if self._band_structure.labels:
+    if labels:
         from matplotlib import rc
         rc('font',**{'family':'serif','sans-serif':['Times']})
         rc('text', usetex=True)
