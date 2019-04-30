@@ -88,11 +88,13 @@ ax.errorbar(
     markeredgewidth   = 1,
     # markerfacecolor = 'none',
     markersize        = 5,
-    label             = 'NNP('+r'$\pm$'+'5%)',
+    label             = 'ML-Pot('+r'$\pm$'+'5%)',
     )
-ax.legend()
+ax.legend(loc='center right', fontsize='x-large')
 
 ########### plot
 ax.grid(color='0.8')
-plt.xticks(list(sorted(tick_list)), (r'$\Gamma$', 'X', 'K', r'$\Gamma$', 'L'))
+plt.xticks(list(sorted(tick_list)), (r'$\Gamma$', 'X', 'U|K', r'$\Gamma$', 'L'), fontsize='xx-large')
+plt.yticks(fontsize='xx-large')
+# plt.ylim(-0.5,12.5)
 plt.show()
