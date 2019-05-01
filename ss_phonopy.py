@@ -40,12 +40,17 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
     ndir = ''
     import io
     from phonopy.interface.vasp import VasprunxmlExpat
+    # Make KPOINTS file
+    from kpoints_gen import get_grid_num
+    kgrid = get_grid_num(phonon.get_supercell().cell, precision=55.)
     for i in range(len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir_prev = ndir
         ndir = get_subdir_name(i, disp)
         bu_and_mkdir(calc_dir, ndir)
-        call(['cp INCAR POTCAR KPOINTS '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['cp INCAR POTCAR '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        with open(calc_dir+'/'+ndir+'/KPOINTS', 'w') as txt:
+            txt.write('KPOINTS\n0\nGamma\n{} {} {}\n0 0 0'.format(kgrid[0], kgrid[1], kgrid[2]))
         call(['cp POSCAR-'+str(i).zfill(3)+' POSCAR'], cwd=calc_dir+'/'+ndir, shell=True)
         call(['cp WAVECAR CHGCAR ../'+ndir], cwd=calc_dir+'/'+ndir_prev, shell=True)
         call(['mpiexec.hydra -np $NSLOTS vasp_std > out'], cwd = calc_dir+'/'+ndir, shell=True)
@@ -204,6 +209,7 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     call(['mv POSCAR-* SPOSCAR '+calc_dir+'/poscars/'], shell=True)
 
     # Load saved pickle file
+    print('')
     try:
         phonon = pckl.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
@@ -212,11 +218,11 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         print('<<  CAUTION  >>  Fail to load pickle file.                <<  CAUTION  >>'.center(120))
         print(('<<  CAUTION  >>'+':: Expected file name ::'.center(43)+'<<  CAUTION  >>').center(120))
         print(('<<  CAUTION  >>'+pckl_name.center(43)+'<<  CAUTION  >>').center(120))
-        print('<<  CAUTION  >>  Phonon calculation will be carried out.  <<  CAUTION  >>'.center(120))
         do_calc = True
     else:
         print('>>>>>>> Pickle file "{}" has been loaded. <<<<<<<<'.format(pckl_name).center(120))
         do_calc = False
+    print('')
     if do_calc:
         if calculator == 'vasp': 
             calc = calc_vasp

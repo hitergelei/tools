@@ -15,6 +15,7 @@ print('  >>>> Pre-definition <<<<')
 print('      np     : Numpy class')
 print('     npyz    : Loaded npy or npz object')
 print('     dic     : npyz.__dict__')
+print('     keys    : npyz.__dict__.keys()')
 print('')
 print('================================================================================================================='.center(120))
 print('')
@@ -27,6 +28,8 @@ else:
     sys.exit(1)
 
 f_name = sys.argv[1]
-npyz = np.load(f_name)
-dic = npyz.__dict__
+npyz   = np.load(f_name)
+dic    = npyz.__dict__
+keys   = dic.keys()
+
 print(dic)
