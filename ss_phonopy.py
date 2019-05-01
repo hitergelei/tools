@@ -1,102 +1,9 @@
-        ##### Code by YJ Choi of CNPL, Dep. of Phys. POSTECH, Korea #####
-        #####                 ssrokyz@postech.ac.kr                 #####
-        ##### Some codes are copied from phonopy
+        #####    Code by YJ Choi of CNPL, Dep. of Phys. POSTECH, Korea    #####
+        #####                    ssrokyz@postech.ac.kr                    #####
+        ##### Some codes are copied from phonopy. Code for Phonopy v2.1.2 #####
 
 import numpy as np
-
-def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
-    """ Calculate Force Constant with Vasp """
-    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
-    import sys
-    import subprocess as sp
-    import pickle
-    np.set_printoptions(threshold=sys.maxsize)
-        
-    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
-    directions = phonon.get_displacement_directions()
-    N1         = phonon.get_supercell_matrix()[0][0]
-    N2         = phonon.get_supercell_matrix()[1][1]
-    N3         = phonon.get_supercell_matrix()[2][2]
-    image_num  = len(directions)
-    sym_dict   = {0:'nonsym', 1:'sym'}
-    sym        = sym_dict[phonon._is_symmetry]
-    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
-    pckl_name  = 'pickle-'+job_name+'.p'
-    import os
-    pwd = os.getcwd()
-    calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
-    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
-
-    try:
-        phonon = pickle.load(open(pckl_name, 'rb'))
-        if phonon.get_force_constants() is None:
-            raise ValueError
-    except:
-        print("******* There is no saved pickle file. ********".center(120))
-        do_calc = True
-    else:
-        print("******* Pickle file has been loaded. ********".center(120))
-        do_calc = False
-    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
-    if do_calc:
-        print("******* VASP calc will be carried out. ********".center(120))
-        forces = []
-        ndir = ''
-        for i in range(image_num):
-            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
-            ndir_prev = ndir
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
-                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
-            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", "INCAR", "POTCAR", "KPOINTS", 
-                calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
-            sp.call(["cp POSCAR-"+str(i+1).zfill(3)+" POSCAR"], cwd=calc_dir+"/"+ndir, shell=True)
-            sp.call(['cp WAVECAR CHGCAR ../'+ndir], cwd=calc_dir+'/'+ndir_prev, shell=True)
-            if (sys.version_info > (3,0)):
-                sp.call(["mpiexec.hydra -np $NSLOTS vasp_gpu > "+ calc_dir+"/"+ndir+"/out"], \
-                         cwd = calc_dir+"/"+ndir, shell = True)
-            else:
-                sp.call(["mpiexec.hydra -np $NSLOTS vasp_std > "+ calc_dir+"/"+ndir+"/out"], \
-                         cwd = calc_dir+"/"+ndir, shell = True)
-            import io
-            with io.open(calc_dir+"/"+ndir+"/vasprun.xml", "rb") as xmlfile:
-                from phonopy.interface.vasp import VasprunxmlExpat
-                vasprun = VasprunxmlExpat(xmlfile)
-                if vasprun.parse():
-                    force_now = (vasprun.get_forces()).tolist()
-#                   epsilon = vasprun.get_epsilon()
-#                   borns = vasprun.get_born()
-#                   lattice = vasprun.get_lattice()[-1]
-#                   points = vasprun.get_points()[-1]
-#                   symbols = vasprun.get_symbols()
-#                   unit_cell = PhonopyAtoms(symbols=symbols,
-#                                            scaled_positions=points,
-#                                            cell=lattice)
-                    forces.extend(force_now)
-                    if verbose:
-                        print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
-        forces_arr = np.asarray(forces)
-        if verbose:
-            print("\n\n"+"forces"+"\n"+str(forces_arr))
-        phonon.set_forces(forces_arr)
-        phonon.produce_force_constants()
-        if acoustic_sum_rule:
-            phonon.symmetrize_force_constants()
-    
-        if verbose:
-            print("\n\ndisplacement_dataset =>\n\n")
-            print(phonon.get_displacement_dataset())
-            print("\n\nforce_constants =>\n\n")
-            print(phonon.get_force_constants())
-    
-        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
-    return phonon
-
+from subprocess import call
 
 #def get_fc(directions, delta):
 #    """ Get forces, FCs """
@@ -108,413 +15,237 @@ def calc_vasp(phonon, verbose = False, acoustic_sum_rule = False):
 #        ndir = str(delta) + "-" + str(directions[i][0]) + "-" + \
 #               str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
 
-def calc_dpmd(phonon, acoustic_sum_rule=False, F_0_correction=False, verbose=False):
-    """ Calculate Force Constant with DPMD """
-    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
-    import sys
-    import subprocess as sp
-    import pickle
-    np.set_printoptions(threshold=sys.maxsize)
-        
-    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
-    directions = phonon.get_displacement_directions()
-    N1         = phonon.get_supercell_matrix()[0][0]
-    N2         = phonon.get_supercell_matrix()[1][1]
-    N3         = phonon.get_supercell_matrix()[2][2]
-    image_num  = len(directions)
-    sym_dict   = {0:'nonsym', 1:'sym'}
-    sym        = sym_dict[phonon._is_symmetry]
-    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
-    pckl_name  = 'pickle-'+job_name+'.p'
-    import os
-    pwd = os.getcwd()
-    calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
-    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
+def bu_and_mkdir(calc_dir, ndir):
+    call(['rm -rf '+calc_dir+'/bu-'+ndir], shell=True)
+    call(['mv '+calc_dir+'/'+ndir+' '+calc_dir+'/bu-'+ndir], shell=True)
+    call(['mkdir -p '+calc_dir+'/'+ndir], shell=True)
 
-    try:
-        phonon = pickle.load(open(pckl_name, 'rb'))
-        if phonon.get_force_constants() is None:
+def get_subdir_name(order, disp): 
+    sign = []
+    for i in range(3):
+        num = np.sign(disp[order][i+1], dtype=np.float)
+        if num == 1.:
+            sign.append('+')
+        elif num == 0.:
+            sign.append('0')
+        elif num == -1.:
+            sign.append('-')
+        else:
             raise ValueError
-    except:
-        print("******* There is no saved pickle file. ********".center(120))
-        do_calc = True
-    else:
-        print("******* Pickle file has been loaded. ********".center(120))
-        do_calc = False
-    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
-    if do_calc:
-        print("******* DPMD calc will be carried out. ********".center(120))
-        forces = []
+    return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
 
-        from ase.io.lammpsrun import read_lammps_dump as read_dump
-        from ase.io import write
-        #### To get F_0 for F' ( F' = F - F_0 )
-        directions = [[0,0,0,0]] + directions
-        
-        for i in range(image_num+1):
-            print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
-            ndir = "pos" + str(i).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
-                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
-            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp","frozen_model.pb", "input.in", 
-                calc_dir+"/POSCARS/POSCAR-"+str(i).zfill(3), calc_dir+"/"+ndir])
-            sp.call(["lmp-pos2lmp.awk POSCAR-"+str(i).zfill(3)+" > structure.in"],
-                cwd = calc_dir+"/"+ndir, shell = True)
-            sp.call(["mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out"],
-                cwd = calc_dir+"/"+ndir, shell = True)
-            atoms = read_dump(calc_dir+"/"+ndir+"/out.dump", index=0, order=True)
-            if i == 0:
-                F_0 = atoms.get_forces(apply_constraint=False)
-            else:
-                if F_0_correction:
-                    atoms._calc.results['forces'] -= F_0
-                force_now = [atoms.get_forces(apply_constraint=False).tolist()]
+def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
+    """ Calculate Force Constant with Vasp """
+    forces = []
+    ndir = ''
+    import io
+    from phonopy.interface.vasp import VasprunxmlExpat
+    for i in range(len(disp)):
+        print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
+        ndir_prev = ndir
+        ndir = get_subdir_name(i, disp)
+        bu_and_mkdir(calc_dir, ndir)
+        call(['cp INCAR POTCAR KPOINTS '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['cp POSCAR-'+str(i).zfill(3)+' POSCAR'], cwd=calc_dir+'/'+ndir, shell=True)
+        call(['cp WAVECAR CHGCAR ../'+ndir], cwd=calc_dir+'/'+ndir_prev, shell=True)
+        call(['mpiexec.hydra -np $NSLOTS vasp_std > out'], cwd = calc_dir+'/'+ndir, shell=True)
+        with io.open(calc_dir+'/'+ndir+'/vasprun.xml', 'rb') as xmlfile:
+            vasprun = VasprunxmlExpat(xmlfile)
+            if vasprun.parse():
+                force_now = (vasprun.get_forces()).tolist()
+#                   epsilon = vasprun.get_epsilon()
+#                   borns = vasprun.get_born()
+#                   lattice = vasprun.get_lattice()[-1]
+#                   points = vasprun.get_points()[-1]
+#                   symbols = vasprun.get_symbols()
+#                   unit_cell = PhonopyAtoms(symbols=symbols,
+#                                            scaled_positions=points,
+#                                            cell=lattice)
                 forces.extend(force_now)
-                if verbose:
-                    print("force_now"+str(i)+"\n"+str(np.asarray(force_now)))
-            write(calc_dir+'/'+ndir+'/'+'atoms.traj', atoms)
+    phonon.set_forces(np.array(forces))
 
-        forces_arr = np.asarray(forces)
-        if verbose:
-            print("\n\n"+"forces"+"\n"+str(forces_arr))
-        phonon.set_forces(forces_arr)
-        phonon.produce_force_constants(forces_arr)
-        if acoustic_sum_rule:
-            phonon.symmetrize_force_constants()
- 
-        if verbose:
-            print("\n\ndisplacement_dataset =>\n\n")
-            print(phonon.get_displacement_dataset())
-            print("\n\nforce_constants =>\n\n")
-            print(phonon.get_force_constants())
- 
-        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
-    return phonon
+def calc_dpmd(phonon, disp, calc_dir, F_0_correction, amp_calc):
+    """ Calculate Force Constant with DPMD """
+    forces = []
+    from ase.io.lammpsrun import read_lammps_dump as read_dump
+    from ase.io import write
+    for i in range(len(disp)):
+        print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
+        ndir = get_subdir_name(i, disp)
+        bu_and_mkdir(calc_dir, ndir)
+        call(['cp frozen_model.pb input.in '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['lmp-pos2lmp.awk POSCAR-'+str(i).zfill(3)+' > structure.in'], cwd = calc_dir+'/'+ndir, shell = True)
+        call(['mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out'], cwd = calc_dir+'/'+ndir, shell = True)
+        atoms = read_dump(calc_dir+'/'+ndir+'/out.dump', index=0, order=True)
+        if i == 0:
+            F_0 = atoms.get_forces(apply_constraint=False)
+        else:
+            if F_0_correction:
+                atoms._calc.results['forces'] -= F_0
+            forces.append(atoms.get_forces(apply_constraint=False).tolist())
+        write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
+    phonon.set_forces(np.array(forces))
 
-
-def calc_amp(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
+def calc_amp(phonon, disp, calc_dir, F_0_correction, amp_calc):
     """ Calculate Force Constant with AMP """
-    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
-    import sys
-    import subprocess as sp
-    import pickle
-    np.set_printoptions(threshold=sys.maxsize)
-        
-    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
-    directions = phonon.get_displacement_directions()
-    N1         = phonon.get_supercell_matrix()[0][0]
-    N2         = phonon.get_supercell_matrix()[1][1]
-    N3         = phonon.get_supercell_matrix()[2][2]
-    image_num  = len(directions)
-    sym_dict   = {0:'nonsym', 1:'sym'}
-    sym        = sym_dict[phonon._is_symmetry]
-    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
-    pckl_name  = 'pickle-'+job_name+'.p'
-    import os
-    pwd = os.getcwd()
-    calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
-    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
+    numeric_F_dx=0.001
+    parallel=True
+    forces = []
+    from ase.io import read, write
+    for i in range(len(disp)):
+        print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
+        ndir = get_subdir_name(i, disp)
+        bu_and_mkdir(calc_dir, ndir)
+        call(['cp '+calc_dir+'/poscars/POSCAR-'+str(i+1).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
 
-    try:
-        phonon = pickle.load(open(pckl_name, 'rb'))
-        if phonon.get_force_constants() is None:
-            raise ValueError
-    except:
-        print("******* There is no saved pickle file. ********".center(120))
-        do_calc = True
-    else:
-        print("******* Pickle file has been loaded. ********".center(120))
-        do_calc = False
-    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
-    if do_calc:
-        print("******* AMP calc will be carried out. ********".center(120))
-        forces = []
-        for i in range(image_num):
-            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
-                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
-            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+        ########### calculate forces & atomic energies with amp ############
+        atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i+1).zfill(3), format = 'vasp')
+        atoms.set_pbc(True)
+        atoms.set_calculator(amp_calc)
 
-            ########### calculate forces & atomic energies with amp ############
-            from ase.io import read
-            atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
-                         format = "vasp")
-            atoms.set_pbc(True)
-            from amp import Amp
-            atoms.set_calculator(calc)
-            from amp.utilities import Logger
-            log = atoms._calc._log
-            log("**********************************************")
-            log(str(i+1)+" th image calculation start", tic = 'image')
-            log("**********************************************")
+        #********** numerical force must precede ***********
+        # force_now = [calc.calculate_numerical_forces(
+            # atoms,
+            # d = numeric_F_dx,
+            # parallel = parallel,
+            # )] # alternative
+        forces.append(atoms.get_forces(apply_constraint=False).tolist()) # alternative
+        write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
+    phonon.set_forces(np.array(forces))
 
-            #********** numerical force must precede ***********
-            # force_now = [calc.calculate_numerical_forces(
-                # atoms,
-                # d = numeric_F_dx,
-                # parallel = parallel,
-                # )] # alternative
-            force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
-            #stress_now = calc.calculate_numerical_stress(atoms) # just in case
-            #********** energy calculation ***********
-            energy_now = atoms.get_potential_energy()
-            energies_now = atoms.get_potential_energies()
-            #********** force information restore ***********
-            atoms._calc.results['forces'] = np.asarray(force_now[0])
-            if verbose:
-                print(energies_now)
-                print(atoms._calc.results['forces'])
-            forces.extend(force_now)
-            #********** traj file gen ***********
-            from ase.io.trajectory import Trajectory
-            traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
-            traj.write(atoms)
-            traj.close()
-            if verbose:
-                print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
-            log("**********************************************")
-            log(str(i+1)+" th image calculated", toc = 'image')
-            log("**********************************************")
-            
-        forces_arr = np.asarray(forces)
-        if verbose:
-            print("\n\n"+"forces"+"\n"+str(forces_arr))
-        phonon.set_forces(forces_arr)
-        phonon.produce_force_constants()
-        if acoustic_sum_rule:
-            phonon.symmetrize_force_constants()
- 
-        if verbose:
-            print("\n\ndisplacement_dataset =>\n\n")
-            print(phonon.get_displacement_dataset())
-            print("\n\nforce_constants =>\n\n")
-            print(phonon.get_force_constants())
- 
-        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
-    return phonon
-
-
-def calc_amp_tf(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
+def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, amp_calc):
     """ Calculate Force Constant with AMP with tensorflow """
-    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
-    import sys
-    import subprocess as sp
-    import pickle
-    np.set_printoptions(threshold=sys.maxsize)
-        
-    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
-    directions = phonon.get_displacement_directions()
-    N1         = phonon.get_supercell_matrix()[0][0]
-    N2         = phonon.get_supercell_matrix()[1][1]
-    N3         = phonon.get_supercell_matrix()[2][2]
-    image_num  = len(directions)
-    sym_dict   = {0:'nonsym', 1:'sym'}
-    sym        = sym_dict[phonon._is_symmetry]
-    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
-    pckl_name  = 'pickle-'+job_name+'.p'
-    import os
-    pwd = os.getcwd()
-    calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
-    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
+    numeric_F_dx=0.001
+    parallel=True
+    forces = []
+    from ase.io import read, write
+    for i in range(len(disp)):
+        print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
+        ndir = get_subdir_name(i, disp)
+        bu_and_mkdir(calc_dir, ndir)
+        call(['cp '+calc_dir+'/poscars/POSCAR-'+str(i+1).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
 
-    try:
-        phonon = pickle.load(open(pckl_name, 'rb'))
-        if phonon.get_force_constants() is None:
-            raise ValueError
-    except:
-        print("******* There is no saved pickle file. ********".center(120))
-        do_calc = True
-    else:
-        print("******* Pickle file has been loaded. ********".center(120))
-        do_calc = False
-    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
-    if do_calc:
-        print("******* AMP-TF calc will be carried out. ********".center(120))
-        forces = []
-        for i in range(image_num):
-            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
-                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
-            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
+        ########### calculate forces & atomic energies with amp ############
+        atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i+1).zfill(3), format = 'vasp')
+        atoms.set_pbc(True)
+        atoms.set_calculator(amp_calc)
 
-            ########### calculate forces & atomic energies with amp ############
-            from ase.io import read
-            atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
-                         format = "vasp")
-            atoms.set_pbc(True)
-            atoms.set_calculator(calc)
-            from amp.utilities import Logger
-            log = atoms._calc._log
-            log("**********************************************")
-            log(str(i+1)+" th image calculation start", tic = 'image')
-            log("**********************************************")
+        #********** numerical force must precede ***********
+        forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
+        atoms._calc.results['forces'] = forces[-1]
+        write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
+    phonon.set_forces(np.array(forces))
 
-            #********** numerical force must precede ***********
-            force_now = [calc.calculate_numerical_forces(
-                atoms,
-                d = numeric_F_dx,
-                parallel = parallel,
-                )] # alternative
-            #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
-            #stress_now = calc.calculate_numerical_stress(atoms) # just in case
-            #********** energy calculation ***********
-            energy_now = atoms.get_potential_energy()
-            energies_now = atoms.get_potential_energies()
-            #********** force information restore ***********
-            atoms._calc.results['forces'] = force_now[0]
-            if verbose:
-                print(energies_now)
-                print(atoms._calc.results['forces'])
-            forces.extend(force_now)
-            #********** traj file gen ***********
-            from ase.io.trajectory import Trajectory
-            traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
-            traj.write(atoms)
-            traj.close()
-            if verbose:
-                print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
-            log("**********************************************")
-            log(str(i+1)+" th image calculated", toc = 'image')
-            log("**********************************************")
-
-        forces_arr = np.asarray(forces)
-        if verbose:
-            print("\n\n"+"forces"+"\n"+str(forces_arr))
-        phonon.set_forces(forces_arr)
-        phonon.produce_force_constants()
-        if acoustic_sum_rule:
-            phonon.symmetrize_force_constants()
- 
-        if verbose:
-            print("\n\ndisplacement_dataset =>\n\n")
-            print(phonon.get_displacement_dataset())
-            print("\n\nforce_constants =>\n\n")
-            print(phonon.get_force_constants())
- 
-        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
-    return phonon
-
-def calc_amp_tf_bunch(phonon, calc, verbose = False, numeric_F_dx=0.001, parallel = True, acoustic_sum_rule = False):
+def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, amp_calc):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
-    #>>>>>>>>>>>>>>>>>>> all same from now <<<<<<<<<<<<<<<<<<
-    import sys
-    import subprocess as sp
-    import pickle
-    np.set_printoptions(threshold=sys.maxsize)
-        
-    delta      = np.linalg.norm(phonon.get_displacements()[0][1:4])
-    directions = phonon.get_displacement_directions()
-    N1         = phonon.get_supercell_matrix()[0][0]
-    N2         = phonon.get_supercell_matrix()[1][1]
-    N3         = phonon.get_supercell_matrix()[2][2]
-    image_num  = len(directions)
-    sym_dict   = {0:'nonsym', 1:'sym'}
-    sym        = sym_dict[phonon._is_symmetry]
-    job_name   = "x" + str(N1) + str(N2) + str(N3) + "_d" + str("%.3f" % delta) + "_" + sym
-    pckl_name  = 'pickle-'+job_name+'.p'
-    import os
-    pwd = os.getcwd()
-    calc_dir = pwd + "/calcs/" + job_name
-    sp.call(["rm -rf " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(["mkdir -p " + calc_dir + "/POSCARS"], shell = True)
-    sp.call(['cp SPOSCAR POSCAR-000'], shell=True)
-    sp.call(["mv POSCAR-* SPOSCAR " + calc_dir + "/POSCARS"], shell = True)
+    numeric_F_dx=0.001
+    parallel=True
+    forces = []
+    from ase.io import read, write
+    for i in range(len(disp)):
+        print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
+        ndir = get_subdir_name(i, disp)
+        bu_and_mkdir(calc_dir, ndir)
+        call(['cp '+calc_dir+'/poscars/POSCAR-'+str(i+1).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
 
+        ########### calculate forces & atomic energies with amp ############
+        atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i+1).zfill(3), format = 'vasp')
+        atoms.set_pbc(True)
+        atoms.set_calculator(amp_calc)
+
+        #********** numerical force must precede ***********
+        force_now = [calc.calculate_numerical_forces(
+            atoms,
+            d = numeric_F_dx,
+            parallel = parallel,
+            )] # alternative
+        #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
+        #stress_now = calc.calculate_numerical_stress(atoms) # just in case
+        #********** energy calculation ***********
+        energy_now = atoms.get_potential_energy()
+        energies_now = atoms.get_potential_energies()
+        #********** force information restore ***********
+        atoms._calc.results['forces'] = np.asarray(force_now[0])
+        if verbose:
+            print(energies_now)
+            print(atoms._calc.results['forces'])
+        forces.extend(force_now)
+        
+        forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
+        atoms._calc.results['forces'] = forces[-1]
+        write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
+    phonon.set_forces(np.array(forces))
+
+def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, amp_calc=None):
+    """
+    calc -- Specify calculator. One of these. [vasp, dpmd, amp, amp_tf, amp_tf_bunch]
+    phonon -- Phonopy phonon object.
+    """
+    import sys
+    import pickle as pckl
+    if verbose:
+        np.set_printoptions(threshold=sys.maxsize)
+    delta    = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    disp     = [[0,0,0,0]] + phonon.get_displacements()
+    job_name = 'x{}{}{}_d{:5.3f}_sym{}'.format(
+        phonon.get_supercell_matrix()[0][0],
+        phonon.get_supercell_matrix()[1][1],
+        phonon.get_supercell_matrix()[2][2],
+        delta,
+        phonon._is_symmetry,
+        )
+    # Define names
+    pckl_name = job_name+'.bin'
+    calc_dir = './calcs/'+job_name
+    # Environment preset
+    call(['rm -rf '+calc_dir+'/poscars'], shell=True)
+    call(['mkdir -p '+calc_dir+'/poscars'], shell=True)
+    call(['cp SPOSCAR POSCAR-000'], shell=True)
+    call(['mv POSCAR-* SPOSCAR '+calc_dir+'/poscars/'], shell=True)
+
+    # Load saved pickle file
     try:
-        phonon = pickle.load(open(pckl_name, 'rb'))
+        phonon = pckl.load(open(pckl_name, 'rb'))
         if phonon.get_force_constants() is None:
-            raise ValueError
+            raise ValueError(' Error:: Phonon object in pickle file is not containing force constants info')
     except:
-        print("******* There is no saved pickle file. ********".center(120))
+        print('<<  CAUTION  >>  Fail to load pickle file.                <<  CAUTION  >>'.center(120))
+        print(('<<  CAUTION  >>'+':: Expected file name ::'.center(43)+'<<  CAUTION  >>').center(120))
+        print(('<<  CAUTION  >>'+pckl_name.center(43)+'<<  CAUTION  >>').center(120))
+        print('<<  CAUTION  >>  Phonon calculation will be carried out.  <<  CAUTION  >>'.center(120))
         do_calc = True
     else:
-        print("******* Pickle file has been loaded. ********".center(120))
+        print('>>>>>>> Pickle file "{}" has been loaded. <<<<<<<<'.format(pckl_name).center(120))
         do_calc = False
-    #>>>>>>>>>>>>>>>>>>> all same until now <<<<<<<<<<<<<<<<<<
     if do_calc:
-        print("******* AMP-TF-bunch calc will be carried out. ********".center(120))
-        forces = []
-        for i in range(image_num):
-            print(' >>> Starting {:d}-th image calculation <<< '.format(i+1).center(120))
-            ndir = "pos" + str(i+1).zfill(4) + "_atom" + str(directions[i][0]).zfill(4) + \
-                "_direc" + str(directions[i][1]) + str(directions[i][2]) + str(directions[i][3])
-            sp.call(["rm", "-rf", calc_dir+"/BU-"+ndir])
-            sp.call(["mv", calc_dir+"/"+ndir, calc_dir+"/BU-"+ndir])
-            sp.call(["mkdir", "-p", calc_dir+"/"+ndir])
-            sp.call(["cp", calc_dir+"/POSCARS/POSCAR-"+str(i+1).zfill(3), calc_dir+"/"+ndir])
-
-            ########### calculate forces & atomic energies with amp ############
-            from ase.io import read
-            atoms = read(calc_dir+"/"+ndir+"/POSCAR-"+str(i+1).zfill(3),
-                         format = "vasp")
-            atoms.set_pbc(True)
-            atoms.set_calculator(calc)
-            from amp.utilities import Logger
-            log = atoms._calc._log
-            log("**********************************************")
-            log(str(i+1)+" th image calculation start", tic = 'image')
-            log("**********************************************")
-
-            #********** numerical force must precede ***********
-            force_now = [calc.calculate_numerical_forces(
-                atoms,
-                d = numeric_F_dx,
-                parallel = parallel,
-                )] # alternative
-            #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
-            #stress_now = calc.calculate_numerical_stress(atoms) # just in case
-            #********** energy calculation ***********
-            energy_now = atoms.get_potential_energy()
-            energies_now = atoms.get_potential_energies()
-            #********** force information restore ***********
-            atoms._calc.results['forces'] = np.asarray(force_now[0])
-            if verbose:
-                print(energies_now)
-                print(atoms._calc.results['forces'])
-            forces.extend(force_now)
-            #********** traj file gen ***********
-            from ase.io.trajectory import Trajectory
-            traj = Trajectory(calc_dir+"/"+ndir+"/output.traj", "w")
-            traj.write(atoms)
-            traj.close()
-            if verbose:
-                print("force_now"+str(i+1)+"\n"+str(np.asarray(force_now)))
-            log("**********************************************")
-            log(str(i+1)+" th image calculated", toc = 'image')
-            log("**********************************************")
+        if calculator == 'vasp': 
+            calc = calc_vasp
+        elif calculator == 'dpmd':
+            calc = calc_dpmd
+        elif calculator == 'amp':
+            calc = calc_amp
+        elif calculator == 'amp_tf':
+            calc = calc_amp_tf
+        elif calculator == 'amp_tf_bunch':
+            calc = calc_amp_tf_bunch
+        else:
+            raise ValueError('Unknown calculator ({}) has been provided.'.format(calculator))
+        print(">>>>>>> {} calculation will be carried out. <<<<<<<<".format(calculator).center(120))
+        calc(phonon, disp, calc_dir, F_0_correction, amp_calc)
             
-        forces_arr = np.asarray(forces)
         if verbose:
-            print("\n\n"+"forces"+"\n"+str(forces_arr))
-        phonon.set_forces(forces_arr)
+            print('\n\n'+'forces'+'\n'+str(phonon.forces))
+        # Produce fc
         phonon.produce_force_constants()
         if acoustic_sum_rule:
             phonon.symmetrize_force_constants()
- 
+
         if verbose:
-            print("\n\ndisplacement_dataset =>\n\n")
+            print('\n\ndisplacement_dataset =>\n\n')
             print(phonon.get_displacement_dataset())
-            print("\n\nforce_constants =>\n\n")
+            print('\n\nforce_constants =>\n\n')
             print(phonon.get_force_constants())
- 
-        pickle.dump(phonon, open(pckl_name, "wb"), protocol=2)
+        pckl.dump(phonon, open(pckl_name, 'wb'), protocol=2)
     return phonon
 
 def make_band(path, N_q):
@@ -794,22 +525,3 @@ def two_dos_plot(
     plt.legend()
 
     return plt
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
