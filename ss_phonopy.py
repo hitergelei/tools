@@ -20,18 +20,16 @@ def bu_and_mkdir(calc_dir, ndir):
     call(['mv '+calc_dir+'/'+ndir+' '+calc_dir+'/bu-'+ndir], shell=True)
     call(['mkdir -p '+calc_dir+'/'+ndir], shell=True)
 
-def get_subdir_name(order, disp): 
+def get_subdir_name(order, disp, prec=1e-5): 
     sign = []
     for i in range(3):
-        num = np.sign(disp[order][i+1], dtype=np.float)
-        if num == 1.:
+        num = disp[order][i+1]
+        if num > prec:
             sign.append('+')
-        elif num == 0.:
-            sign.append('0')
-        elif num == -1.:
+        elif num < -1 * prec:
             sign.append('-')
         else:
-            raise ValueError
+            sign.append('0')
     return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
 
 def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
@@ -44,7 +42,7 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
     from kpoints_gen import get_grid_num
     kgrid = get_grid_num(phonon.get_supercell().cell, precision=55.)
     from ase.io import read
-    for i in range(len(disp)):
+    for i in range(1,len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir_prev = ndir
         ndir = get_subdir_name(i, disp)
@@ -69,8 +67,8 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
 #                                            scaled_positions=points,
 #                                            cell=lattice)
                 # forces.extend(force_now)
-        if i != 0:
-            forces.extend(result.get_forces())
+        # if i != 0:
+        forces.append(result.get_forces())
     phonon.set_forces(np.array(forces))
 
 def calc_dpmd(phonon, disp, calc_dir, F_0_correction, amp_calc):
