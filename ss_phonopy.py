@@ -38,11 +38,12 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
     """ Calculate Force Constant with Vasp """
     forces = []
     ndir = ''
-    import io
+    # import io
     from phonopy.interface.vasp import VasprunxmlExpat
     # Make KPOINTS file
     from kpoints_gen import get_grid_num
     kgrid = get_grid_num(phonon.get_supercell().cell, precision=55.)
+    from ase.io import read
     for i in range(len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir_prev = ndir
@@ -54,10 +55,11 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
         call(['cp POSCAR-'+str(i).zfill(3)+' POSCAR'], cwd=calc_dir+'/'+ndir, shell=True)
         call(['cp WAVECAR CHGCAR ../'+ndir], cwd=calc_dir+'/'+ndir_prev, shell=True)
         call(['mpiexec.hydra -np $NSLOTS vasp_std > out'], cwd = calc_dir+'/'+ndir, shell=True)
-        with io.open(calc_dir+'/'+ndir+'/vasprun.xml', 'rb') as xmlfile:
-            vasprun = VasprunxmlExpat(xmlfile)
-            if vasprun.parse():
-                force_now = (vasprun.get_forces()).tolist()
+        result = read(calc_dir+'/'+ndir+'/vasprun.xml', 0)
+        # with io.open(calc_dir+'/'+ndir+'/vasprun.xml', 'rb') as xmlfile:
+            # vasprun = VasprunxmlExpat(xmlfile)
+            # if vasprun.parse():
+                # force_now = (vasprun.get_forces()).tolist()
 #                   epsilon = vasprun.get_epsilon()
 #                   borns = vasprun.get_born()
 #                   lattice = vasprun.get_lattice()[-1]
@@ -66,7 +68,9 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
 #                   unit_cell = PhonopyAtoms(symbols=symbols,
 #                                            scaled_positions=points,
 #                                            cell=lattice)
-                forces.extend(force_now)
+                # forces.extend(force_now)
+        if i != 0:
+            forces.extend(result.get_forces())
     phonon.set_forces(np.array(forces))
 
 def calc_dpmd(phonon, disp, calc_dir, F_0_correction, amp_calc):
@@ -114,7 +118,8 @@ def calc_amp(phonon, disp, calc_dir, F_0_correction, amp_calc):
             # d = numeric_F_dx,
             # parallel = parallel,
             # )] # alternative
-        forces.append(atoms.get_forces(apply_constraint=False).tolist()) # alternative
+        if i!=0:
+            forces.append(atoms.get_forces(apply_constraint=False).tolist()) # alternative
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
@@ -136,7 +141,8 @@ def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, amp_calc):
         atoms.set_calculator(amp_calc)
 
         #********** numerical force must precede ***********
-        forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
+        if i!=0:
+            forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
         atoms._calc.results['forces'] = forces[-1]
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
@@ -158,12 +164,6 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, amp_calc):
         atoms.set_pbc(True)
         atoms.set_calculator(amp_calc)
 
-        #********** numerical force must precede ***********
-        force_now = [calc.calculate_numerical_forces(
-            atoms,
-            d = numeric_F_dx,
-            parallel = parallel,
-            )] # alternative
         #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
         #stress_now = calc.calculate_numerical_stress(atoms) # just in case
         #********** energy calculation ***********
@@ -174,9 +174,8 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, amp_calc):
         if verbose:
             print(energies_now)
             print(atoms._calc.results['forces'])
-        forces.extend(force_now)
-        
-        forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
+        if i!=0:
+            forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
         atoms._calc.results['forces'] = forces[-1]
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
