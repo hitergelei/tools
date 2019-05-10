@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     ## Save
     # Numpy save
-    np.save('blacklist_'+sys.argv[1], blacklist)
+    np.save('blacklist_cut{}_{}'.format(int(cutoff_force), sys.argv[1]), blacklist)
     # Alist save
     img2remove = np.unique(blacklist[:,0]).astype(np.int)
     select_bool = np.ones(len(alist), dtype=np.bool)
