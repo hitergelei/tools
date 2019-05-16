@@ -32,7 +32,8 @@ RDFobj = RDF(atoms=traj[0],
 for i in range(1,len(traj)):
     RDFobj.atoms = traj[i]  # Fool RDFobj to use the new atoms
     RDFobj.update()           # Collect data
-    print("\t Updating "+str(i)+" th image's RDF")
+    if i % 1000 == 999:
+        print("\t Updating "+str(i+1)+" th image's RDF")
 
 rdf = RDFobj.get_rdf()
 x = np.arange(nBins) * rMax / nBins
