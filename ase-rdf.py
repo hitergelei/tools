@@ -18,8 +18,8 @@ if __name__ == '__main__':
     print('=================================================================================================='.center(120))
     print('This code will give you Raidial Distribution Function'.center(120))
     print('')
-    print('Useage  ==> ./ase-rdf.py >atoms list file< >rMax< >nBins<'.center(120))
-    print('Example ==> ./ase-rdf.py si.traj 12 500                  '.center(120))
+    print('Useage  ==> ./ase-rdf.py >atoms list file< >rMax< >nBins< (>rectify_cut<)'.center(120))
+    print('Example ==> ./ase-rdf.py si.traj 12 500 0.2                              '.center(120))
     print('')
     print('Return ----------> rdf-(original name)-(rMax)-(nBins).npy'.center(120))
     print('')
@@ -28,6 +28,10 @@ if __name__ == '__main__':
     inp_fname = sys.argv[1]
     rMax = float(sys.argv[2])
     nBins = int(sys.argv[3])
+    if len(sys.argv) == 5:
+        rectify_cut = float(sys.argv[4])
+    else:
+        rectify_cut = None
     fname = 'rdf-{}-{:.2f}-{}.npy'.format(inp_fname, rMax, nBins)
     try:
         curve = np.load(fname)
@@ -58,13 +62,14 @@ if __name__ == '__main__':
         print('=================================================================================================='.center(120))
 
     ## Rectify curve
-    iter = True
-    while True:
-        test = curve[1:] - curve[:-1]
-        peak_bool = np.array(list(test[:,1] > -0.2) + [True], dtype=np.bool)
-        if False not in peak_bool:
-            break
-        curve = curve[peak_bool]
+    if rectify_cut:
+        iter = True
+        while True:
+            test = curve[1:] - curve[:-1]
+            peak_bool = np.array(list(test[:,1] > (-1 * rectify_cut)) + [True], dtype=np.bool)
+            if False not in peak_bool:
+                break
+            curve = curve[peak_bool]
 
     ## Plot
     plt.plot(curve[:-1, 0], curve[:-1, 1])
