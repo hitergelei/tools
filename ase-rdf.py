@@ -22,7 +22,10 @@ def get_RDF(alist, rMax, nBins=500, chem=None, log=False):
         (unique, counts) = np.unique(alist[0].get_chemical_symbols(), return_counts=True)
         norm_const = counts[list(unique).index(chem2)] / np.sum(counts)
         #
-        rdf = RDFobj.get_rdf(elements=(spec_ind1, spec_ind2)) / norm_const
+        from chem_num_inverter import invert_chem_num
+        spec_inds = invert_chem_num(chem)
+        #
+        rdf = RDFobj.get_rdf(elements=tuple(spec_inds)) / norm_const
     x = np.arange(nBins) * rMax / nBins
     ## Return curve
     return np.transpose(np.concatenate(([x], [rdf])))
