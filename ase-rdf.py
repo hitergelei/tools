@@ -1,54 +1,71 @@
 #!/usr/bin/env python
 
 from asap3.analysis.rdf import RadialDistributionFunction as RDF
-from ase.io.trajectory import Trajectory
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-print("\n\n#######################################################################################\n")
-print("      %%%%%%%%%%% This code will give you Raidial Distribution Function %%%%%%%%%")
-print("useage ==> ./ase-rdf.py 'trajectory file' 'rMax' 'nBins'")
-print("           EXAMPLE) ./ase-rdf.py si.traj 12 500")
-print("                    OUTPUT file is 'rdf-si.traj.log'")
-print("#######################################################################################")
-if len(sys.argv) is 4:
-    print("          The Number of arguments is correct.\n\n")
-else:
-    print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
-    sys.exit(1)
+if __name__ == '__main__':
+    import sys
+    import datetime
 
-inp_fname = sys.argv[1]
-rMax = sys.argv[2]
-rMax = float(rMax)
-nBins = sys.argv[3]
-nBins = int(nBins)
+    now = datetime.datetime.now()
+    time = now.strftime('%Y-%m-%d %H:%M:%S')
+    print('')
+    print('>>>>> Code by Young Jae Choi @ POSTECH <<<<<'.center(120))
+    print(('code started time: '+time).center(120))
+    print('')
+    print('=================================================================================================='.center(120))
+    print('This code will give you Raidial Distribution Function'.center(120))
+    print('')
+    print('Useage  ==> ./ase-rdf.py >atoms list file< >rMax< >nBins<'.center(120))
+    print('Example ==> ./ase-rdf.py si.traj 12 500                  '.center(120))
+    print('')
+    print('Return ----------> rdf-(original name)-(rMax)-(nBins).npy'.center(120))
+    print('')
+    print('=================================================================================================='.center(120))
 
-traj = Trajectory(inp_fname, "r")
-RDFobj = RDF(atoms=traj[0],
-             rMax=rMax,
-             nBins=nBins)
+    inp_fname = sys.argv[1]
+    rMax = float(sys.argv[2])
+    nBins = int(sys.argv[3])
+    fname = 'rdf-{}-{:.2f}-{}.npy'.format(inp_fname, rMax, nBins)
+    try:
+        curve = np.load(fname)
+        print('File {} is loaded.'.format(fname).center(120))
+    except:
+        print('File {} not found. Calculation will be carried out.'.format(fname).center(120))
+        ## Read inputs
+        from ase.io import read
+        alist = read(inp_fname, ':')
+        RDFobj = RDF(atoms=alist[0],
+                     rMax=rMax,
+                     nBins=nBins)
 
-for i in range(1,len(traj)):
-    RDFobj.atoms = traj[i]  # Fool RDFobj to use the new atoms
-    RDFobj.update()           # Collect data
-    if i % 1000 == 999:
-        print("\t Updating "+str(i+1)+" th image's RDF")
+        for i in range(1,len(alist)):
+            RDFobj.atoms = alist[i]  # Fool RDFobj to use the new atoms
+            RDFobj.update()           # Collect data
+            if i % 1000 == 999:
+                print('\t Updating '+str(i+1)+" th image's RDF")
 
-rdf = RDFobj.get_rdf()
-x = np.arange(nBins) * rMax / nBins
+        rdf = RDFobj.get_rdf()
+        x = np.arange(nBins) * rMax / nBins
 
-out = open("rdf-"+inp_fname+".log", "w")
-for i in range(len(x)):
-    out.write(str("%.7f" %x[i])+"\t"+str(rdf[i])+"\n")
+        ## Writing output
+        curve = np.transpose(np.concatenate(([x], [rdf])))
+        np.save(fname, curve)
+        print('=================================================================================================='.center(120))
+        print('Return ----------> {}'.format(fname).center(120))
+        print('=================================================================================================='.center(120))
 
-print("\n\n#######################################################################################\n")
-print("      %%%%%%%%%%% This code will give you Raidial Distribution Function %%%%%%%%%")
-print("useage ==> ./ase-rdf.py 'trajectory file' 'rMax' 'nBins'")
-print("           EXAMPLE) ./ase-rdf.py si.traj 12 500")
-print("                    OUTPUT file is 'rdf-si.traj.log'")
-print("#######################################################################################")
+    ## Rectify curve
+    iter = True
+    while True:
+        test = curve[1:] - curve[:-1]
+        peak_bool = np.array(list(test[:,1] > -0.2) + [True], dtype=np.bool)
+        if False not in peak_bool:
+            break
+        curve = curve[peak_bool]
 
-plt.plot(x, rdf)
-plt.show()
-
+    ## Plot
+    plt.plot(curve[:-1, 0], curve[:-1, 1])
+    plt.show()
