@@ -111,9 +111,9 @@ if __name__ == '__main__':
     else:
         plt.ylabel(r'$g_{{{}{}}}(r)$'.format(chem[0], chem[1]), fontsize='xx-large')
     plt.xlabel(r'$r\ /\ \AA$', fontsize='xx-large')
-    plt.subplots_adjust(left=0.15, bottom=0.35, right=0.95, top=0.65, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.15, bottom=0.37, right=0.95, top=0.63, wspace=0.2, hspace=0.2)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
     plt.xlim(0., rMax)
-    plt.hlines(1., 0., rMax, linestyle='dashed')
+    plt.hlines(1., 0., rMax, linestyle='dashed', linewidth=2)
     plt.show()
