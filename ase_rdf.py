@@ -20,7 +20,7 @@ def get_RDF(alist, rMax, nBins=500, chem=None, log=False):
     else:
         # Get normalize constant
         (unique, counts) = np.unique(alist[0].get_chemical_symbols(), return_counts=True)
-        norm_const = counts[list(unique).index(chem2)] / np.sum(counts)
+        norm_const = counts[list(unique).index(chem[1])] / np.sum(counts, dtype=np.float)
         #
         from chem_num_inverter import invert_chem_num
         spec_inds = invert_chem_num(chem)

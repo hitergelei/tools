@@ -5,7 +5,7 @@ import numpy as np
 ## Hyper params
 legend_bool = True
 ylim_low    = None
-ylim_up     = 2.5
+ylim_up     = 3.5
 
 if __name__ == '__main__':
     import sys
@@ -39,9 +39,11 @@ if __name__ == '__main__':
     [chem2, rMax2] = rdf2_f.split('-')[-3:-1]
     if chem1 != chem2 or rMax1 != rMax2:
         raise ValueError('Two files seem not proper to compare. ({} != {} or {} != {})'.format(chem1, chem2, rMax1, rMax2))
-    else:
+    elif chem1 != 'allall':
         chem = chem1
-        rMax = np.float(rMax1)
+    else:
+        chem = None
+    rMax = np.float(rMax1)
 
     ## Rectify curve
     if rectify_cut:
