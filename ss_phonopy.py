@@ -389,8 +389,8 @@ def plot_band_and_dos(
     import matplotlib.pyplot as plt
     if labels:
         from matplotlib import rc
-        rc('font',**{'family':'serif','sans-serif':['Times']})
-        rc('text', usetex=True)
+        # rc('font',**{'family':'serif','sans-serif':['Times']})
+        # rc('text', usetex=True)
 
     import matplotlib.gridspec as gridspec
     plt.figure(figsize=(20, 6))
