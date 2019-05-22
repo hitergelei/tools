@@ -2,6 +2,7 @@
 
 import sys
 import datetime
+import numpy as np
 now = datetime.datetime.now()
 time = now.strftime('%Y-%m-%d %H:%M:%S')
 print("")
@@ -68,8 +69,9 @@ print("type.raw :: writing")
 from ss_util import list2numlist as l2nl
 symbols = traj[0].get_chemical_symbols()
 type_ref.write(str(symbols))
-if traj[-1].get_chemical_symbols() != symbols:
-    raise ValueError("Chemical symbols seem to be not consistent. Please check")
+for i in np.random.choice(len(traj), 20, replace=False):
+    if traj[i].get_chemical_symbols() != symbols:
+        raise ValueError("Chemical symbols seem to be not consistent. Please check")
 symbols_num = l2nl(list(symbols))
 for nums in symbols_num:
     type_raw.write(str(nums)+" ")
