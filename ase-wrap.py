@@ -24,13 +24,17 @@ if __name__ == '__main__':
     else:
         raise ValueError("*****ERROR***** The number of arguments is not correct *****ERROR*****")
 
-    from ase.io import read
+    from ase.io import read, write
     obj = read(obj_file, ':')
     if not isinstance(obj, list):
         obj = [obj]
 
-    from ase.io.trajectory import Trajectory as Traj
-    traj = Traj('wrapped-'+obj_file, 'w')
+    # from ase.io.trajectory import Trajectory as Traj
+    # if obj_file.split('.')[-1] == 'traj':
+        # traj = Traj('wrapped-'+obj_file, 'w')
+    # else:
+        # traj = Traj('wrapped-'+obj_file+'.traj', 'w')
+    alist = []
 
     #### Check the available info
     atoms = obj[0]
@@ -59,13 +63,21 @@ if __name__ == '__main__':
     i=0
     for atoms in obj:
         ## Backup results info
-        result = atoms._calc.results.copy()
+        if atoms._calc is not None:
+            result = atoms._calc.results.copy()
         atoms.wrap(eps=0.)
         ## Recover results info
-        atoms._calc.result = result.copy()
-        atoms._calc.atoms = atoms.copy()
-        traj.write(atoms)
+        if atoms._calc is not None:
+            atoms._calc.result = result.copy()
+            atoms._calc.atoms = atoms.copy()
+        # traj.write(atoms)
+        alist.append(atoms)
         #### Print every 1000 process
         i+=1
         if i % 1000 == 0: 
             print((str(i)+'-th image written').center(120))
+
+    if obj_file.split('.')[-1] == 'traj':
+        write('wrapped-'+obj_file, alist)
+    else:
+        write('wrapped-'+obj_file+'.traj', alist)

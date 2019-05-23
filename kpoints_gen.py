@@ -18,6 +18,10 @@ def get_grid_num(cell_mat, precision):
     k_grids = np.around(precision / cell_mat).astype(np.int)
     return k_grids
 
+def write_KPOINTS(k_grids):
+    with open('KPOINTS', 'w') as txt:
+        txt.write('KPOINTS\n0\nGamma\n{} {} {}\n0 0 0'.format(k_grids[0], k_grids[1], k_grids[2]))
+        
 if __name__ == '__main__':
     import sys
     import datetime
@@ -41,8 +45,7 @@ if __name__ == '__main__':
     from ase.io import read
     cell_mat = read(sys.argv[1], -1).get_cell()
     prec = sys.argv[2]
-    kgrid = get_grid_num(cell_mat, prec)
+    k_grids = get_grid_num(cell_mat, prec)
 
     ## Write KPOINTS
-    with open('KPOINTS', 'w') as txt:
-        txt.write('KPOINTS\n0\nGamma\n{} {} {}\n0 0 0'.format(kgrid[0], kgrid[1], kgrid[2]))
+    write_KPOINTS(k_grids)
