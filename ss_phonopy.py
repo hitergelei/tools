@@ -423,10 +423,7 @@ def plot_band_and_dos(
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
     bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, plot_legend, labels=labels)
-    if unit == 'meV':
-        plt.ylabel('Frequency(meV)', fontsize=35)
-    elif unit == 'THz':
-        plt.ylabel('Frequency(THz)', fontsize=35)
+    plt.ylabel('Frequency ({})'.format(unit), fontsize=35)
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')
 
