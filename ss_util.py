@@ -7,6 +7,24 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
+def read_txt_matrix(file_name, start_line=0, end_line=-1):
+    mat = []
+    with open(file_name, 'r') as f:
+        for i in range(start_line):
+            f.readline()
+        if end_line != -1:
+            for i in range(end_line - start_line + 1):
+                line = f.readline()
+                seg = line.split()
+                mat.append(seg)
+        else:
+            while True:
+                line = f.readline()
+                if not line: break
+                seg = line.split()
+                mat.append(seg)
+    return mat
+
 def nospace(string): return string.replace(' ', '_')
 def E_fromAlist(alist):
     energies = []
