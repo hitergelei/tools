@@ -26,14 +26,17 @@ flip_pdos_xy       = True
 dos_tetrahedron    = False
 
 #
-if symmetry:
+if symmetry is True:
     is_symmetry = True
     is_plusminus = 'auto'
-    if symmetry == '+-':
-        is_plusminus = True
-else:
+elif symmetry == '+-':
+    is_symmetry = True
+    is_plusminus = True
+elif symmetry is False:
     is_symmetry = False
     is_plusminus = 'auto'
+else:
+    raise ValueError('symmetry parameter "{}" is unknown.'.format(symmetry))
 
 #
 from phonopy import Phonopy, units
