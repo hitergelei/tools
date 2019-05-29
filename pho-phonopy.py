@@ -23,7 +23,7 @@ unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = False
 flip_pdos_xy       = True
-dos_tetrahedron    = False
+dos_tetrahedron    = True
 
 #
 if symmetry is True:
