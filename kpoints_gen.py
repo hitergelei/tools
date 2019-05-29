@@ -16,6 +16,8 @@ def get_grid_num(cell_mat, precision):
         raise ValueError('Cell matrix shape[={}] is wrong. (3,3) or (3,) should be given.'.format(np.shape(cell_mat)))
     # Get grid numbers
     k_grids = np.around(precision / cell_mat).astype(np.int)
+    # Prevent zero
+    k_grids += (k_grids == 0).astype(np.int)
     return k_grids
 
 def write_KPOINTS(k_grids):
