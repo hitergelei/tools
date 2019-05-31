@@ -2,26 +2,28 @@
 
 import numpy as np
 
-## Global params
-calc = 'dpmd'
-# calc = 'vasp'
+    ## Global params
+# calc = 'dpmd'
+calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_rlx')
+atoms = vasp.read_vasp('POSCAR_GeTe_conv_1.05')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
-symmetry           = '+-'
-# phonon_or_pdos     = 'phonon'
-phonon_or_pdos     = 'pdos'
-pdos_precision     = 500
-chemical_pdos      = True
+symmetry           = True
+# symmetry           = '+-'
+phonon_or_pdos     = 'phonon'
+# phonon_or_pdos     = 'pdos'
 freqlim_up         = None
 freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = False
+    ## PDOS arguments
+pdos_precision     = 500
+chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
 
@@ -117,8 +119,8 @@ yaml_name = 'gnuplot_phonon.yaml'
 phonon.write_yaml_band_structure(filename=yaml_name)
 from subprocess import call
 call(['phonopy-bandplot --gnuplot '+yaml_name+' > band-'+calc+'.in'], shell=True)
-eu1 = np.load('eu1.npy')
-eu2 = np.load('eu2.npy')
+# eu1 = np.load('eu1.npy')
+# eu2 = np.load('eu2.npy')
 
 #### Band plot
 if phonon_or_pdos == 'phonon':
@@ -131,15 +133,15 @@ if phonon_or_pdos == 'phonon':
         )
     phonon.run_total_dos()
 
-    eu1 = eigvec[3]
-    eu2 = eigvec[4]
+    # eu1 = eigvec[3]
+    # eu2 = eigvec[4]
     ssp.plot_band_and_dos(
         phonon,
         labels           = ['K', '$\Gamma$', 'M'],
         unit             = unit,
-        proj_eigvec      = {'Eu-A':eu1, 'Eu-B':eu2},
+        # proj_eigvec      = {'Eu-A':eu1, 'Eu-B':eu2},
         # proj_size_factor = 400.,
-        proj_colors      = ['g', 'r'],
+        # proj_colors      = ['g', 'r'],
         # proj_alpha       = 0.1,
         # proj_legend      = True,
         ylim_lower       = freqlim_low,

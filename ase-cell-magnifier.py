@@ -46,5 +46,5 @@ if __name__ == '__main__':
         A_new = np.matmul(M, A)
         atoms.set_cell(A_new, scale_atoms=True)
 
-    write(a_file+'_magnified.traj', alist)
+    write('magnified_'+a_file, alist, format=format)
 
