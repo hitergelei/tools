@@ -6,23 +6,23 @@ import numpy as np
 # calc = 'dpmd'
 calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_GeTe_conv_15.8')
-N                  = 4
+atoms = vasp.read_vasp('POSCAR_tmp')
+N                  = 1
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-phonon_or_pdos     = 'phonon'
-# phonon_or_pdos     = 'pdos'
+# phonon_or_pdos     = 'phonon'
+phonon_or_pdos     = 'pdos'
 freqlim_up         = None
 freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = False
+legend_bool        = True
     ## PDOS arguments
-pdos_precision     = 500
+pdos_precision     = 100
 chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
@@ -163,7 +163,7 @@ if phonon_or_pdos == 'pdos':
     call('mkdir {}'.format(dir_name), shell=True)
     from kpoints_gen import get_grid_num
     k_grids = get_grid_num(phonon.get_supercell().cell, precision=pdos_precision)
-    pckl_name = dir_name + 'p{:d}_k{:d}{:d}{:d}_tetra{}.bin'.format(pdos_precision, k_grids[0],k_grids[1],k_grids[2], dos_tetrahedron)
+    pckl_name = dir_name + 'p-{:d}_k-{:d}-{:d}-{:d}_tetra-{}.bin'.format(pdos_precision, k_grids[0],k_grids[1],k_grids[2], dos_tetrahedron)
     ## 
     import pickle as pckl
     try:
@@ -215,3 +215,4 @@ if phonon_or_pdos == 'pdos':
     plt.yticks(fontsize='xx-large')
     plt.grid(alpha=0.2)
     plt.show()
+
