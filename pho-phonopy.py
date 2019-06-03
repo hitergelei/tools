@@ -6,7 +6,7 @@ import numpy as np
 # calc = 'dpmd'
 calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_GeTe_conv_1.05')
+atoms = vasp.read_vasp('POSCAR_GeTe_conv_15.8')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
@@ -108,10 +108,9 @@ phonon.set_band_structure(
 ######### eigenvectors #########
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
-freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.,0.])
+freq, eigvec = phonon.get_frequencies_with_eigenvectors(M)
 eigvec = eigvec.T
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
-
 
 ########## Plot ################
 #ssp.plot_band(phonon, labels = ['GM', 'X', 'U|K', 'GM', 'L']).show()
@@ -151,16 +150,39 @@ if phonon_or_pdos == 'phonon':
 
 #### Partial DOS plot
 if phonon_or_pdos == 'pdos':
+    ## Get name
+    delta    = np.linalg.norm(phonon.get_displacements()[0][1:4])
+    job_name = 'x{}{}{}_d{:5.3f}_sym{}'.format(
+        phonon.get_supercell_matrix()[0][0],
+        phonon.get_supercell_matrix()[1][1],
+        phonon.get_supercell_matrix()[2][2],
+        delta,
+        phonon._is_symmetry,
+        )
+    dir_name = job_name + '.pdos/'
+    call('mkdir {}'.format(dir_name), shell=True)
     from kpoints_gen import get_grid_num
     k_grids = get_grid_num(phonon.get_supercell().cell, precision=pdos_precision)
-    phonon.run_mesh(
-        [k_grids[0], k_grids[1], k_grids[2]],
-        is_mesh_symmetry=False,
-        with_eigenvectors=True,
-        )
-    phonon.run_projected_dos(
-        use_tetrahedron_method=dos_tetrahedron,
-        )
+    pckl_name = dir_name + 'p{:d}_k{:d}{:d}{:d}_tetra{}.bin'.format(pdos_precision, k_grids[0],k_grids[1],k_grids[2], dos_tetrahedron)
+    ## 
+    import pickle as pckl
+    try:
+        phonon._pdos = pckl.load(open(pckl_name, 'rb'))
+    except:
+        print('Failed to load PDOS pickle file. Expected file name: {}'.format(pckl_name).center(120))
+        print('PDOS calculation will be carried out'.center(120))
+        phonon.run_mesh(
+            [k_grids[0], k_grids[1], k_grids[2]],
+            is_mesh_symmetry=False,
+            with_eigenvectors=True,
+            )
+        phonon.run_projected_dos(
+            use_tetrahedron_method=dos_tetrahedron,
+            )
+        pckl.dump(phonon._pdos, open(pckl_name, 'wb'), protocol=2)
+    else:
+        print('Successfully load {}'.format(pckl_name).center(120))
+
     phonon.write_projected_dos('pdos-'+calc+'.in')
     if chemical_pdos:
         chem_arr = np.array(atoms.get_chemical_symbols())
