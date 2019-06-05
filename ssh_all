@@ -15,7 +15,7 @@ default_end_node=197
 elif [ $hostname = 'pcs7' ]
 then
 default_start_node=1
-default_end_node=25
+default_end_node=23
 elif [ $hostname = 'pcs8' ]
 then
 default_start_node=1
