@@ -4,10 +4,12 @@ hostname=`echo \$HOSTNAME`
 
 if [ $hostname = 'pcs5-pal' ]
 then
+hostname='pcs5'
 default_start_node=18
 default_end_node=42
 elif [ $hostname = 'pcs6-ib' ]
 then
+hostname='pcs6'
 default_start_node=177
 default_end_node=197
 elif [ $hostname = 'pcs7' ]
