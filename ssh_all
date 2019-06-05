@@ -1,0 +1,81 @@
+#!/bin/sh
+
+hostname=`echo \$HOSTNAME`
+
+if [ $hostname = 'pcs5-pal' ]
+then
+default_start_node=18
+default_end_node=42
+elif [ $hostname = 'pcs6-ib' ]
+then
+default_start_node=177
+default_end_node=197
+elif [ $hostname = 'pcs7' ]
+then
+default_start_node=1
+default_end_node=25
+elif [ $hostname = 'pcs8' ]
+then
+default_start_node=1
+default_end_node=7
+else
+exit 0
+fi
+
+if [ $# -eq 1 ]
+then 
+start_node=$default_start_node
+end_node=$default_end_node
+fi
+
+if [ $# -eq 2 ]
+then 
+start_node=$2
+end_node=$2
+fi
+
+if [ $# -eq 3 ]
+then
+start_node=$2
+end_node=$3
+fi
+
+if [ $# -gt 3 ]
+then
+echo "invalid arguments : usage : killproc execname [start node ,[end node]]"
+exit 1
+fi
+
+if [ $# -eq 0 ]
+then 
+echo "invalid arguments : usage : killproc execname [start node ,[end node]]"
+exit 1
+fi
+
+i=$start_node
+
+while [ "$i" -le $end_node ]
+do
+
+if [ "$i" -le 9 ]
+then
+        echo "------------------------ [node0$i] ---------------------------"
+        ssh $hostname-0$i $1
+        i=$(($i+1))
+elif [ "$i" -le 99 ]
+then
+        echo "------------------------ [node$i] ---------------------------"
+        ssh $hostname-$i $1
+        i=$(($i+1))
+else
+        echo "------------------------ [node$i] ---------------------------"
+        ssh $hostname-$i $1
+        i=$(($i+1))
+fi
+
+done
+
+echo "-------------------------- DONE -----------------------------"
+
+
+exit 0
