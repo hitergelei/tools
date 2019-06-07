@@ -2,11 +2,11 @@
 
 import numpy as np
 
-def get_RDF(alist, rMax, nBins=500, chem=None, log=False):
+def get_RDF(alist, rMax, nBin=500, chem=None, log=False):
     from asap3.analysis.rdf import RadialDistributionFunction as RDF
     RDFobj = RDF(atoms=alist[0],
                  rMax=rMax,
-                 nBins=nBins)
+                 nBins=nBin)
     for i in range(1,len(alist)):
         RDFobj.atoms = alist[i]
         RDFobj.update()
@@ -26,7 +26,7 @@ def get_RDF(alist, rMax, nBins=500, chem=None, log=False):
         spec_inds = invert_chem_num(chem)
         #
         rdf = RDFobj.get_rdf(elements=tuple(spec_inds)) / norm_const
-    x = np.arange(nBins) * rMax / nBins
+    x = np.arange(nBin) * rMax / nBin
     ## Return curve
     return np.transpose(np.concatenate(([x], [rdf])))
 
@@ -40,60 +40,70 @@ def rectify_RDF(curve, rectify_cut):
         curve = curve[peak_bool]
     return curve
 
-if __name__ == '__main__':
-    import sys
-    import datetime
+def argparse():
+    import argparse
+    parser = argparse.ArgumentParser(description = """
+    This code will give you the (Total/Partial) Raidial Distribution Function.
+    Return npy file.
+    """)
+    # Positional arguments
+    parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name')
+    # Optional arguments
+    parser.add_argument('-p', '--partial', type=str, default='total', help='If you need partial RDF. Default: total RDF. E.g.: -p Ge-Te')
+    parser.add_argument('-r', '--rmax', type = float, default=12., help='Maximum radius for RDF. Default: 12.')
+    parser.add_argument('-n', '--nbin', type=int, default=500, help='Number of bins. Default: 500')
+    parser.add_argument('-c', '--rectify-cut', type=float, default=False, help='All of drastic variation higher than this value will be omitted in output. Default: no rectify')
+    return parser.parse_args()
 
+if __name__ == '__main__':
+    ## Intro
+    import datetime
     now = datetime.datetime.now()
     time = now.strftime('%Y-%m-%d %H:%M:%S')
     print('')
     print('>>>>> Code by Young Jae Choi @ POSTECH <<<<<'.center(120))
-    print(('code started time: '+time).center(120))
+    print(('Code runtime : '+time).center(120))
     print('')
     print('=================================================================================================='.center(120))
-    print('This code will give you (Total/Partial) Raidial Distribution Function'.center(120))
-    print('')
-    print('Useage    ==> ./ase_rdf.py >1st_spec< >2nd_spec< >atoms list file< >rMax< >nBins< (>rectify_cut<)'.center(120))
-    print('Example 1 ==> ./ase_rdf.py     all        all         si.traj        12     500         0.2      '.center(120))
-    print('Example 2 ==> ./ase_rdf.py      Ge         Te         si.traj        12     500         0.2      '.center(120))
-    print('')
-    print('Return ----------> rdf-(original name)-(rMax)-(nBins).npy'.center(120))
-    print('')
+    print('This code will give you the (Total/Partial) Raidial Distribution Function'.center(120))
     print('=================================================================================================='.center(120))
+    print('')
+    args = argparse()
 
     ## Read input params
-    chem1 = sys.argv[1]
-    chem2 = sys.argv[2]
-    inp_fname = sys.argv[3]
-    rMax = float(sys.argv[4])
-    nBins = int(sys.argv[5])
-    if len(sys.argv) == 7:
-        rectify_cut = float(sys.argv[6])
-    else:
-        rectify_cut = None
-    fname = 'rdf-{}-{}{}-{:.2f}-{}.npy'.format(inp_fname, chem1, chem2, rMax, nBins)
-    if chem1 != 'all' and chem2 != 'all':
-        chem = [chem1, chem2]
-    elif chem1 == 'all' and chem2 == 'all':
+    # --partial
+    if args.partial == 'total':
         chem = None
+    elif len(args.partial.split('-')) == 2:
+        chem = args.partial.split('-')
     else:
-        raise ValueError('chem1 ({}) or chem2 ({}) argument is wrong. (Or both)'.format(chem1, chem2))
+        raise ValueError('--partial (or -p) argument (={}) is wrong.'.format(args.partial))
+    # --rmax, --nbin
+    rMax = args.rmax
+    nBin = args.nbin
+    # --rectify_cut
+    rectify_cut = args.rectify_cut
+    if rectify_cut == False:
+        rectify_cut = False
+    # --inp_file
+    inp_fname = args.inp_file
+    out_fname = 'rdf-{}-{}-{:.2f}-{}.npy'.format(inp_fname, args.partial, rMax, nBin)
 
     ## Load saved file
     try:
-        curve = np.load(fname)
+        curve = np.load(out_fname)
     except:
-        print('File "{}" not found. Calculation will be carried out.'.format(fname).center(120))
+        print('File "{}" not found. Calculation will be carried out.'.format(out_fname).center(120))
         ## Read inputs
         from ase.io import read
         alist = read(inp_fname, ':')
-        curve = get_RDF(alist, rMax, nBins, chem, log=True)
-        np.save(fname, curve)
+        curve = get_RDF(alist, rMax, nBin, chem, log=True)
+        np.save(out_fname, curve)
         print('=================================================================================================='.center(120))
-        print('Return ----------> {}'.format(fname).center(120))
+        print('Return ----------> {}'.format(out_fname).center(120))
         print('=================================================================================================='.center(120))
     else:
-        print('File "{}" is loaded.'.format(fname).center(120))
+        print('File "{}" is loaded.'.format(out_fname).center(120))
 
 
     ## Rectify curve
