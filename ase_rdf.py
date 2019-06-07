@@ -88,23 +88,36 @@ if __name__ == '__main__':
     # --inp_file
     inp_fname = args.inp_file
     out_fname = 'rdf-{}-{}-{:.2f}-{}.npy'.format(inp_fname, args.partial, rMax, nBin)
+    if chem is not None:
+        out_fname2 = 'rdf-{}-{}-{:.2f}-{}.npy'.format(inp_fname, chem[1]+'-'+chem[0], rMax, nBin)
 
     ## Load saved file
     try:
         curve = np.load(out_fname)
     except:
-        print('File "{}" not found. Calculation will be carried out.'.format(out_fname).center(120))
-        ## Read inputs
-        from ase.io import read
-        alist = read(inp_fname, ':')
-        curve = get_RDF(alist, rMax, nBin, chem, log=True)
-        np.save(out_fname, curve)
-        print('=================================================================================================='.center(120))
-        print('Return ----------> {}'.format(out_fname).center(120))
-        print('=================================================================================================='.center(120))
+        print('File "{}" was not found.'.format(out_fname).center(120))
+        do_calc = True
+        if chem is not None:
+            try:
+                curve = np.load(out_fname2)
+            except:
+                print('Also, file "{}" was not found. Calculation will be carried out.'.format(out_fname2).center(120))
+                do_calc = True
+            else:
+                out_fname = out_fname2
+                print('File "{}" is loaded.'.format(out_fname).center(120))
+                do_calc = False
+        if do_calc:
+            ## Read inputs
+            from ase.io import read
+            alist = read(inp_fname, ':')
+            curve = get_RDF(alist, rMax, nBin, chem, log=True)
+            np.save(out_fname, curve)
+            print('=================================================================================================='.center(120))
+            print('Return ----------> {}'.format(out_fname).center(120))
+            print('=================================================================================================='.center(120))
     else:
         print('File "{}" is loaded.'.format(out_fname).center(120))
-
 
     ## Rectify curve
     if rectify_cut:
