@@ -14,9 +14,12 @@ from ase.calculators.lammpsrun import LAMMPS
 import os
 
 ## Global params
-label = "gete-crystallization"
-atoms = read('init.traj')
-temp  = 650
+label    = "GST-liquid"
+atoms    = read('GST-liquid-1.traj', -1)
+temp     = 1100 *units.kB
+timestep = 10 *units.fs
+ttime    = 1000 *units.fs
+ptime    = 1000 *units.fs
 
 ############# calculator ############
 calc = Vasp()
@@ -27,8 +30,8 @@ write_KPOINTS(get_grid_num(atoms.get_cell(), 45))
 calc.read_kpoints()
     
 ########### dynamics ###############
-Max(atoms, temp* 2.0 *units.kB)
-Stationary(atoms)
+# Max(atoms, temp* 2.0)
+# Stationary(atoms)
 
 # from ase.md.verlet import VelocityVerlet
 # dyn = VelocityVerlet(atoms, 10*units.fs , trajectory = 'atoms_training_set_'+str(i)+'.traj')  #'dyn' is defined as an object of VV class 
@@ -43,12 +46,10 @@ Stationary(atoms)
     # logfile     = 'log_'+label+'.txt',
     # ) 
 from ase.md.npt import NPT
-ttime = 1000 *units.fs
-ptime = 1000 *units.fs
 dyn = NPT(
     atoms = atoms,
-    timestep = 10 *units.fs,
-    temperature = 650. *units.kB, 
+    timestep = timestep,
+    temperature = temp,
     externalstress = 0.,
     ttime = ttime,
     pfactor = (ptime)**2 * 100. *units.GPa,
