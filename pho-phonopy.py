@@ -6,7 +6,7 @@ import numpy as np
 # calc = 'dpmd'
 calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_tmp')
+atoms = vasp.read_vasp('POSCAR')
 N                  = 1
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
@@ -22,7 +22,7 @@ unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = True
     ## PDOS arguments
-pdos_precision     = 100
+pdos_precision     = 250
 chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
