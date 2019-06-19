@@ -6,18 +6,20 @@ import numpy as np
 # calc = 'dpmd'
 calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR')
-N                  = 1
+atoms = vasp.read_vasp('POSCAR_beta_GeTe_conv')
+N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-# phonon_or_pdos     = 'phonon'
-phonon_or_pdos     = 'pdos'
-freqlim_up         = None
-freqlim_low        = None
+phonon_or_pdos     = 'phonon'
+# phonon_or_pdos     = 'pdos'
+freqlim_up         = 6
+freqlim_low        = -4
+# freqlim_up         = None
+# freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = True
@@ -108,7 +110,7 @@ phonon.set_band_structure(
 ######### eigenvectors #########
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
-freq, eigvec = phonon.get_frequencies_with_eigenvectors(M)
+freq, eigvec = phonon.get_frequencies_with_eigenvectors(GM)
 eigvec = eigvec.T
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 
@@ -120,6 +122,9 @@ from subprocess import call
 call(['phonopy-bandplot --gnuplot '+yaml_name+' > band-'+calc+'.in'], shell=True)
 # eu1 = np.load('eu1.npy')
 # eu2 = np.load('eu2.npy')
+g1 = np.load('g1.npy')
+g2 = np.load('g2.npy')
+g3 = np.load('g3.npy')
 
 #### Band plot
 if phonon_or_pdos == 'phonon':
@@ -138,11 +143,11 @@ if phonon_or_pdos == 'phonon':
         phonon,
         labels           = ['K', '$\Gamma$', 'M'],
         unit             = unit,
-        # proj_eigvec      = {'Eu-A':eu1, 'Eu-B':eu2},
+        proj_eigvec      = {'$\Gamma$1':g1, '$\Gamma$2':g2, '$\Gamma$3':g3},
         # proj_size_factor = 400.,
-        # proj_colors      = ['g', 'r'],
+        proj_colors      = ['g', 'r', 'b'],
         # proj_alpha       = 0.1,
-        # proj_legend      = True,
+        plot_legend      = legend_bool,
         ylim_lower       = freqlim_low,
         ylim_upper       = freqlim_up,
         # reverse_seq      = True,
