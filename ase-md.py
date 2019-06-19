@@ -14,8 +14,8 @@ from ase.calculators.lammpsrun import LAMMPS
 import os
 
 ## Global params
-label    = "GST-liquid"
-atoms    = read('GST-liquid-1.traj', -1)
+label    = "GeTe-liquid"
+atoms    = read('init.vasp')
 temp     = 1100 *units.kB
 timestep = 10 *units.fs
 ttime    = 1000 *units.fs
@@ -30,8 +30,8 @@ write_KPOINTS(get_grid_num(atoms.get_cell(), 45))
 calc.read_kpoints()
     
 ########### dynamics ###############
-# Max(atoms, temp* 2.0)
-# Stationary(atoms)
+Max(atoms, temp* 1.0)
+Stationary(atoms)
 
 # from ase.md.verlet import VelocityVerlet
 # dyn = VelocityVerlet(atoms, 10*units.fs , trajectory = 'atoms_training_set_'+str(i)+'.traj')  #'dyn' is defined as an object of VV class 
