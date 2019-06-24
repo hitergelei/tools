@@ -6,20 +6,18 @@ import numpy as np
 # calc = 'dpmd'
 calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_beta_GeTe_conv')
-N                  = 4
+atoms = vasp.read_vasp('POSCAR')
+N                  = 1
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-phonon_or_pdos     = 'phonon'
-# phonon_or_pdos     = 'pdos'
-freqlim_up         = 6
-freqlim_low        = -4
-# freqlim_up         = None
-# freqlim_low        = None
+# phonon_or_pdos     = 'phonon'
+phonon_or_pdos     = 'pdos'
+freqlim_up         = None
+freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = True
@@ -28,6 +26,8 @@ pdos_precision     = 250
 chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
+total_dos_bool     = True
+mode_projection    = {'g1':np.load('g1-gete12.npy'), 'g2':np.load('g2-gete12.npy'), 'g3':np.load('g3-gete12.npy')}
 
 #
 if symmetry is True:
@@ -110,22 +110,16 @@ phonon.set_band_structure(
 ######### eigenvectors #########
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
-freq, eigvec = phonon.get_frequencies_with_eigenvectors(GM)
+freq, eigvec = phonon.get_frequencies_with_eigenvectors(M)
 eigvec = eigvec.T
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 
-########## Plot ################
-#ssp.plot_band(phonon, labels = ['GM', 'X', 'U|K', 'GM', 'L']).show()
-yaml_name = 'gnuplot_phonon.yaml'
-phonon.write_yaml_band_structure(filename=yaml_name)
-from subprocess import call
-call(['phonopy-bandplot --gnuplot '+yaml_name+' > band-'+calc+'.in'], shell=True)
-# eu1 = np.load('eu1.npy')
-# eu2 = np.load('eu2.npy')
-g1 = np.load('g1.npy')
-g2 = np.load('g2.npy')
-g3 = np.load('g3.npy')
+#### Mode projection
+if mode_projection:
+    mode_list = list(mode_projection.keys())
 
+########## Plot ################
+from subprocess import call
 #### Band plot
 if phonon_or_pdos == 'phonon':
     from kpoints_gen import get_grid_num
@@ -137,21 +131,28 @@ if phonon_or_pdos == 'phonon':
         )
     phonon.run_total_dos()
 
+    # eu1 = np.load('eu1.npy')
+    # eu2 = np.load('eu2.npy')
     # eu1 = eigvec[3]
     # eu2 = eigvec[4]
+    yaml_name = 'gnuplot_phonon.yaml'
+    phonon.write_yaml_band_structure(filename=yaml_name)
+    call(['phonopy-bandplot --gnuplot '+yaml_name+' > band-'+calc+'.in'], shell=True)
     ssp.plot_band_and_dos(
         phonon,
         labels           = ['K', '$\Gamma$', 'M'],
         unit             = unit,
-        proj_eigvec      = {'$\Gamma$1':g1, '$\Gamma$2':g2, '$\Gamma$3':g3},
+        # proj_eigvec      = {'Eu-A':eu1, 'Eu-B':eu2},
         # proj_size_factor = 400.,
-        proj_colors      = ['g', 'r', 'b'],
+        # proj_colors      = ['g', 'r'],
         # proj_alpha       = 0.1,
-        plot_legend      = legend_bool,
+        # proj_legend      = True,
         ylim_lower       = freqlim_low,
         ylim_upper       = freqlim_up,
         # reverse_seq      = True,
         ).show()
+    # Only band plot
+    #ssp.plot_band(phonon, labels = ['GM', 'X', 'U|K', 'GM', 'L']).show()
 
 #### Partial DOS plot
 if phonon_or_pdos == 'pdos':
@@ -188,6 +189,28 @@ if phonon_or_pdos == 'pdos':
     else:
         print('Successfully load {}'.format(pckl_name).center(120))
 
+    if mode_projection:
+        from copy import deepcopy
+        mode_dir_name = pckl_name[:-3]+'mode_proj/'
+        call('mkdir {}'.format(mode_dir_name), shell=True)
+        phonon._pdos_mode = dict()
+        for mode in mode_list:
+            mode_pckl_name = mode_dir_name + '{}.bin'.format(mode)
+            try:
+                phonon._pdos_mode[mode] = pckl.load(open(mode_pckl_name, 'rb'))
+            except:
+                print('Failed to load mode projected PDOS pickle file. Expected file name: {}'.format(mode_pckl_name).center(120))
+                print('Mode projected PDOS calculation will be carried out ({} mode)'.format(mode).center(120))
+                phonon._pdos_mode[mode] = deepcopy(phonon._pdos)
+                sim = []
+                for i in range(len(phonon._pdos_mode[mode]._eigenvectors)):
+                    sim.append(np.square(np.abs(np.dot(np.transpose(phonon._pdos_mode[mode]._eigenvectors[i]), np.reshape(mode_projection[mode], (-1))))))
+                phonon._pdos_mode[mode]._weights = np.array(sim)
+                phonon._pdos_mode[mode]._run_tetrahedron_method()
+                pckl.dump(phonon._pdos_mode[mode], open(mode_pckl_name, 'wb'), protocol=2)
+            else:
+                print('Successfully load {}'.format(mode_pckl_name).center(120))
+
     phonon.write_projected_dos('pdos-'+calc+'.in')
     if chemical_pdos:
         chem_arr = np.array(atoms.get_chemical_symbols())
@@ -201,11 +224,34 @@ if phonon_or_pdos == 'pdos':
 
     else:
         (unique_chem, pdos_indices) = (None, None)
-    plt = phonon.plot_projected_dos(
+    plt, ax = phonon.plot_projected_dos(
         pdos_indices,
         unique_chem,
+        total_dos_bool,
         flip_xy=flip_pdos_xy,
         )
+    if mode_projection:
+        from phonopy.phonon.dos import get_pdos
+        # mode_legend = ['{} {}'.format(mode, chem) for chem in unique_chem]
+        mode_pdos_list = []
+        for mode in mode_list:
+            mode_pdos_list.append(get_pdos(
+                ax,
+                phonon._pdos_mode[mode]._partial_dos,
+                pdos_indices,
+                ))
+        mode_pdos = np.sum(mode_pdos_list, axis=0)
+        for pdos, chem in zip(mode_pdos, unique_chem):
+            if flip_pdos_xy:
+                ax.plot(-pdos, phonon._pdos._frequency_points, label='$\Gamma$-'+chem)
+            else:
+                ax.plot(phonon._pdos._frequency_points, -pdos, label='$\Gamma$-'+chem)
+        mode_pdos_sum = np.sum(mode_pdos, axis=0)
+        if flip_pdos_xy:
+            ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
+        else:
+            ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
+
     if flip_pdos_xy:
         plt.xlabel('PDOS (a.u.)',fontsize='xx-large')
         plt.ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
@@ -218,6 +264,8 @@ if phonon_or_pdos == 'pdos':
         plt.xlim(freqlim_low, freqlim_up)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
+    if legend_bool:
+        plt.legend()
     plt.grid(alpha=0.2)
     plt.show()
 
