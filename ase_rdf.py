@@ -49,7 +49,7 @@ def argparse():
     # Positional arguments
     parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name')
     # Optional arguments
-    parser.add_argument('-p', '--partial', type=str, default='total', help='If you need partial RDF. Default: total RDF. E.g.: -p Ge-Te')
+    parser.add_argument('-p', '--partial', type=str, default='total-total', help='If you need partial RDF. Default: total-total RDF. E.g.: -p Ge-Te')
     parser.add_argument('-r', '--rmax', type = float, default=12., help='Maximum radius for RDF. Default: 12.')
     parser.add_argument('-n', '--nbin', type=int, default=500, help='Number of bins. Default: 500')
     parser.add_argument('-c', '--rectify-cut', type=float, default=False, help='All of drastic variation higher than this value will be omitted in output. Default: no rectify')
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     ## Read input params
     # --partial
-    if args.partial == 'total':
+    if args.partial == 'total-total':
         chem = None
     elif len(args.partial.split('-')) == 2:
         chem = args.partial.split('-')
