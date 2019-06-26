@@ -20,8 +20,8 @@ if __name__ == '__main__':
     print('=================================================================================================='.center(120))
     print('This code will give you comparison graph of two RDFs'.center(120))
     print('')
-    print('Useage  ==> ./plt-compare-rdf.py >RDF 1 file< >RDF 2 file< (>rectify_cut<)'.center(120))
-    print('Example ==> ./plt-compare-rdf.py  ....DFT.npy ....DPMD.npy       0.2      '.center(120))
+    print('Useage  ==> ./plt-compare-rdf.py >DFT RDF file< >ML RDF file< (>rectify_cut<)'.center(120))
+    print('Example ==> ./plt-compare-rdf.py   ....DFT.npy   ....DPMD.npy       0.2      '.center(120))
     print('')
     print('=================================================================================================='.center(120))
 
@@ -35,11 +35,13 @@ if __name__ == '__main__':
     else:
         rectify_cut = None
     ## Split
-    [chem1, rMax1] = rdf1_f.split('-')[-3:-1]
-    [chem2, rMax2] = rdf2_f.split('-')[-3:-1]
+    [chem11, chem12, rMax1] = rdf1_f.split('-')[-4:-1]
+    [chem21, chem22, rMax2] = rdf2_f.split('-')[-4:-1]
+    chem1 = chem11+chem12
+    chem2 = chem21+chem22
     if chem1 != chem2 or rMax1 != rMax2:
         raise ValueError('Two files seem not proper to compare. ({} != {} or {} != {})'.format(chem1, chem2, rMax1, rMax2))
-    elif chem1 != 'allall':
+    elif chem1 != 'totaltotal':
         chem = chem1
     else:
         chem = None
