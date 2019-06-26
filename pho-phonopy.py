@@ -3,10 +3,10 @@
 import numpy as np
 
     ## Global params
-# calc = 'dpmd'
-calc = 'vasp'
+calc = 'dpmd'
+# calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR')
+atoms = vasp.read_vasp('POSCAR_rlx')
 N                  = 1
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
@@ -21,6 +21,7 @@ freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = True
+plot_bool          = False
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
@@ -212,60 +213,61 @@ if phonon_or_pdos == 'pdos':
                 print('Successfully load {}'.format(mode_pckl_name).center(120))
 
     phonon.write_projected_dos('pdos-'+calc+'.in')
-    if chemical_pdos:
-        chem_arr = np.array(atoms.get_chemical_symbols())
-        unique_chem = np.unique(chem_arr)
-        ind = np.arange(len(chem_arr))
-        pdos_indices = []
-        for chem in unique_chem:
-            pdos_indices.append(ind[chem_arr==chem])
-        if not legend_bool:
-            unique_chem = None
+    if plot_bool:
+        if chemical_pdos:
+            chem_arr = np.array(atoms.get_chemical_symbols())
+            unique_chem = np.unique(chem_arr)
+            ind = np.arange(len(chem_arr))
+            pdos_indices = []
+            for chem in unique_chem:
+                pdos_indices.append(ind[chem_arr==chem])
+            if not legend_bool:
+                unique_chem = None
 
-    else:
-        (unique_chem, pdos_indices) = (None, None)
-    plt, ax = phonon.plot_projected_dos(
-        pdos_indices,
-        unique_chem,
-        total_dos_bool,
-        flip_xy=flip_pdos_xy,
-        )
-    if mode_projection:
-        from phonopy.phonon.dos import get_pdos
-        # mode_legend = ['{} {}'.format(mode, chem) for chem in unique_chem]
-        mode_pdos_list = []
-        for mode in mode_list:
-            mode_pdos_list.append(get_pdos(
-                ax,
-                phonon._pdos_mode[mode]._partial_dos,
-                pdos_indices,
-                ))
-        mode_pdos = np.sum(mode_pdos_list, axis=0)
-        for pdos, chem in zip(mode_pdos, unique_chem):
-            if flip_pdos_xy:
-                ax.plot(-pdos, phonon._pdos._frequency_points, label='$\Gamma$-'+chem)
-            else:
-                ax.plot(phonon._pdos._frequency_points, -pdos, label='$\Gamma$-'+chem)
-        mode_pdos_sum = np.sum(mode_pdos, axis=0)
-        if flip_pdos_xy:
-            ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
         else:
-            ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
+            (unique_chem, pdos_indices) = (None, None)
+        plt, ax = phonon.plot_projected_dos(
+            pdos_indices,
+            unique_chem,
+            total_dos_bool,
+            flip_xy=flip_pdos_xy,
+            )
+        if mode_projection:
+            from phonopy.phonon.dos import get_pdos
+            # mode_legend = ['{} {}'.format(mode, chem) for chem in unique_chem]
+            mode_pdos_list = []
+            for mode in mode_list:
+                mode_pdos_list.append(get_pdos(
+                    ax,
+                    phonon._pdos_mode[mode]._partial_dos,
+                    pdos_indices,
+                    ))
+            mode_pdos = np.sum(mode_pdos_list, axis=0)
+            for pdos, chem in zip(mode_pdos, unique_chem):
+                if flip_pdos_xy:
+                    ax.plot(-pdos, phonon._pdos._frequency_points, label='$\Gamma$-'+chem)
+                else:
+                    ax.plot(phonon._pdos._frequency_points, -pdos, label='$\Gamma$-'+chem)
+            mode_pdos_sum = np.sum(mode_pdos, axis=0)
+            if flip_pdos_xy:
+                ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
+            else:
+                ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
 
-    if flip_pdos_xy:
-        plt.xlabel('PDOS (a.u.)',fontsize='xx-large')
-        plt.ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        plt.subplots_adjust(left=0.35, bottom=0.15, right=0.65, top=0.97, wspace=0.2, hspace=0.2)
-        plt.ylim(freqlim_low, freqlim_up)
-    else:
-        plt.xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        plt.ylabel('PDOS (a.u.)',fontsize='xx-large')
-        plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
-        plt.xlim(freqlim_low, freqlim_up)
-    plt.xticks(fontsize='xx-large')
-    plt.yticks(fontsize='xx-large')
-    if legend_bool:
-        plt.legend()
-    plt.grid(alpha=0.2)
-    plt.show()
+        if flip_pdos_xy:
+            plt.xlabel('PDOS (a.u.)',fontsize='xx-large')
+            plt.ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
+            plt.subplots_adjust(left=0.35, bottom=0.15, right=0.65, top=0.97, wspace=0.2, hspace=0.2)
+            plt.ylim(freqlim_low, freqlim_up)
+        else:
+            plt.xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
+            plt.ylabel('PDOS (a.u.)',fontsize='xx-large')
+            plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
+            plt.xlim(freqlim_low, freqlim_up)
+        plt.xticks(fontsize='xx-large')
+        plt.yticks(fontsize='xx-large')
+        if legend_bool:
+            plt.legend()
+        plt.grid(alpha=0.2)
+        plt.show()
 
