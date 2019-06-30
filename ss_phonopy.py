@@ -306,7 +306,7 @@ def set_projection(phonon, proj_eigvec):
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
-def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, plot_legend, labels=None):
+def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=None):
     if self._projections is not None:
         #### Define key list
         key_list = list(self._projections.keys())
@@ -344,7 +344,7 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
         #### Legend plot
         if reverse_seq:
             legend.reverse(); key_list.reverse()
-        if plot_legend:
+        if legend_bool:
             plt.legend(legend, key_list, scatterpoints = 1, fontsize='xx-large', loc='upper right')
     else:
         for distances, frequencies in zip(self._distances,
@@ -371,7 +371,7 @@ def plot_band_and_dos(
     proj_size_factor = 400.,
     proj_colors      = ['r', 'g', 'b', 'c', 'm', 'y'],
     proj_alpha       = 0.5,
-    plot_legend      = False,
+    legend_bool      = False,
     ylim_lower       = None,
     ylim_upper       = None,
     reverse_seq      = False,
@@ -422,7 +422,7 @@ def plot_band_and_dos(
         for key in proj_eigvec.keys():
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
-    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, plot_legend, labels=labels)
+    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=labels)
     plt.ylabel('Frequency ({})'.format(unit), fontsize=35)
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')

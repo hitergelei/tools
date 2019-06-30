@@ -7,28 +7,33 @@ calc = 'dpmd'
 # calc = 'vasp'
 from phonopy.interface import vasp
 atoms = vasp.read_vasp('POSCAR_rlx')
-N                  = 1
+N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-# phonon_or_pdos     = 'phonon'
-phonon_or_pdos     = 'pdos'
-freqlim_up         = None
-freqlim_low        = None
+phonon_or_pdos     = 'phonon'
+# phonon_or_pdos     = 'pdos'
+freqlim_up         = 6.0
+freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = True
 plot_bool          = True
+# mode_projection    = {'g1':np.load('g1-gete12.npy'), 'g2':np.load('g2-gete12.npy'), 'g3':np.load('g3-gete12.npy')}
+# mode_projection    = None
+mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
 total_dos_bool     = True
-mode_projection    = {'g1':np.load('g1-gete12.npy'), 'g2':np.load('g2-gete12.npy'), 'g3':np.load('g3-gete12.npy')}
+    ## Phonon arguments
+# reverse_seq        = True
+reverse_seq        = False
 
 #
 if symmetry is True:
@@ -111,7 +116,7 @@ phonon.set_band_structure(
 ######### eigenvectors #########
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
-freq, eigvec = phonon.get_frequencies_with_eigenvectors(M)
+freq, eigvec = phonon.get_frequencies_with_eigenvectors(GM)
 eigvec = eigvec.T
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 
@@ -128,8 +133,6 @@ if phonon_or_pdos == 'phonon':
         )
     phonon.run_total_dos()
 
-    # eu1 = np.load('eu1.npy')
-    # eu2 = np.load('eu2.npy')
     # eu1 = eigvec[3]
     # eu2 = eigvec[4]
     yaml_name = 'gnuplot_phonon.yaml'
@@ -139,14 +142,14 @@ if phonon_or_pdos == 'phonon':
         phonon,
         labels           = ['K', '$\Gamma$', 'M'],
         unit             = unit,
-        # proj_eigvec      = {'Eu-A':eu1, 'Eu-B':eu2},
-        # proj_size_factor = 400.,
-        # proj_colors      = ['g', 'r'],
-        # proj_alpha       = 0.1,
-        # proj_legend      = True,
+        proj_eigvec      = mode_projection,
+        proj_size_factor = 400.,
+        proj_colors      = ['g', 'r'],
+        proj_alpha       = 0.5,
+        legend_bool      = legend_bool,
         ylim_lower       = freqlim_low,
         ylim_upper       = freqlim_up,
-        # reverse_seq      = True,
+        reverse_seq      = reverse_seq,
         ).show()
     # Only band plot
     #ssp.plot_band(phonon, labels = ['GM', 'X', 'U|K', 'GM', 'L']).show()
