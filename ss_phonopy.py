@@ -619,7 +619,6 @@ def plot_pdos(
         )
     if mode_projection:
         from phonopy.phonon.dos import get_pdos
-        # mode_legend = ['{} {}'.format(mode, chem) for chem in unique_chem]
         mode_pdos_list = []
         for mode in list(mode_projection.keys()):
             mode_pdos_list.append(get_pdos(
