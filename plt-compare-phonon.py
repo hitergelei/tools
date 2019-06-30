@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Global variables
-band_1_f = open('dft-band.in', 'r')
-band_2_f = open('dpmd-band.in', 'r')
+band_1_f = open('band-dft.in', 'r')
+band_2_f = open('band-dpmd.in', 'r')
 unit = 'THz'
 scatter_num = 40
 # errorbar_frac = 0.00
