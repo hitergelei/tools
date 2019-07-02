@@ -3,10 +3,10 @@
 import numpy as np
 
     ## Global params
-calc = 'dpmd'
-# calc = 'vasp'
+# calc = 'dpmd'
+calc = 'vasp'
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_rlx')
+atoms = vasp.read_vasp('POSCAR_GeTe_conv')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
@@ -14,23 +14,25 @@ delta              = 0.050
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-phonon_or_pdos     = 'phonon'
-# phonon_or_pdos     = 'pdos'
+# phonon_or_pdos     = 'phonon'
+phonon_or_pdos     = 'pdos'
 freqlim_up         = 6.0
 freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = True
+legend_bool        = False
 plot_bool          = True
-# mode_projection    = {'g1':np.load('g1-gete12.npy'), 'g2':np.load('g2-gete12.npy'), 'g3':np.load('g3-gete12.npy')}
+mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
 # mode_projection    = None
-mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
+# mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
 total_dos_bool     = True
+doslim_up          = 15
+doslim_low         = -10
     ## Phonon arguments
 # reverse_seq        = True
 reverse_seq        = False
@@ -144,7 +146,7 @@ if phonon_or_pdos == 'phonon':
         unit             = unit,
         proj_eigvec      = mode_projection,
         proj_size_factor = 400.,
-        proj_colors      = ['g', 'r'],
+        proj_colors      = ['g', 'r', 'b'],
         proj_alpha       = 0.5,
         legend_bool      = legend_bool,
         ylim_lower       = freqlim_low,
@@ -173,6 +175,8 @@ if phonon_or_pdos == 'pdos':
             unit,
             freqlim_low,
             freqlim_up,
+            doslim_low,
+            doslim_up,
             flip_pdos_xy,
             legend_bool,
             )
