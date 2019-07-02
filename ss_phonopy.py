@@ -606,8 +606,6 @@ def plot_pdos(
         pdos_indices = []
         for chem in unique_chem:
             pdos_indices.append(ind[chem_arr==chem])
-        if not legend_bool:
-            unique_chem = None
 
     else:
         (unique_chem, pdos_indices) = (None, None)
@@ -650,7 +648,8 @@ def plot_pdos(
         plt.xlim(freqlim_low, freqlim_up)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
-    if legend_bool:
-        plt.legend()
+    plt.legend()
+    if not legend_bool:
+        plt.legend.remove()
     plt.grid(alpha=0.2)
     plt.show()
