@@ -650,6 +650,6 @@ def plot_pdos(
     plt.yticks(fontsize='xx-large')
     plt.legend()
     if not legend_bool:
-        plt.legend.remove()
+        plt.legend().remove()
     plt.grid(alpha=0.2)
     plt.show()
