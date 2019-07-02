@@ -595,6 +595,8 @@ def plot_pdos(
     unit,
     freqlim_low,
     freqlim_up,
+    doslim_low,
+    doslim_up,
     flip_pdos_xy,
     legend_bool,
     ):
@@ -641,11 +643,13 @@ def plot_pdos(
         plt.ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
         plt.subplots_adjust(left=0.35, bottom=0.15, right=0.65, top=0.97, wspace=0.2, hspace=0.2)
         plt.ylim(freqlim_low, freqlim_up)
+        plt.xlim(doslim_low, doslim_up)
     else:
         plt.xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
         plt.ylabel('PDOS (a.u.)',fontsize='xx-large')
         plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
         plt.xlim(freqlim_low, freqlim_up)
+        plt.ylim(doslim_low, doslim_up)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
     plt.legend()
