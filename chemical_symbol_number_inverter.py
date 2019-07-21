@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 
-def invert_chem_num(inp):
+def invert_chem_sym_num(inp):
     """
     inp_list (list or tuple or string or integer) - If type is list(or tuple), the list(or tuple) must contain same typed elements only (chem or num).
     """
@@ -49,16 +49,16 @@ if __name__ == '__main__':
     print('This code will give you the atomic numbers from the chemical symbols'.center(120))
     print('(or vice versa)                                        '.center(120))
     print('')
-    print('Useage  ==> ./chem_num_inverter.py >chemical symbol or atomic number<'.center(120))
-    print('Example 1 ==> ./chem_num_inverter.py Ge Sb Te                        '.center(120))
-    print('Example 2 ==> ./chem_num_inverter.py 32 51 52                        '.center(120))
+    print('Useage  ==> ./chemical_symbol_number_inverter.py >chemical symbol or atomic number<'.center(120))
+    print('Example 1 ==> ./chemical_symbol_number_inverter.py Ge Sb Te                        '.center(120))
+    print('Example 2 ==> ./chemical_symbol_number_inverter.py 32 51 52                        '.center(120))
     print('')
     print('=================================================================================================='.center(120))
 
     inp_list = []
     for i in range(len(sys.argv)-1):
         inp_list.append(sys.argv[i+1])
-    out_arr = invert_chem_num(inp_list)
+    out_arr = invert_chem_sym_num(inp_list)
     print('')
     for i in range(len(inp_list)):
         print('{:2} --> {:2}'.format(inp_list[i], out_arr[i]).center(120))
