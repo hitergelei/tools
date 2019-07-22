@@ -38,7 +38,7 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     t_fin = (image_num-1) * d_t
     # Get discrete time domain
     t = np.arange(t_init, t_fin+d_t, d_t)
-    # Get frequency domain (Use Arfken representation)
+    # Get frequency domain
     f = np.fft.fftfreq(image_num) / d_t
     # Get positive part only
     f = f[:int(round(len(t)/2.))]
@@ -47,15 +47,16 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     # Fourier transform for each DOF
     v_f_arr = []
     for DOF_i in range(len(velocity_arr)):
-        v_f = np.fft.fft(velocity_arr[DOF_i])
+        # Fourier transform and normalize
+        v_f = np.fft.fft(velocity_arr[DOF_i]) / (t_fin - t_init)
         # Get positive part only
         v_f = v_f[:int(round(len(t)/2.))]
         v_f_arr.append(v_f)
     v_f_arr = np.array(v_f_arr)
     # calculate the formula
     from ase import units
-    # ADOS =  (np.repeat(atomic_mass_arr, 3) / 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
-    ADOS = np.square(np.abs(v_f_arr)) / 3. / natoms / units.kB / average_temp
+    ADOS =  (np.repeat(atomic_mass_arr, 3) / 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
+    # ADOS = np.square(np.abs(v_f_arr)) / 3. / natoms / units.kB / average_temp
 
     return f, ADOS
         
