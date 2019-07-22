@@ -27,8 +27,8 @@ w = np.concatenate((w[int(round(len(t)/2.)):], w[:int(round(len(t)/2.))]))
 
 # Get f(t)
 y_t = ftn(t)
-# Get f(w)
-y_w = fft.fft(y_t)
+# Get f(w) and normalize
+y_w = fft.fft(y_t) / (t_fin - t_init)
 y_w = np.concatenate((y_w[int(round(len(t)/2.)):], y_w[:int(round(len(t)/2.))]))
 
 ## Plot 
