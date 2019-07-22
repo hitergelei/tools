@@ -54,8 +54,8 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     v_f_arr = np.array(v_f_arr)
     # calculate the formula
     from ase import units
-    ADOS =  (np.repeat(atomic_mass_arr, 3) / 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
-    # ADOS =  ( 1./ 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
+    # ADOS =  (np.repeat(atomic_mass_arr, 3) / 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
+    ADOS = np.square(np.abs(v_f_arr)) / 3. / natoms / units.kB / average_temp
 
     return f, ADOS
         
