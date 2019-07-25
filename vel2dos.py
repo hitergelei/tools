@@ -15,12 +15,13 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     This fomula gives phonon density of states from 
     velocities of atoms in trajectory.
 
-                        N             _             
-             1/2 * (summation) m_n * |v_n(f)|^2     
-                       n=1                          
+              1         N             _             
+             --- * (summation) m_n * |v_n(f)|^2     
+              2        n=1                          
     g(f) = --------------------------------------   
-                        3/2 * NkT                   
-                                                    
+                         3                          
+                        --- * NkT                   
+                         2                          
     _
     v_n(f) : velocity vector in frequency space
     m_n    : Atomic mass of atom n
@@ -48,7 +49,7 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     v_f_arr = []
     for DOF_i in range(len(velocity_arr)):
         # Fourier transform and normalize
-        v_f = np.fft.fft(velocity_arr[DOF_i]) / (t_fin - t_init)
+        v_f = np.fft.fft(velocity_arr[DOF_i], norm='ortho') * np.sqrt(d_t * (t_fin - t_init + d_t) / 2 / np.pi)
         # Get positive part only
         v_f = v_f[:int(round(len(t)/2.))]
         v_f_arr.append(v_f)
