@@ -393,6 +393,8 @@ def plot_band_and_dos(
         # rc('text', usetex=True)
 
     import matplotlib.gridspec as gridspec
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
     plt.figure(figsize=(20, 6))
     gs = gridspec.GridSpec(1, 3, width_ratios=[7,4,1])
     ax2 = plt.subplot(gs[0, 2])
