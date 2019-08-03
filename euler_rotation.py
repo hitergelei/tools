@@ -19,7 +19,7 @@ e.g.   Ref.             New basis
      [0,0,1]]           [z1,z2,z3]]
 
     """
-    R = vec @ np.linalg.inv(ref_vec)
+    R = np.matmul(vec, np.linalg.inv(ref_vec))
     return R
 
 def get_Euler_angles(vector):
