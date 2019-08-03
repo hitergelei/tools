@@ -59,7 +59,7 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     ADOS =  (np.repeat(atomic_mass_arr, 3) / 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
     # ADOS = np.square(np.abs(v_f_arr)) / 3. / natoms / units.kB / average_temp
 
-    return f, ADOS
+    return f, np.reshape(ADOS, (natoms, 3, -1))
         
 
 def plot_total_DOS(
@@ -142,7 +142,7 @@ def plot_partial_DOS(
     # Gather along species
     PDOS_list = []
     for spec_i in range(len(unique_spec)):
-        PDOS_list.append(np.sum(ADOS[pdos_indices[spec_i]],axis=0))
+        PDOS_list.append(np.sum(np.sum(ADOS[pdos_indices[spec_i]],axis=0), axis=0))
 
     ## Plot
     from matplotlib import pyplot as plt
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     else:
         plot_total_DOS(
             f,
-            np.sum(ADOS, axis=0),
+            np.sum(np.sum(ADOS, axis=0), axis=0),
             unit='THz',
             freqlim_low=freqlim_low,
             freqlim_up=freqlim_up,
