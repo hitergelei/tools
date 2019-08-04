@@ -3,9 +3,9 @@
 import numpy as np
 
 ## Hyper params
-legend_bool = True
+legend_bool = False
 ylim_low    = None
-ylim_up     = 3.5
+ylim_up     = 16.5
 
 if __name__ == '__main__':
     import sys
@@ -58,6 +58,8 @@ if __name__ == '__main__':
     # from scipy.interpolate import make_interp_spline, BSpline
     # spl = make_interp_spline(rdf1[:-1, 0][::20], rdf1[:-1, 1][::20])
     # rdf1[:-1, 1] = spl(rdf1[:-1, 0])
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
     plt.plot(rdf1[:-1, 0], rdf1[:-1, 1], linewidth=3, label='DFT')
     plt.plot(rdf2[:-1, 0], rdf2[:-1, 1], linewidth=3, label='ML-Pot', linestyle='dashed', color='r')
     if chem == None:
@@ -68,6 +70,8 @@ if __name__ == '__main__':
     plt.subplots_adjust(left=0.15, bottom=0.37, right=0.95, top=0.63, wspace=0.2, hspace=0.2)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
+    plt.tick_params(axis="y",direction="in")
+    plt.tick_params(axis="x",direction="in")
     plt.xlim(0., rMax)
     plt.ylim(ylim_low, ylim_up)
     plt.hlines(1., 0., rMax, linestyle='dashed', linewidth=2)
