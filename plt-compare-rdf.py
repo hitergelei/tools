@@ -4,7 +4,7 @@ import numpy as np
 
 ## Hyper params
 legend_bool = False
-ylim_low    = None
+ylim_low    = -0.1
 ylim_up     = 16.5
 
 if __name__ == '__main__':
