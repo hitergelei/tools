@@ -78,7 +78,11 @@ if __name__ == '__main__':
     elif unit != 'THz':
         raise ValueError('Provided unit is wrong')
 
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
     fig, ax = plt.subplots()
+    plt.tick_params(axis="y",direction="in")
+    plt.tick_params(axis="x",direction="in")
     scatter_tick_list = get_scatter_tick(band_1_x[0], scatter_num)
     scatter_bool_arr = get_scatter_bool_arr(band_1_x[0], scatter_tick_list)
 
@@ -95,11 +99,18 @@ if __name__ == '__main__':
             band_2_x[i][scatter_bool_arr],
             band_2_E[i][scatter_bool_arr],
             s          = scatter_size,
-            # facecolors = 'none',
-            facecolors = 'r',
+            facecolors = 'none',
+            # facecolors = 'r',
             edgecolors = 'r',
             # alpha      = 0.5,
             zorder     = 10,
+            )
+        ax.plot(
+            band_2_x[i],
+            band_2_E[i],
+            color = 'r',
+            linewidth = 0.4,
+            # color = '#112482',
             )
         # making error bar
         # error = band_1_E[i] * errorbar_frac
@@ -135,7 +146,8 @@ if __name__ == '__main__':
             band_2_x[0][scatter_bool_arr][0],
             band_2_E[0][scatter_bool_arr][0],
             s          = scatter_size,
-            facecolors = 'r',
+            # facecolors = 'r',
+            facecolors = None,
             edgecolors = 'r',
             label      = 'ML-Pot',
             zorder     = 10,
