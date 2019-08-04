@@ -7,13 +7,15 @@ import matplotlib.pyplot as plt
 band_1_f = open('band-vasp.in', 'r')
 band_2_f = open('band-dpmd.in', 'r')
 unit = 'THz'
-scatter_num = 40
+scatter_num = 20
 # errorbar_frac = 0.00
 # errorbar_num = 20
-legend_bool = False
+legend_bool = True
 scatter_size = 10
 ylim_low = None
 ylim_up = None
+# tick_list = ['L', '$\Gamma$', 'X', 'U|K', '$\Gamma$']
+tick_list = ['K', '$\Gamma$', 'X']
 
 def load_data(file):
     # Dump first three lines
@@ -173,7 +175,7 @@ if __name__ == '__main__':
 
     ########### plot
     ax.grid(color='0.8')
-    plt.xticks(list(sorted(tick_set)), ('L', '$\Gamma$', 'X', 'U|K', '$\Gamma$'), fontsize='xx-large')
+    plt.xticks(list(sorted(tick_set)), tick_list, fontsize='xx-large')
     # plt.xticks(list(sorted(tick_set)), ('K', '$\Gamma$', 'M'), fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
     plt.xlabel('Frequency RMSE = {:.3f} ({})'.format(err_std, unit), fontsize='large')
