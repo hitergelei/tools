@@ -4,8 +4,8 @@ import numpy as np
 
 ## Hyper params
 legend_bool = False
-ylim_low    = -0.1
-ylim_up     = 16.5
+ylim_up     = 19.0
+ylim_low    = ylim_up / -55.
 
 if __name__ == '__main__':
     import sys
@@ -63,13 +63,13 @@ if __name__ == '__main__':
     plt.plot(rdf1[:-1, 0], rdf1[:-1, 1], linewidth=3, label='DFT')
     plt.plot(rdf2[:-1, 0], rdf2[:-1, 1], linewidth=3, label='ML-Pot', linestyle='dashed', color='r')
     if chem == None:
-        plt.ylabel(r'$g_{tot}(r)$', fontsize='xx-large')
+        plt.ylabel(r'$g_{tot}(r)$', fontsize=23)
     else:
-        plt.ylabel(r'$g_{{{}}}(r)$'.format(chem), fontsize='xx-large')
-    plt.xlabel(r'$r\ (\AA)$', fontsize='xx-large')
-    plt.subplots_adjust(left=0.15, bottom=0.37, right=0.95, top=0.63, wspace=0.2, hspace=0.2)
-    plt.xticks(fontsize='xx-large')
-    plt.yticks(fontsize='xx-large')
+        plt.ylabel(r'$g_{{{}}}(r)$'.format(chem), fontsize=23)
+    plt.xlabel(r'$r\ (\AA)$', fontsize=23)
+    plt.subplots_adjust(left=0.15, bottom=0.34, right=0.95, top=0.66, wspace=0.2, hspace=0.2)
+    plt.xticks(fontsize=23)
+    plt.yticks(fontsize=23)
     plt.tick_params(axis="y",direction="in")
     plt.tick_params(axis="x",direction="in")
     plt.xlim(0., rMax)
