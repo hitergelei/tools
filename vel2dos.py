@@ -49,7 +49,7 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     v_f_arr = []
     for DOF_i in range(len(velocity_arr)):
         # Fourier transform and normalize
-        v_f = np.fft.fft(velocity_arr[DOF_i], norm='ortho') * np.sqrt(d_t * (t_fin - t_init + d_t) / 2 / np.pi) * (t_fin - t_init + d_t) **2
+        v_f = np.fft.fft(velocity_arr[DOF_i], norm='ortho') * np.sqrt(d_t * (t_fin - t_init + d_t) / 2 / np.pi) #* (t_fin - t_init + d_t) **2
         # Get positive part only
         v_f = v_f[:int(round(len(t)/2.))]
         v_f_arr.append(v_f)
