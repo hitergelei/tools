@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+import numpy as np
+
+def _parse_slice(s):
+    a = [int(e) if e.strip() else None for e in s.split(":")]
+    return slice(*a)
+
+def argparse():
+    import argparse
+    parser = argparse.ArgumentParser(description = """
+    This code will plot x-y figure.
+    """)
+    # Positional arguments
+    parser.add_argument('data', type=str, help='Path to data file.')
+    parser.add_argument('y_axis', nargs='+', type=str, help='Column numbers of y-axis data. Multiple-plot is available.')
+    # Optional arguments
+    parser.add_argument('-x', '--x_axis', type=int, default=0, help='Column number of x-axis data. Zero(Line number) as default.')
+    parser.add_argument('-n', '--line_slice', type=_parse_slice, default=':', help='e.g. 200:1000:10  Specified slice of rows of data will be used. Default: automatic')
+    parser.add_argument('-l', '--log_scale', action='store_true', help='If provided, Plot y axis as log scale.')
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    ## Intro
+    import datetime
+    now = datetime.datetime.now()
+    time = now.strftime('%Y-%m-%d %H:%M:%S')
+    print('')
+    print('>>>>> Code by Young Jae Choi @ Phys. Dep. of POSTECH in Korea <<<<<'.center(120))
+    print(('Code runtime : '+time).center(120))
+    print('')
+    print('=================================================================================================='.center(120))
+    print('This code will plot x-y figure.'.center(120))
+    print('=================================================================================================='.center(120))
+    print('')
+    ## Argparse
+    args           = argparse()
+    fname          = args.data
+    y_axis_seq_arr = np.array(args.y_axis, dtype = int) -1
+    x_axis_seq     = args.x_axis -1
+    line_slice     = args.line_slice
+    log_bool       = args.log_scale
+
+    x = []
+    y_list = []
+    for i in range(len(y_axis_seq_arr)):
+        y_list.append([])
+    ## Gather data
+    with open(fname, 'r') as f:
+        data = f.readlines()[line_slice]
+    #
+    from matplotlib import pyplot as plt
+    if log_bool:
+        plt.yscale('log')
+    if x_axis_seq != -1:
+        for line in data:
+            word_list = line.split()
+            try:
+                x.append(float(word_list[x_axis_seq]))
+            except:
+                continue
+            else:
+                for i in range(len(y_axis_seq_arr)):
+                    try:
+                        tmp = float(word_list[y_axis_seq_arr[i]])
+                    except:
+                        tmp = None
+                    else:
+                        pass
+                    y_list[i].append(tmp)
+        # Plot
+        for i in range(len(y_list)):
+            plt.scatter(x, y_list[i], 1, marker='o', label='Column {}'.format(y_axis_seq_arr[i]+1))
+    else:
+        for line in data:
+            word_list = line.split()
+            try:
+                tmp = float(word_list[y_axis_seq_arr[0]])
+            except:
+                continue
+            else:
+                y_list[0].append(tmp)
+                for i in range(1, len(y_axis_seq_arr)):
+                    try:
+                        tmp = float(word_list[y_axis_seq_arr[i]])
+                    except:
+                        tmp = None
+                    else:
+                        y_list[i].append(tmp)
+        # Plot
+        for i in range(len(y_list)):
+            plt.scatter(np.arange(len(y_list[i])), y_list[i], 1, marker='o', label='Column {}'.format(y_axis_seq_arr[i]+1))
+    plt.grid(alpha=0.4, which='both')
+    plt.legend()
+    plt.show()
+
+    
+
