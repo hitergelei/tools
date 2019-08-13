@@ -1,38 +1,46 @@
 #!/usr/bin/env python
 
 import numpy as np
+from ase import units as ase_units
 
     ## Global params
-# calc = 'dpmd'
-calc = 'vasp'
+calc = 'dpmd'
+# calc = 'vasp'
+# calc = 'ase_calc'
+## ASE calc
+# ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
+# from ase.calculators.lj import LennardJones as LJ
+# ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
+## Params
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_GeTe_conv')
-N                  = 4
+atoms = vasp.read_vasp('POSCAR_rlx')
+N                  = 2
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
+# primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-# phonon_or_pdos     = 'phonon'
-phonon_or_pdos     = 'pdos'
-freqlim_up         = 6.0
+phonon_or_pdos     = 'phonon'
+# phonon_or_pdos     = 'pdos'
+freqlim_up         = 6.5
 freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = False
 plot_bool          = True
-mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
-# mode_projection    = None
-# mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
+# mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
+mode_projection    = None
+mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
 flip_pdos_xy       = True
 dos_tetrahedron    = True
 total_dos_bool     = True
-doslim_up          = 15
-doslim_low         = -10
+doslim_up          = None
+doslim_low         = None
     ## Phonon arguments
 # reverse_seq        = True
 reverse_seq        = False
@@ -51,11 +59,11 @@ else:
     raise ValueError('symmetry parameter "{}" is unknown.'.format(symmetry))
 
 #
-from phonopy import Phonopy, units
+from phonopy import Phonopy, units as phonopy_units
 if unit == 'THz':
-    factor = units.VaspToTHz,
+    factor = phonopy_units.VaspToTHz,
 elif unit == 'meV':
-    factor = units.VaspToEv * 1000,
+    factor = phonopy_units.VaspToEv * 1000,
 else:
     raise ValueError('Unit parameter, "{}" is unknown'.format(unit))
 phonon = Phonopy(
@@ -81,7 +89,7 @@ vasp.write_supercells_with_displacements(
 
 
 ######### get new phonon object ##########
-# amp_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
+#
 import ss_phonopy as ssp
 phonon = ssp.calc_phonon(
     calc,
@@ -89,7 +97,7 @@ phonon = ssp.calc_phonon(
     # acoustic_sum_rule=False,
     # F_0_correction=True,
     # verbose=True,
-    # amp_calc=amp_calc,
+    ase_calc=ase_calc,
     )
 
 ######### Band structure ##########
@@ -127,7 +135,7 @@ from subprocess import call
 #### Band plot
 if phonon_or_pdos == 'phonon':
     from kpoints_gen import get_grid_num
-    k_grids = get_grid_num(phonon.get_supercell().cell, precision=55.)
+    k_grids = get_grid_num(phonon.get_supercell().cell, precision=100.)
     phonon.run_mesh(
         [k_grids[0], k_grids[1], k_grids[2]],
         # is_mesh_symmetry=False,

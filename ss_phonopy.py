@@ -32,7 +32,7 @@ def get_subdir_name(order, disp, prec=1e-5):
             sign.append('0')
     return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
 
-def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
+def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc):
     """ Calculate Force Constant with Vasp """
     forces = []
     ndir = ''
@@ -71,7 +71,7 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, amp_calc):
         forces.append(result.get_forces())
     phonon.set_forces(np.array(forces))
 
-def calc_dpmd(phonon, disp, calc_dir, F_0_correction, amp_calc):
+def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
     """ Calculate Force Constant with DPMD """
     forces = []
     from ase.io.lammpsrun import read_lammps_dump as read_dump
@@ -93,22 +93,22 @@ def calc_dpmd(phonon, disp, calc_dir, F_0_correction, amp_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_amp(phonon, disp, calc_dir, F_0_correction, amp_calc):
-    """ Calculate Force Constant with AMP """
-    numeric_F_dx=0.001
-    parallel=True
+def calc_ase_calc(phonon, disp, calc_dir, F_0_correction, ase_calc):
+    """ Calculate Force Constant with any ase implemented calculator """
+    # numeric_F_dx=0.001
+    # parallel=True
     forces = []
     from ase.io import read, write
     for i in range(len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir = get_subdir_name(i, disp)
         bu_and_mkdir(calc_dir, ndir)
-        call(['cp '+calc_dir+'/poscars/POSCAR-'+str(i+1).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['cp '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
 
         ########### calculate forces & atomic energies with amp ############
-        atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i+1).zfill(3), format = 'vasp')
+        atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i).zfill(3), format = 'vasp')
         atoms.set_pbc(True)
-        atoms.set_calculator(amp_calc)
+        atoms.set_calculator(ase_calc)
 
         #********** numerical force must precede ***********
         # force_now = [calc.calculate_numerical_forces(
@@ -121,7 +121,7 @@ def calc_amp(phonon, disp, calc_dir, F_0_correction, amp_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, amp_calc):
+def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, ase_calc):
     """ Calculate Force Constant with AMP with tensorflow """
     numeric_F_dx=0.001
     parallel=True
@@ -136,7 +136,7 @@ def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, amp_calc):
         ########### calculate forces & atomic energies with amp ############
         atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i+1).zfill(3), format = 'vasp')
         atoms.set_pbc(True)
-        atoms.set_calculator(amp_calc)
+        atoms.set_calculator(ase_calc)
 
         #********** numerical force must precede ***********
         if i!=0:
@@ -145,7 +145,7 @@ def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, amp_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, amp_calc):
+def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     numeric_F_dx=0.001
     parallel=True
@@ -160,7 +160,7 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, amp_calc):
         ########### calculate forces & atomic energies with amp ############
         atoms = read(calc_dir+'/'+ndir+'/POSCAR-'+str(i+1).zfill(3), format = 'vasp')
         atoms.set_pbc(True)
-        atoms.set_calculator(amp_calc)
+        atoms.set_calculator(ase_calc)
 
         #force_now = [atoms.get_forces(apply_constraint=False).tolist()] # alternative
         #stress_now = calc.calculate_numerical_stress(atoms) # just in case
@@ -178,7 +178,7 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, amp_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, amp_calc=None):
+def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None):
     """
     calc -- Specify calculator. One of these. [vasp, dpmd, amp, amp_tf, amp_tf_bunch]
     phonon -- Phonopy phonon object.
@@ -225,8 +225,8 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
             calc = calc_vasp
         elif calculator == 'dpmd':
             calc = calc_dpmd
-        elif calculator == 'amp':
-            calc = calc_amp
+        elif calculator == 'ase_calc':
+            calc = calc_ase_calc
         elif calculator == 'amp_tf':
             calc = calc_amp_tf
         elif calculator == 'amp_tf_bunch':
@@ -234,7 +234,7 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         else:
             raise ValueError('Unknown calculator ({}) has been provided.'.format(calculator))
         print(">>>>>>> {} calculation will be carried out. <<<<<<<<".format(calculator).center(120))
-        calc(phonon, disp, calc_dir, F_0_correction, amp_calc)
+        calc(phonon, disp, calc_dir, F_0_correction, ase_calc)
             
         if verbose:
             print('\n\n'+'forces'+'\n'+str(phonon.forces))
