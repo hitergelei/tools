@@ -604,13 +604,8 @@ def plot_pdos(
     ):
     if chemical_pdos:
         atoms = phonon._unitcell
-        chem_arr = np.array(atoms.get_chemical_symbols())
-        unique_chem = np.unique(chem_arr)
-        ind = np.arange(len(chem_arr))
-        pdos_indices = []
-        for chem in unique_chem:
-            pdos_indices.append(ind[chem_arr==chem])
-
+        from ss_util import get_chem_ind_arr
+        unique_chem, pdos_indices = get_chem_ind_arr(atoms.get_chemical_symbols())
     else:
         (unique_chem, pdos_indices) = (None, None)
     plt, ax = phonon.plot_projected_dos(

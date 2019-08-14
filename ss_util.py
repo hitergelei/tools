@@ -7,6 +7,15 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
+def get_chem_ind_arr(chemical_symbols):
+    chem_arr = np.array(chemical_symbols)
+    unique_chem = np.unique(chem_arr)
+    ind = np.arange(len(chem_arr))
+    chem_ind_arr = []
+    for chem in unique_chem:
+        chem_ind_arr.append(ind[chem_arr==chem])
+    return unique_chem, np.array(chem_ind_arr)
+
 def read_txt_matrix(file_name, start_line=0, end_line=-1):
     mat = []
     with open(file_name, 'r') as f:

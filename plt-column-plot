@@ -12,7 +12,7 @@ def argparse():
     """)
     # Positional arguments
     parser.add_argument('data', type=str, help='Path to data file.')
-    parser.add_argument('y_axis', nargs='+', type=str, help='Column numbers of y-axis data. Multiple-plot is available.')
+    parser.add_argument('y_axis', nargs='+', type=int, help='Column numbers of y-axis data. Multiple-plot is available.')
     # Optional arguments
     parser.add_argument('-x', '--x_axis', type=int, default=0, help='Column number of x-axis data. Zero(Line number) as default.')
     parser.add_argument('-n', '--line_slice', type=_parse_slice, default=':', help='e.g. 200:1000:10  Specified slice of rows of data will be used. Default: automatic')
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         # Plot
         for i in range(len(y_list)):
             plt.scatter(np.arange(len(y_list[i])), y_list[i], 1, marker='o', label='Column {}'.format(y_axis_seq_arr[i]+1))
-    plt.grid(alpha=0.4, which='both')
+    plt.grid(alpha=0.2, which='both')
     plt.legend()
     plt.show()
 
