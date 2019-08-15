@@ -88,21 +88,22 @@ def plot_total_DOS(
 
     ## Plot
     from matplotlib import pyplot as plt
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
     fig, ax = plt.subplots()
     if flip_xy:
         ax.plot(DOS, f)
         ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+        ax.set_xlabel('DOS (arb. units)', fontsize='xx-large')
+        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
         ax.set_xlim((0,None))
     else:
         ax.plot(f, DOS)
         ax.set_xlim((freqlim_low, freqlim_up))
-        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
+        ax.set_ylabel('DOS (arb. units)', fontsize='xx-large')
         ax.set_ylim((0,None))
-    plt.xticks(fontsize='x-large')
-    plt.yticks(fontsize='x-large')
+    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
     plt.grid(alpha=0.2)
     plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)
     plt.show()
@@ -146,25 +147,26 @@ def plot_partial_DOS(
 
     ## Plot
     from matplotlib import pyplot as plt
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
     fig, ax = plt.subplots()
     if flip_xy:
         for spec_i in range(len(unique_spec)):
             ax.plot(PDOS_list[spec_i], f, label=unique_spec[spec_i])
         ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+        ax.set_xlabel('DOS (arb. units)', fontsize='xx-large')
+        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
         ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((0,None))
     else:
         for spec_i in range(len(unique_spec)):
             ax.plot(f, PDOS_list[spec_i], label=unique_spec[spec_i])
         ax.set_xlim((freqlim_low, freqlim_up))
-        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
+        ax.set_ylabel('DOS (arb. units)', fontsize='xx-large')
         ax.fill_betweenx(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_ylim((0,None))
-    plt.xticks(fontsize='x-large')
-    plt.yticks(fontsize='x-large')
+    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
     plt.grid(alpha=0.2)
     plt.legend()
     plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)

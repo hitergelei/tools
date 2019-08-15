@@ -94,8 +94,10 @@ if __name__ == '__main__':
         if not DOSlim_low:
             DOSlim_low = 0.
 
-        #
+        # Plot
         from matplotlib import pyplot as plt
+        font = {'family':'Arial'}
+        plt.rc('font', **font)
         if not cdos_bool and not ados_bool:
             # Plot
             if flip_xy:
@@ -228,15 +230,14 @@ if __name__ == '__main__':
     if flip_xy:
         plt.xlim((DOSlim_low, DOSlim_up))
         plt.ylim((Elim_low, Elim_up))
-        plt.xlabel('DOS(arb. units)', fontsize='x-large')
-        plt.ylabel('Energy(eV)', fontsize='x-large')
+        plt.xlabel('DOS(arb. units)', fontsize='xx-large')
+        plt.ylabel('Energy(eV)', fontsize='xx-large')
     else:
         plt.xlim((Elim_low, Elim_up))
         plt.ylim((DOSlim_low, DOSlim_up))
-        plt.xlabel('Energy(eV)', fontsize='x-large')
-        plt.ylabel('DOS(arb. units)', fontsize='x-large')
-    plt.xticks(fontsize='x-large')
-    plt.yticks(fontsize='x-large')
+        plt.xlabel('Energy(eV)', fontsize='xx-large')
+        plt.ylabel('DOS(arb. units)', fontsize='xx-large')
+    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
     plt.grid(alpha=0.2)
     plt.show()
 

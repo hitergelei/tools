@@ -83,8 +83,6 @@ if __name__ == '__main__':
     font = {'family':'Arial'}
     plt.rc('font', **font)
     fig, ax = plt.subplots()
-    plt.tick_params(axis="y",direction="in")
-    plt.tick_params(axis="x",direction="in")
     scatter_tick_list = get_scatter_tick(band_1_x[0], scatter_num)
     scatter_bool_arr = get_scatter_bool_arr(band_1_x[0], scatter_tick_list)
 
@@ -175,9 +173,9 @@ if __name__ == '__main__':
 
     ########### plot
     ax.grid(color='0.8')
-    plt.xticks(list(sorted(tick_set)), tick_list, fontsize='xx-large')
+    plt.xticks(list(sorted(tick_set)), tick_list)
     # plt.xticks(list(sorted(tick_set)), ('K', '$\Gamma$', 'M'), fontsize='xx-large')
-    plt.yticks(fontsize='xx-large')
+    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
     plt.xlabel('Frequency RMSE = {:.3f} ({})'.format(err_std, unit), fontsize='large')
     plt.xlim(0., np.amax(band_1_x))
     plt.ylim(ylim_low, ylim_up)
