@@ -183,6 +183,7 @@ if __name__ == '__main__':
                 if not cdos_sym:
                     cdos_sym = unique_chem
                 for spec_i in range(len(cdos_sym)):
+                    spec_i = list(unique_chem).index(cdos_sym[spec_i])
                     if 'sum' in pdos_orbit:
                         if flip_xy:
                             plt.plot(np.sum(chem_pdos_arr[spec_i], axis=0), E_arr, label=unique_chem[spec_i]+'-(s+p+d)')
