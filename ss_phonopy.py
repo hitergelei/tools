@@ -636,14 +636,14 @@ def plot_pdos(
             ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
 
     if flip_pdos_xy:
-        plt.xlabel('PDOS (a.u.)',fontsize='xx-large')
+        plt.xlabel('PDOS (arb. units.)',fontsize='xx-large')
         plt.ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
         plt.subplots_adjust(left=0.35, bottom=0.15, right=0.65, top=0.97, wspace=0.2, hspace=0.2)
         plt.ylim(freqlim_low, freqlim_up)
         plt.xlim(doslim_low, doslim_up)
     else:
         plt.xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        plt.ylabel('PDOS (a.u.)',fontsize='xx-large')
+        plt.ylabel('PDOS (arb. units.)',fontsize='xx-large')
         plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
         plt.xlim(freqlim_low, freqlim_up)
         plt.ylim(doslim_low, doslim_up)
