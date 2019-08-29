@@ -103,16 +103,23 @@ phonon = ssp.calc_phonon(
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points, bandpath
 points = ibz_points['hexagonal']
-GM = points['Gamma']
+G = points['Gamma']
 M = points['M']
 K = points['K']
 A = points['A']
 L = points['L']
 H = points['H']
+# points = ibz_points['fcc']
+# G = points['Gamma']
+# X = points['X']
+# W = points['W']
+# K = points['K']
+# U = points['U']
+# L = points['L']
 
 #point_names = ['$\Gamma$', 'X', 'K', '$\Gamma$', 'L']
-path = [[K, GM], [GM, M]]
-# path = [[GM, X], [X, K], [K, GM], [GM, L]]
+path = [[K, G], [G, M]]
+# path = [[G, X], [X, U], [K, G], [G, L]]
 N_q = 100
 
 bands = ssp.make_band(path, N_q)
@@ -126,7 +133,7 @@ phonon.set_band_structure(
 ######### eigenvectors #########
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
-freq, eigvec = phonon.get_frequencies_with_eigenvectors(GM)
+freq, eigvec = phonon.get_frequencies_with_eigenvectors(G)
 eigvec = eigvec.T
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 
@@ -140,6 +147,7 @@ if phonon_or_pdos == 'phonon':
         [k_grids[0], k_grids[1], k_grids[2]],
         # is_mesh_symmetry=False,
         with_eigenvectors=True,
+        is_gamma_center=True,
         )
     phonon.run_total_dos()
 
@@ -151,6 +159,7 @@ if phonon_or_pdos == 'phonon':
     ssp.plot_band_and_dos(
         phonon,
         labels           = ['K', '$\Gamma$', 'M'],
+        # labels           = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'],
         unit             = unit,
         proj_eigvec      = mode_projection,
         proj_size_factor = 400.,
@@ -162,7 +171,7 @@ if phonon_or_pdos == 'phonon':
         reverse_seq      = reverse_seq,
         ).show()
     # Only band plot
-    #ssp.plot_band(phonon, labels = ['GM', 'X', 'U|K', 'GM', 'L']).show()
+    #ssp.plot_band(phonon, labels = ['G', 'X', 'U|K', 'G', 'L']).show()
 
 #### Partial DOS plot
 if phonon_or_pdos == 'pdos':

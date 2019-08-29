@@ -559,6 +559,7 @@ def calc_dos(
             [k_grids[0], k_grids[1], k_grids[2]],
             is_mesh_symmetry=False,
             with_eigenvectors=True,
+            is_gamma_center=True,
             )
         phonon.run_projected_dos(
             use_tetrahedron_method=dos_tetrahedron,
