@@ -15,17 +15,19 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     This fomula gives phonon density of states from 
     velocities of atoms in trajectory.
 
-              1         N             _             
-             --- * (summation) m_n * |v_n(f)|^2     
-              2        n=1                          
-    g(f) = --------------------------------------   
-                         3                          
-                        --- * NkT                   
-                         2                          
+                      1         N             _             
+                     --- * (summation) m_n * |v_n(f)|^2     
+      1               2        n=1                          
+     ---- * g(f) = --------------------------------------   
+     M*df                        3                          
+                     M*df * M * --- * NkT                   
+                                 2                          
     _
     v_n(f) : velocity vector in frequency space
     m_n    : Atomic mass of atom n
     N      : Number of atoms in unit cell
+    df     : Magnitude of frequency bin
+    M      : Number of time-step (= 2 times of number of positive frequency bins)
     n      : Atom index
     k      : Boltzmann constant
     T      : Temperature
@@ -40,24 +42,20 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     # Get discrete time domain
     t = np.arange(t_init, t_fin+d_t, d_t)
     # Get frequency domain
-    f = np.fft.fftfreq(image_num) / d_t
-    # Get positive part only
-    f = f[:int(round(len(t)/2.))]
+    f = np.fft.rfftfreq(image_num) / d_t
+    d_f = f[1] - f[0]
     # Reshape
     velocity_arr = np.reshape(velocity_arr, (image_num, natoms*3)).T
     # Fourier transform for each DOF
     v_f_arr = []
     for DOF_i in range(len(velocity_arr)):
         # Fourier transform and normalize
-        v_f = np.fft.fft(velocity_arr[DOF_i], norm='ortho') * np.sqrt(d_t * (t_fin - t_init + d_t) / 2 / np.pi) #* (t_fin - t_init + d_t) **2
-        # Get positive part only
-        v_f = v_f[:int(round(len(t)/2.))]
+        v_f = np.fft.rfft(velocity_arr[DOF_i], norm=None)
         v_f_arr.append(v_f)
     v_f_arr = np.array(v_f_arr)
-    # calculate the formula
+    # calculate the formula (First factor 2 is from throwing away negative frequencies)
     from ase import units
-    ADOS =  (np.repeat(atomic_mass_arr, 3) / 3. / natoms / units.kB / average_temp * np.square(np.abs(v_f_arr)).T).T
-    # ADOS = np.square(np.abs(v_f_arr)) / 3. / natoms / units.kB / average_temp
+    ADOS = 2. * (np.repeat(atomic_mass_arr, 3) / 3. / len(t)**2 / natoms / units.kB / average_temp / d_f * np.square(np.abs(v_f_arr)).T).T
 
     return f, np.reshape(ADOS, (natoms, 3, -1))
         
@@ -178,13 +176,16 @@ def argparse():
     This code will give you the phonon-(partial/total)DOS from MD trajectory.
     """)
     # Positional arguments
-    parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
     parser.add_argument('d_t', type=float, help='Time interval between images selected in unit of picosec.')
+    parser.add_argument('inp_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
     # Optional arguments
     parser.add_argument('-n', '--image_range', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-p', '--partial_DOS', action='store_true', help='If activated, return partial DOS. (If not, total DOS as default)')
     parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. Zero as default.')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
+    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
+    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
+    parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 3. (cf. In case of phonopy, 3N, where N is number of atoms in unit cell.)')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -207,23 +208,60 @@ if __name__ == '__main__':
     pdos_bool = args.partial_DOS
     freqlim_low = args.freqlim_low
     freqlim_up = args.freqlim_up
-    # inp_file
+    # inp_file_list
     from ase.io import read
-    alist = read(args.inp_file, args.image_range)
+    ## Main loop
+    ADOS_list = []
+    for i in range(len(args.inp_file_list)):
+        npz_name = '{}_dt{}_img{}.npz'.format(args.inp_file_list[i], d_t, args.image_range)
+        try:
+            args.load_bool = True
+            npz = np.load(npz_name)
+            f    = npz['f']
+            ADOS = npz['ADOS']
+        except:
+            # log
+            if i % 10 == 0:
+                print("Getting {}-th file's VACF".format(i))
+            # Read file
+            alist = read(args.inp_file_list[i], args.image_range)
+            # Get atomic masses
+            atomic_mass_arr = alist[0].get_masses()
+            # Gather velocities and temperatures
+            v_arr = []
+            temp_arr = []
+            for atoms in alist:
+                v_arr.append(atoms.get_velocities())
+                temp_arr.append(atoms.get_temperature())
+            # Get average temperature
+            average_temp = np.mean(temp_arr)
+            # Get VACF
+            f, ADOS = velocity2phononPDOS(atomic_mass_arr, average_temp, v_arr, d_t)
+            if args.save_bool:
+                np.savez(npz_name, f=f, ADOS=ADOS)
+        else:
+            if i % 100 == 0:
+                print("Loading {}-th file's PDOS".format(i))
+        ADOS_list.append(ADOS)
+        # # For debugging
+        # if np.shape(np.array(ADOS)) != (8, 3, 1750):
+            # print(np.shape(np.array(ADOS)))
+            # print(args.inp_file_list[i])
+    ## Averaging ADOS
+    ADOS = np.mean(ADOS_list, axis=0) * args.DOS_factor
+    # ## write txt file
+    # with open('tmp.txt', 'w') as txt:
+        # sum = np.sum(np.sum(ADOS, axis=0), axis=0)
+        # for j in range(ADOS.shape[-1]):
+            # txt.write('{:10.5f}'.format(f[j]))
+            # txt.write('        ')
+            # txt.write('{:10.5e}'.format(sum[j]))
+            # txt.write('\n')
+    # # Print area (Normalization test)
+    # d_f = 1. / (d_t * (len(f)-1)*2)
+    # print(np.sum(ADOS) * d_f)
 
-    ## Preprocess
-    # Get atomic masses
-    atomic_mass_arr = alist[0].get_masses()
-    # Gather velocities and temperatures
-    v_arr = []
-    temp_arr = []
-    for atoms in alist:
-        v_arr.append(atoms.get_velocities())
-        temp_arr.append(atoms.get_temperature())
-    # Get average temperature
-    average_temp = np.mean(temp_arr)
-    # Main
-    f, ADOS = velocity2phononPDOS(atomic_mass_arr, average_temp, v_arr, d_t)
+    ## Plot
     if pdos_bool:
         plot_partial_DOS(
             f,
