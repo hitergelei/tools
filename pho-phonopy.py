@@ -14,7 +14,7 @@ calc = 'dpmd'
 ## Params
 from phonopy.interface import vasp
 atoms = vasp.read_vasp('POSCAR_rlx')
-N                  = 2
+N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
@@ -22,16 +22,16 @@ delta              = 0.050
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-phonon_or_pdos     = 'phonon'
-# phonon_or_pdos     = 'pdos'
-freqlim_up         = 6.5
+# phonon_or_pdos     = 'phonon'
+phonon_or_pdos     = 'pdos'
+freqlim_up         = 6.0
 freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = False
+legend_bool        = True
 plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
-mode_projection    = None
+# mode_projection    = None
 mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
     ## PDOS arguments
 pdos_precision     = 250
@@ -97,7 +97,7 @@ phonon = ssp.calc_phonon(
     # acoustic_sum_rule=False,
     # F_0_correction=True,
     # verbose=True,
-    ase_calc=ase_calc,
+    # ase_calc=ase_calc,
     )
 
 ######### Band structure ##########
