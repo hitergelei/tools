@@ -35,6 +35,8 @@ if __name__ == '__main__':
     # Read file
     from ase.io import read
     alist = read(args.inp_file, args.image_range)
+    if type(alist) is not list:
+        alist = [alist]
 
     if args.target == 'e':
         vector_type = False
