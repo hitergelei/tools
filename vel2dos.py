@@ -53,7 +53,7 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
         v_f = np.fft.rfft(velocity_arr[DOF_i], norm=None)
         v_f_arr.append(v_f)
     v_f_arr = np.array(v_f_arr)
-    # calculate the formula (First factor 2 is from throwing away negative frequencies)
+    # calculate the formula (First factor 2 is from throwing away negative frequencies) (Or 0~inf integral of g(f) equals to be 1/2)
     from ase import units
     ADOS = 2. * (np.repeat(atomic_mass_arr, 3) / 3. / len(t)**2 / natoms / units.kB / average_temp / d_f * np.square(np.abs(v_f_arr)).T).T
 
@@ -185,7 +185,7 @@ def argparse():
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
-    parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 3. (cf. In case of phonopy, 3N, where N is number of atoms in unit cell.)')
+    parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in unit cell.)')
     return parser.parse_args()
 
 if __name__ == '__main__':
