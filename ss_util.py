@@ -36,25 +36,35 @@ def read_txt_matrix(file_name, start_line=0, end_line=-1):
 
 def nospace(string): return string.replace(' ', '_')
 def E_fromAlist(alist):
+    """ Return total energy array """
     energies = []
     for atoms in alist:
         energies.append(atoms.get_potential_energy())
     return np.array(energies)
 def F_fromAlist(alist):
+    """ Return force array array """
     forces = []
     for atoms in alist:
         forces.append(atoms.get_forces())
     return np.array(forces)
 def v_fromAlist(alist):
+    """ Return velocity array array """
     velocities = []
     for atoms in alist:
         velocities.append(atoms.get_velocities())
     return np.array(velocities)
 def P_fromAlist(alist):
+    """ Return momentum array array """
     momenta = []
     for atoms in alist:
         momenta.append(atoms.get_momenta())
     return np.array(momenta)
+def AtomicK_fromAlist(alist):
+    """ Return atomic kinetic energy array array """
+    kinetic_e=[]
+    for atoms in alist:
+        kinetic_e.append(0.5 * atoms.get_masses() * np.square(np.linalg.norm(atoms.get_velocities(), axis=-1)))
+    return np.array(kinetic_e)
 
 def column2np(
     txtfile,
