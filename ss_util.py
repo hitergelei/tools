@@ -40,12 +40,21 @@ def E_fromAlist(alist):
     for atoms in alist:
         energies.append(atoms.get_potential_energy())
     return np.array(energies)
-
 def F_fromAlist(alist):
     forces = []
     for atoms in alist:
         forces.append(atoms.get_forces())
     return np.array(forces)
+def v_fromAlist(alist):
+    velocities = []
+    for atoms in alist:
+        velocities.append(atoms.get_velocities())
+    return np.array(velocities)
+def P_fromAlist(alist):
+    momenta = []
+    for atoms in alist:
+        momenta.append(atoms.get_momenta())
+    return np.array(momenta)
 
 def column2np(
     txtfile,
