@@ -33,6 +33,7 @@ plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
 # mode_projection    = None
 mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
+save_svg           = True
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
@@ -196,6 +197,7 @@ if phonon_or_pdos == 'pdos':
             doslim_up,
             flip_pdos_xy,
             legend_bool,
+            save_svg,
             )
 
 

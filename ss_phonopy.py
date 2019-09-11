@@ -602,6 +602,7 @@ def plot_pdos(
     doslim_up,
     flip_pdos_xy,
     legend_bool,
+    save_svg,
     ):
     if chemical_pdos:
         atoms = phonon._unitcell
@@ -654,4 +655,6 @@ def plot_pdos(
     if not legend_bool:
         plt.legend().remove()
     plt.grid(alpha=0.2)
+    if save_svg:
+        plt.savefig('figure.svg', format='svg')
     plt.show()
