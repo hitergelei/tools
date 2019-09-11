@@ -628,9 +628,9 @@ def plot_pdos(
         mode_pdos = np.sum(mode_pdos_list, axis=1)
         for pdos, mode in zip(mode_pdos, list(mode_projection.keys())):
             if flip_pdos_xy:
-                ax.plot(-pdos, phonon._pdos._frequency_points, label=mode)
+                ax.plot(-pdos, phonon._pdos._frequency_points, linewidth=1, label=mode)
             else:
-                ax.plot(phonon._pdos._frequency_points, -pdos, label=mode)
+                ax.plot(phonon._pdos._frequency_points, -pdos, linewidth=1, label=mode)
         mode_pdos_sum = np.sum(mode_pdos, axis=0)
         if flip_pdos_xy:
             ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
