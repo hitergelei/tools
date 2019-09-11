@@ -624,12 +624,12 @@ def plot_pdos(
                 phonon._pdos_mode[mode]._partial_dos,
                 pdos_indices,
                 ))
-        mode_pdos = np.sum(mode_pdos_list, axis=0)
-        for pdos, chem in zip(mode_pdos, unique_chem):
+        mode_pdos = np.sum(mode_pdos_list, axis=1)
+        for pdos, mode in zip(mode_pdos, list(mode_projection.keys())):
             if flip_pdos_xy:
-                ax.plot(-pdos, phonon._pdos._frequency_points, label='$\Gamma$-'+chem)
+                ax.plot(-pdos, phonon._pdos._frequency_points, label=mode)
             else:
-                ax.plot(phonon._pdos._frequency_points, -pdos, label='$\Gamma$-'+chem)
+                ax.plot(phonon._pdos._frequency_points, -pdos, label=mode)
         mode_pdos_sum = np.sum(mode_pdos, axis=0)
         if flip_pdos_xy:
             ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
@@ -650,7 +650,7 @@ def plot_pdos(
         plt.ylim(doslim_low, doslim_up)
     plt.xticks(fontsize='xx-large')
     plt.yticks(fontsize='xx-large')
-    plt.legend()
+    plt.legend(fontsize='large')
     if not legend_bool:
         plt.legend().remove()
     plt.grid(alpha=0.2)
