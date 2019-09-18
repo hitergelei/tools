@@ -50,6 +50,10 @@ if __name__ == '__main__':
         vector_type = True
         from ss_util import v_fromAlist 
         data = v_fromAlist(alist).reshape((-1,3))
+    elif args.target == 'v2':
+        vector_type = False
+        from ss_util import v_fromAlist
+        data = (v_fromAlist(alist)**2).reshape((-1))
     elif args.target == 'p':
         vector_type = True
         from ss_util import P_fromAlist 
