@@ -59,6 +59,12 @@ def P_fromAlist(alist):
     for atoms in alist:
         momenta.append(atoms.get_momenta())
     return np.array(momenta)
+def S_fromAlist(alist):
+    """ Return stress array (xx, yy, zz, yz, zx, xy) array """
+    stresses = []
+    for atoms in alist:
+        stresses.append(atoms.get_stress())
+    return np.array(stresses)
 def AtomicK_fromAlist(alist):
     """ Return atomic kinetic energy array array """
     kinetic_e=[]
