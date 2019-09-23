@@ -3,28 +3,30 @@
 import sys
 import datetime
 import numpy as np
+from ase import units
 now = datetime.datetime.now()
 time = now.strftime('%Y-%m-%d %H:%M:%S')
 print("")
-print(">>>>> Code by Young Jae Choi @ POSTECH <<<<<".center(100))
-print(("code started time: "+time).center(100))
+print(">>>>> Code by Young Jae Choi @ POSTECH <<<<<".center(120))
+print(("code started time: "+time).center(120))
 print("")
-print("============================================================".center(100))
-print("useage ==> ./dpmd_traj2raw.py 'trajactory file'".center(100))
-print("============================================================".center(100))
+print("============================================================".center(120))
+print("useage ==> ./dpmd_traj2raw.py 'trajactory file'".center(120))
+print("NOTE!!! We use lammps 'metal' units.".center(120))
+print("============================================================".center(120))
 if len(sys.argv) is 2:
     print(" ")
 else:
-    print("*****ERROR***** The number of arguments is not correct *****ERROR*****".center(100))
+    print("*****ERROR***** The number of arguments is not correct *****ERROR*****".center(120))
     print("")
     print("")
     sys.exit(1)
 
 trajfile = sys.argv[1]
 
-print(("I'll extract informations from '"+trajfile+"' file.").center(100))
-print(("Raw files for DeePMD code will be writen in 'raw-"+trajfile+".d' directory.").center(100))
-print(" i.e.) `box.raw`, `coord.raw`, `force.raw`, `energy.raw` and `virial.raw`".center(100))
+print(("I'll extract informations from '"+trajfile+"' file.").center(120))
+print(("Raw files for DeePMD code will be writen in 'raw-"+trajfile+".d' directory.").center(120))
+print(" i.e.) `box.raw`, `coord.raw`, `force.raw`, `energy.raw` and `virial.raw`".center(120))
 
 from ase.io.trajectory import Trajectory
 from ase import Atom, Atoms
@@ -94,7 +96,7 @@ else:
     for atoms in traj:
         n+=1
         # print("energy.raw :: writing "+str(n)+" th frame.")
-        E_raw.write(str(atoms._calc.results['energy'])+"\n")
+        E_raw.write(str(atoms.get_potential_energy())+"\n")
     E_raw.close()
 
 ################# force.raw ##################
@@ -115,7 +117,7 @@ else:
     for atoms in traj:
         n+=1
         # print("force.raw :: writing "+str(n)+" th frame.")
-        force_array = atoms._calc.results['forces']
+        force_array = atoms.get_forces()
         for i in range(natom):
             for j in range(3):
                 F_raw.write(str(force_array[i][j])+" ")
@@ -141,7 +143,7 @@ else:
     for atoms in traj:
         n+=1
         # print("virial.raw :: writing "+str(n)+" th frame.")
-        stress_array = atoms._calc.results['stress'] * 10e4
+        stress_array = atoms.get_stress() / units.Pascal / 1e5  ## Pascal to bar
         for i in [[0,5,4],[5,1,3],[4,3,2]]:
             for j in i:
                 V_raw.write(str(stress_array[j])+" ")
