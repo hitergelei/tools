@@ -1,42 +1,54 @@
 #!/usr/bin/env python
-from ase.io.trajectory import Trajectory
+from ase.io.trajectory import Trajectory as Traj
 from ase.io import read, write
 from ase.calculators import vasp
 import sys
 import subprocess as sp
 
-print("\n\n##################################################\n")
-print("useage ==> ./traj2vasp.py 'trajactory file'\n")
-print("##################################################\n")
-if len(sys.argv) is 2:
-    print(" ")
-else:
-    print("*****ERROR***** The number of arguments is not correct *****ERROR*****\n\n")
-    sys.exit(1)
+def _parse_slice(s):
+    if ':' in s:
+        a = [int(e) if e.strip() else None for e in s.split(":")]
+    else:
+        a = [int(s), int(s)+1]
+    return slice(*a)
 
-trajfile = sys.argv[1]
+def argparse():
+    import argparse
+    parser = argparse.ArgumentParser(description = """
+    This code converts ase readable file to VASP POSCAR formats.
+    """)
+    # Positional arguments
+    parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
+    # Optional arguments
+    parser.add_argument('-n', '--image_slice', type=_parse_slice, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
+    return parser.parse_args()
 
-print("\nI'll extract informations from '"+trajfile+"' file.")
-print("Informations will be writen in folder, 'vasp_images_"+trajfile+"'")
+if __name__ == '__main__':
+    ## Intro
+    import datetime
+    now = datetime.datetime.now()
+    time = now.strftime('%Y-%m-%d %H:%M:%S')
+    print('')
+    print('>>>>> Code by Young Jae Choi @ POSTECH <<<<<'.center(120))
+    print(('Code runtime : '+time).center(120))
+    print('')
+    print('=================================================================================================='.center(120))
+    print('This code converts ase readable file to VASP POSCAR formats.'.center(120))
+    print('=================================================================================================='.center(120))
+    print('')
+    args = argparse()
+    inp_file = args.inp_file
 
-traj = Trajectory(trajfile, "r")
-steps = len(traj)
-print("\nTotally, "+str(steps)+" images of each step will be writen\n")
+    ##
+    print("\nI'll extract informations from '"+inp_file+"' file.")
+    print("POSCARs will be stored in folder >> 'vasp_images_"+inp_file+"'")
+    alist = read(inp_file, args.image_slice)
+    if not isinstance(alist, list):
+        alist = [alist]
+    print("\nTotally, {} POSCARs will be written\n".format(len(alist)))
 
-
-sp.call(["mkdir vasp_images_"+trajfile], shell=True)
-imagenum = 0
-for image in traj:
-    write("./vasp_images_"+trajfile+"/POSCAR", image)
-    raw = open("./vasp_images_"+trajfile+"/POSCAR", "r")
-    lines = raw.readlines()
-    raw.close()
-    poscar = open("./vasp_images_"+trajfile+"/POSCAR_%.5d"%imagenum, "w")
-    poscar.write("image "+str(imagenum)+"/"+str(steps-1)+"\n")
-    poscar.writelines(lines[1:5])
-    poscar.writelines(lines[5:])
-    poscar.close()
-    imagenum += 1
-    
-    
-sp.call(["rm -rf ./vasp_images_"+trajfile+"/POSCAR"], shell=True)
+    ##
+    indices = range(int(1e6))[args.image_slice]
+    sp.call("mkdir vasp_images_{}".format(inp_file), shell=True)
+    for i in range(len(indices)):
+        write("vasp_images_{}/POSCAR_{}".format(inp_file, str(indices[i]).zfill(6)), alist[i])
