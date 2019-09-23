@@ -179,7 +179,7 @@ def argparse():
     parser.add_argument('d_t', type=float, help='Time interval between images selected in unit of picosec.')
     parser.add_argument('inp_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
     # Optional arguments
-    parser.add_argument('-n', '--image_range', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-p', '--partial_DOS', action='store_true', help='If activated, return partial DOS. (If not, total DOS as default)')
     parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. Zero as default.')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     ## Main loop
     ADOS_list = []
     for i in range(len(args.inp_file_list)):
-        npz_name = '{}_dt{}_img{}.npz'.format(args.inp_file_list[i], d_t, args.image_range)
+        npz_name = '{}_dt{}_img{}.npz'.format(args.inp_file_list[i], d_t, args.image_slice)
         try:
             args.load_bool = True
             npz = np.load(npz_name)
@@ -224,7 +224,7 @@ if __name__ == '__main__':
             if i % 10 == 0:
                 print("Getting {}-th file's VACF".format(i))
             # Read file
-            alist = read(args.inp_file_list[i], args.image_range)
+            alist = read(args.inp_file_list[i], args.image_slice)
             # Get atomic masses
             atomic_mass_arr = alist[0].get_masses()
             # Gather velocities and temperatures
