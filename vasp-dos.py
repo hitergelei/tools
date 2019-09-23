@@ -2,10 +2,15 @@
 import numpy as np
 
 def _parse_slice(s):
+    # Slice format
     if ':' in s:
         a = [int(e) if e.strip() else None for e in s.split(":")]
+    # Int format
     else:
-        a = [int(s), int(s)+1]
+        if int(s) == -1:
+            a = [-1, None]
+        else:
+            a = [int(s), int(s)+1]
     return slice(*a)
 
 def argparse():
