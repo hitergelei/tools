@@ -14,20 +14,37 @@ import os
 
 #### Global params
 ## cell
-label = "lj-Ar-2.51K-10fs"
-atoms = read('lj-Ar-200K.traj', 29400)
+label = "gete-crystallization"
+atoms = read('POSCAR_init-2x2x2.vasp', -1)
 ##
-temp   = 2.51 *units.kB
+temp   = 650 *units.kB
 d_t    = 10 *units.fs
-t_step = 5000
+t_step = 50000
 ############# calculator ############
+### Vasp
 # from ase.calculators.vasp import Vasp
 # calc = Vasp()
 # atoms.set_calculator(calc)
 # calc.read_incar()
 # calc.read_kpoints()
-from ase.calculators.lj import LennardJones as LJ
-calc = LJ(epsilon=120 *units.kB, sigma=0.34 *units.nm)
+### LJ potential
+# from ase.calculators.lj import LennardJones as LJ
+# calc = LJ(epsilon=120 *units.kB, sigma=0.34 *units.nm)
+# atoms.set_calculator(calc)
+### Lammps
+calc = LAMMPS(
+    specorder=['Ge','Te'],
+    parameters={
+        'units':'metal',
+        'boundary':'p p p',
+        'box':'tilt large',
+        'pair_style':'deepmd frozen_model.pb',
+        'pair_coeff':' ',
+        'mass':['1 72.64', '2 127.60'],
+        },
+    files=['frozen_model.pb'],
+    # keep_tmp_files=True,
+    )
 atoms.set_calculator(calc)
 
 ########### Relaxation #############
@@ -42,16 +59,22 @@ atoms.set_calculator(calc)
 # opti_posi.run(1e-3)
     
 ########### dynamics ###############
-# Max(atoms, temp * 1)
-atoms.arrays['momenta'] *= temp / units.kB / atoms.get_temperature()
+#### Initialization
+## Maxwell-Boltzmann distribution
+Max(atoms, temp * 1)
+## Multiply
+# atoms.arrays['momenta'] *= temp / units.kB / atoms.get_temperature()
+## Global
 # Stationary(atoms)
-from ase.md.verlet import VelocityVerlet
-dyn = VelocityVerlet(
-    atoms,
-    d_t,
-    trajectory = label+'.traj',
-    logfile = 'log_'+label+'.txt',
-    )
+
+## Dynamics
+# from ase.md.verlet import VelocityVerlet
+# dyn = VelocityVerlet(
+    # atoms,
+    # d_t,
+    # trajectory = label+'.traj',
+    # logfile = 'log_'+label+'.txt',
+    # )
 # from ase.md import Langevin
 # dyn = Langevin(
     # atoms       = atoms,
@@ -61,18 +84,18 @@ dyn = VelocityVerlet(
     # trajectory  = label+'.traj',
     # logfile     = 'log_'+label+'.txt',
     # ) 
-# from ase.md.npt import NPT
-# dyn = NPT(
-    # atoms = atoms,
-    # timestep = d_t,
-    # temperature = temp,
-    # externalstress = 0.,
-    # ttime = 75 * units.fs,
-    # pfactor = (75. *units.fs)**2 * 100. *units.GPa,
-    # trajectory  = label+'.traj',
-    # logfile     = 'log_'+label+'.txt',
-    # )
+from ase.md.npt import NPT
+dyn = NPT(
+    atoms = atoms,
+    timestep = d_t,
+    temperature = temp,
+    externalstress = 0.,
+    ttime = 75 * units.fs,
+    pfactor = (75. *units.fs)**2 * 100. *units.GPa,
+    trajectory  = label+'.traj',
+    logfile     = 'log_'+label+'.txt',
+    )
 ### relax option
-# dyn.set_fraction_traceless(0) # 0 --> no shape change but yes volume change
+dyn.set_fraction_traceless(0) # 0 --> no shape change but yes volume change
 dyn.run(steps=t_step)     #MD simulation of object 'dyn' is performed by 'run' method of VV class
 
