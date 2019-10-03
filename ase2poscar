@@ -46,14 +46,16 @@ if __name__ == '__main__':
 
     ##
     print("\nI'll extract informations from '"+inp_file+"' file.")
-    print("POSCARs will be stored in folder >> 'vasp_images_"+inp_file+"'")
-    alist = read(inp_file, args.image_slice)
+    print("POSCARs will be stored in folder >> 'vasp_images_"+inp_file+".d'")
+    alist = read(inp_file, ':')
     if not isinstance(alist, list):
         alist = [alist]
+    img_num = len(alist)
+    alist = alist[args.image_slice]
     print("\nTotally, {} POSCARs will be written\n".format(len(alist)))
 
     ##
-    indices = range(int(1e6))[args.image_slice]
-    sp.call("mkdir vasp_images_{}".format(inp_file), shell=True)
+    indices = range(img_num)[args.image_slice]
+    sp.call("mkdir vasp_images_{}.d".format(inp_file), shell=True)
     for i in range(len(indices)):
-        write("vasp_images_{}/POSCAR_{}".format(inp_file, str(indices[i]).zfill(6)), alist[i])
+        write("vasp_images_{}.d/POSCAR_{}".format(inp_file, str(indices[i]).zfill(6)), alist[i])
