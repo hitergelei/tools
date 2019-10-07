@@ -30,16 +30,6 @@ def get_RDF(alist, rMax, nBin=500, chem=None, log=False):
     ## Return curve
     return np.transpose(np.concatenate(([x], [rdf])))
 
-def rectify_RDF(curve, rectify_cut):
-    iter = True
-    while True:
-        test = curve[1:] - curve[:-1]
-        peak_bool = np.array(list(test[:,1] > (-1 * rectify_cut)) + [True], dtype=np.bool)
-        if False not in peak_bool:
-            break
-        curve = curve[peak_bool]
-    return curve
-
 def argparse():
     import argparse
     parser = argparse.ArgumentParser(description = """
@@ -121,7 +111,8 @@ if __name__ == '__main__':
 
     ## Rectify curve
     if rectify_cut:
-        curve = rectify_RDF(curve, rectify_cut)
+        from ss_util import rectify_curve
+        curve = rectify_curve(curve, rectify_cut)
     ## Plot
     import matplotlib.pyplot as plt
     # spline (optional)

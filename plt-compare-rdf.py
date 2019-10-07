@@ -49,9 +49,9 @@ if __name__ == '__main__':
 
     ## Rectify curve
     if rectify_cut:
-        from ase_rdf import rectify_RDF
-        rdf1 = rectify_RDF(rdf1, rectify_cut)
-        rdf2 = rectify_RDF(rdf2, rectify_cut)
+        from ss_util import rectify_curve
+        rdf1 = rectify_curve(rdf1, rectify_cut)
+        rdf2 = rectify_curve(rdf2, rectify_cut)
     ## Plot
     import matplotlib.pyplot as plt
     # spline (optional)

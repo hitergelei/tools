@@ -7,6 +7,16 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
+def rectify_curve(curve, rectify_cut):
+    iter = True
+    while True:
+        test = curve[1:] - curve[:-1]
+        peak_bool = np.array(list(test[:,1] > (-1 * rectify_cut)) + [True], dtype=np.bool)
+        if False not in peak_bool:
+            break
+        curve = curve[peak_bool]
+    return curve
+
 def get_chem_ind_arr(chemical_symbols):
     chem_arr = np.array(chemical_symbols)
     unique_chem = np.unique(chem_arr)
