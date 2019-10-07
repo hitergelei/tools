@@ -20,8 +20,10 @@ def argparse():
     parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. Zero means no smearing. [default: 0]')
     parser.add_argument('-a', '--no_average', dest='avg_bool', action='store_false', help='Not to take average over files. [default: take average]')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
-    parser.add_argument('-l', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
+    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
     parser.add_argument('-m', '--Nprocs', type=int, default=1, help='Number of process for multiprocessing. [Default: serial compute]')
+    parser.add_argument('-u', '--adf_upper', type=float, default=None, help='Upper bound for ADF plot [Default: automatic]')
+    parser.add_argument('-l', '--adf_lower', type=float, default=0, help='Lower bound for ADF plot [Default: 0]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -132,9 +134,17 @@ if __name__ == '__main__':
     ## Plot
     import matplotlib.pyplot as plt
     plt.plot(angd,agr,'-')
-    plt.xlabel('Angle (degree)', fontsize='x-large')
-    plt.ylabel('ADF', fontsize='x-large')
-    plt.xticks(range(0,181,20), fontsize='x-large')
+    if (symbol1, symbol2, symbol3) == ('a','a','a'):
+        plt.ylabel('Total ADF (deg$^{-1}$)', fontsize='x-large')
+    else:
+        print('Partial ADF (deg){}'.format(chem[0]+chem[1]+chem[2]))
+        plt.ylabel('Partial ADF$_{{{}}}$'.format(chem[0]+chem[1]+chem[2])+' (deg$^{-1}$)', fontsize='x-large')
+    plt.xlabel('Bond angle (deg)', fontsize='x-large')
+    plt.subplots_adjust(left=0.16, bottom=0.28, right=0.94, top=0.75, wspace=0.20, hspace=0.20)
+    plt.xticks(range(0,181,20),fontsize='x-large')
     plt.yticks(fontsize='x-large')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.xlim(0., 180.)
+    plt.ylim(args.adf_lower, args.adf_upper)
+    
     plt.show()
