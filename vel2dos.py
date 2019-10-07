@@ -66,6 +66,8 @@ def plot_total_DOS(
     unit='THz',
     freqlim_low=None,
     freqlim_up=None,
+    DOS_low=None,
+    DOS_up=None,
     flip_xy=True,
     ):
     """
@@ -92,16 +94,16 @@ def plot_total_DOS(
     if flip_xy:
         ax.plot(DOS, f)
         ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='xx-large')
-        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        ax.set_xlim((0,None))
+        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+        ax.set_xlim((DOS_low,DOS_up))
     else:
         ax.plot(f, DOS)
         ax.set_xlim((freqlim_low, freqlim_up))
-        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        ax.set_ylabel('DOS (arb. units)', fontsize='xx-large')
-        ax.set_ylim((0,None))
-    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
+        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
+        ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_ylim((DOS_low,DOS_up))
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
     plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)
     plt.show()
@@ -113,6 +115,8 @@ def plot_partial_DOS(
     unit='THz',
     freqlim_low=None,
     freqlim_up=None,
+    DOS_low=None,
+    DOS_up=None,
     flip_xy=True,
     ):
     """
@@ -152,21 +156,21 @@ def plot_partial_DOS(
         for spec_i in range(len(unique_spec)):
             ax.plot(PDOS_list[spec_i], f, label=unique_spec[spec_i])
         ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='xx-large')
-        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
+        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
-        ax.set_xlim((0,None))
+        ax.set_xlim((DOS_low, DOS_up))
     else:
         for spec_i in range(len(unique_spec)):
             ax.plot(f, PDOS_list[spec_i], label=unique_spec[spec_i])
         ax.set_xlim((freqlim_low, freqlim_up))
-        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        ax.set_ylabel('DOS (arb. units)', fontsize='xx-large')
+        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
+        ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
         ax.fill_betweenx(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
-        ax.set_ylim((0,None))
-    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
+        ax.set_ylim((DOS_low, DOS_up))
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
-    plt.legend()
+    plt.legend(fontsize='large')
     plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)
     plt.show()
 
@@ -183,6 +187,8 @@ def argparse():
     parser.add_argument('-p', '--partial_DOS', action='store_true', help='If activated, return partial DOS. (If not, total DOS as default)')
     parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. Zero as default.')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
+    parser.add_argument('-m', '--DOS_low', type=float, default=0., help='Set DOS lower limit for plot. Zero as default.')
+    parser.add_argument('-v', '--DOS_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
     parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
@@ -204,10 +210,12 @@ if __name__ == '__main__':
     args = argparse()
 
     ## Read input params
-    d_t = args.d_t
-    pdos_bool = args.partial_DOS
+    d_t         = args.d_t
+    pdos_bool   = args.partial_DOS
     freqlim_low = args.freqlim_low
-    freqlim_up = args.freqlim_up
+    freqlim_up  = args.freqlim_up
+    DOS_low     = args.DOS_low
+    DOS_up      = args.DOS_up
     # inp_file_list
     from ase.io import read
     ## Main loop
@@ -271,6 +279,8 @@ if __name__ == '__main__':
             unit='THz',
             freqlim_low=freqlim_low,
             freqlim_up=freqlim_up,
+            DOS_low=DOS_low,
+            DOS_up=DOS_up,
             flip_xy=True,
             )
     else:
@@ -280,5 +290,7 @@ if __name__ == '__main__':
             unit='THz',
             freqlim_low=freqlim_low,
             freqlim_up=freqlim_up,
+            DOS_low=DOS_low,
+            DOS_up=DOS_up,
             flip_xy=True,
             )
