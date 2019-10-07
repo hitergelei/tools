@@ -132,6 +132,9 @@ if __name__ == '__main__':
     ## Plot
     import matplotlib.pyplot as plt
     plt.plot(angd,agr,'-')
-    plt.xlabel('Angle (degree)')
-    plt.ylabel('ADF')
+    plt.xlabel('Angle (degree)', fontsize='x-large')
+    plt.ylabel('ADF', fontsize='x-large')
+    plt.xticks(range(0,181,20), fontsize='x-large')
+    plt.yticks(fontsize='x-large')
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.show()
