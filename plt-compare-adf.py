@@ -48,8 +48,8 @@ if __name__ == '__main__':
     adf_arr_list = [adf_npz_list[i]['agr'] for i in range(len(fname_list))]
     rectify_cut = args.rectify_cut
     label_list = args.label_list
-    if label_list and len(label_list) != adf_npz_list:
-        raise ValueError('len(label_list) != len(adf_npz_list)')
+    if label_list and len(label_list) != len(adf_npz_list):
+        raise ValueError('len(label_list) != len(adf_npz_list) ==> {} != {}'.format(len(label_list), len(adf_npz_list)))
     ## Prepare data
     chem, dDeg, rcut = [],[],[]
     for fname in fname_list:
