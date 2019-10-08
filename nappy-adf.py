@@ -137,8 +137,8 @@ if __name__ == '__main__':
     if (symbol1, symbol2, symbol3) == ('a','a','a'):
         plt.ylabel('Total ADF (deg$^{-1}$)', fontsize='x-large')
     else:
-        print('Partial ADF (deg){}'.format(chem[0]+chem[1]+chem[2]))
-        plt.ylabel('Partial ADF$_{{{}}}$'.format(chem[0]+chem[1]+chem[2])+' (deg$^{-1}$)', fontsize='x-large')
+        print('Partial ADF (deg){}'.format(symbol1+symbol2+symbol3))
+        plt.ylabel('Partial ADF$_{{{}}}$'.format(symbol1+symbol2+symbol3)+' (deg$^{-1}$)', fontsize='x-large')
     plt.xlabel('Bond angle (deg)', fontsize='x-large')
     plt.subplots_adjust(left=0.16, bottom=0.28, right=0.94, top=0.75, wspace=0.20, hspace=0.20)
     plt.xticks(range(0,181,20),fontsize='x-large')
