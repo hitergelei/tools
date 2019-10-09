@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-
 import numpy as np
 
-def get_RDF(alist, rMax, nBin=500, chem=None, log=False):
+def get_RDF(alist, rcut, nBin=500, symbol_tuple=None, log=False):
     from asap3.analysis.rdf import RadialDistributionFunction as RDF
-    RDFobj = RDF(atoms=alist[0],
-                 rMax=rMax,
-                 nBins=nBin)
+    RDFobj = RDF(
+        atoms=alist[0],
+        rMax=rcut,
+        nBins=nBin,
+        )
     for i in range(1,len(alist)):
         RDFobj.atoms = alist[i]
         RDFobj.update()
@@ -14,19 +15,19 @@ def get_RDF(alist, rMax, nBin=500, chem=None, log=False):
             print('\t Updating '+str(i+1)+" th image's RDF")
 
     ## Total RDF
-    if chem == None:
+    if symbol_tuple == ('a', 'a'):
         rdf = RDFobj.get_rdf()
     ## Partial RDF
     else:
         # Get normalize constant
         (unique, counts) = np.unique(alist[0].get_chemical_symbols(), return_counts=True)
-        norm_const = counts[list(unique).index(chem[1])] / np.sum(counts, dtype=np.float)
+        norm_const = counts[list(unique).index(symbol_tuple[1])] / np.sum(counts, dtype=np.float)
         #
-        from chem_num_inverter import invert_chem_num
-        spec_inds = invert_chem_num(chem)
+        from chemical_symbol_number_inverter import invert_chem_sym_num
+        spec_inds = invert_chem_sym_num(symbol_tuple)
         #
         rdf = RDFobj.get_rdf(elements=tuple(spec_inds)) / norm_const
-    x = np.arange(nBin) * rMax / nBin
+    x = np.arange(nBin) / float(nBin) * rcut
     ## Return curve
     return np.transpose(np.concatenate(([x], [rdf])))
 
@@ -37,12 +38,19 @@ def argparse():
     Return npy file.
     """)
     # Positional arguments
-    parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name')
+    parser.add_argument('symbol1', type=str, help='symbol1,2, are chemical symbols consisting bonds.')
+    parser.add_argument('symbol2', type=str, help='e.g. Ge-Te == Te-Ge | "a": any symbols.')
+    parser.add_argument('file_list', type=str, nargs='+', help='ASE readable atoms list file name. Multiple files can be read.')
     # Optional arguments
-    parser.add_argument('-p', '--partial', type=str, default='total-total', help='If you need partial RDF. Default: total-total RDF. E.g.: -p Ge-Te')
-    parser.add_argument('-r', '--rmax', type = float, default=12., help='Maximum radius for RDF. Default: 12.')
-    parser.add_argument('-n', '--nbin', type=int, default=500, help='Number of bins. Default: 500')
-    parser.add_argument('-c', '--rectify-cut', type=float, default=False, help='All of drastic variation higher than this value will be omitted in output. Default: no rectify')
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
+    parser.add_argument('-r', '--rcut', type = float, default=8.5, help='Maximum radius for RDF. Default: 8.5')
+    parser.add_argument('-b', '--nBin', type=int, default=500, help='Number of bins. Default: 500')
+    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. Zero means no smearing. [default: 0]')
+    parser.add_argument('-e', '--rectify-cut', type=float, default=None, help='All of drastic kink higher than this will be omitted. [Default: no rectify]')
+    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npz will not be saved. Default: Save array')
+    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npz will not be loaded. Default: Load if possible')
+    parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
+    parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -61,73 +69,98 @@ if __name__ == '__main__':
     args = argparse()
 
     ## Read input params
-    # --partial
-    if args.partial == 'total-total':
-        chem = None
-    elif len(args.partial.split('-')) == 2:
-        chem = args.partial.split('-')
-    else:
-        raise ValueError('--partial (or -p) argument (={}) is wrong.'.format(args.partial))
-    # --rmax, --nbin
-    rMax = args.rmax
-    nBin = args.nbin
-    # --rectify_cut
+    # params
+    symbol1     = args.symbol1
+    symbol2     = args.symbol2
+    rcut        = args.rcut
+    nBin        = args.nBin
+    dr          = rcut/ nBin
+    gsmear_std  = args.gsmear
     rectify_cut = args.rectify_cut
-    if rectify_cut == False:
-        rectify_cut = False
-    # --inp_file
-    inp_fname = args.inp_file
-    out_fname = 'rdf-{}-{}-{:.2f}-{}.npy'.format(inp_fname, args.partial, rMax, nBin)
-    if chem is not None:
-        out_fname2 = 'rdf-{}-{}-{:.2f}-{}.npy'.format(inp_fname, chem[1]+'-'+chem[0], rMax, nBin)
+    # Slice process
+    from ss_util import str_slice_to_list
+    slice_list = str_slice_to_list(args.image_slice)
+    # out file
+    file_list = args.file_list
+    out_fname = 'rdf_saved/{}-slice_{}_{}_{}-_{}-{}_nBin-{}_rcut-{}.npz'.format(
+        file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, nBin, rcut)
+    out_fname2 = 'rdf_saved/{}-slice_{}_{}_{}-_{}-{}_nBin-{}_rcut-{}.npz'.format(
+        file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol2, symbol1, nBin, rcut)
 
-    ## Load saved file
+    ## Main
     try:
+        assert args.load_bool == True
+        assert len(file_list) == 1
         curve = np.load(out_fname)
     except:
-        print('File "{}" was not found.'.format(out_fname).center(120))
-        do_calc = True
-        if chem is not None:
-            try:
-                curve = np.load(out_fname2)
-            except:
-                print('Also, file "{}" was not found. Calculation will be carried out.'.format(out_fname2).center(120))
-                do_calc = True
-            else:
-                out_fname = out_fname2
-                print('File "{}" is loaded.'.format(out_fname).center(120))
-                do_calc = False
+        try:
+            assert args.load_bool == True
+            assert len(file_list) == 1
+            curve = np.load(out_fname2)
+        except:
+            do_calc = True
+            if args.load_bool:
+                print('Failed to load saved npz file. Calculation will be carried out')
+                print('Case 1) Number of input file must be 1 to load npz. len(file_list)=={}'.format(len(file_list)))
+                print('Case 2) Failed to load npz file "{}"'.format(out_fname))
+                print('             or equivalent data "{}"'.format(out_fname2))
+        else:
+            print('File "{}" has been loaded.'.format(out_fname2))
+            do_calc = False
         if do_calc:
             ## Read inputs
+            alist = []
             from ase.io import read
-            alist = read(inp_fname, ':')
-            curve = get_RDF(alist, rMax, nBin, chem, log=True)
-            np.save(out_fname, curve)
-            print('=================================================================================================='.center(120))
-            print('Return ----------> {}'.format(out_fname).center(120))
-            print('=================================================================================================='.center(120))
+            for infname in file_list:
+                read_obj = read(infname, args.image_slice)
+                if isinstance(read_obj, list):
+                    alist.extend(read_obj)
+                else:
+                    alist.append(read_obj)
+            if len(alist) == 0: raise ValueError('No an image provided.')
+            curve = get_RDF(alist, rcut, nBin, (symbol1, symbol2), log=True)
+            if args.save_bool and len(file_list) == 1:
+                from subprocess import call
+                call('mkdir adf_saved', shell=True)
+                np.save(out_fname, curve)
+                print('=================================================================================================='.center(120))
+                print('RDF saved! ----------> {}'.format(out_fname).center(120))
+                print('=================================================================================================='.center(120))
     else:
-        print('File "{}" is loaded.'.format(out_fname).center(120))
+        print('File "{}" has been loaded.'.format(out_fname))
 
     ## Rectify curve
     if rectify_cut:
         from ss_util import rectify_curve
         curve = rectify_curve(curve, rectify_cut)
+
+    if not gsmear_std == 0:
+        print(' Gaussian smearing...')
+        # from gaussian_smear import gsmear
+        # agr= gsmear(angd,agr,gsmear_std)
+        from scipy.ndimage.filters import gaussian_filter1d
+        curve[:,1] = gaussian_filter1d(curve[:,1], gsmear_std /dr)
+    ## Debug option
+    print('Integration of RDF.={}'.format(np.trapz(curve[:,1], curve[:,0])))
+
     ## Plot
     import matplotlib.pyplot as plt
-    # spline (optional)
-    # from scipy.interpolate import make_interp_spline, BSpline
-    # spl = make_interp_spline(curve[:-1, 0][::20], curve[:-1, 1][::20])
-    # curve[:-1, 1] = spl(curve[:-1, 0])
-    plt.plot(curve[:-1, 0], curve[:-1, 1], linewidth=3)
-    if chem == None:
-        plt.ylabel(r'$g_{tot}(r)$', fontsize='xx-large')
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
+    plt.plot(curve[:, 0], curve[:, 1], c='r')
+    if (symbol1, symbol2) == ('a', 'a'):
+        plt.ylabel('Total RDF $(\AA^{-1})$', fontsize='x-large')
     else:
-        plt.ylabel(r'$g_{{{}{}}}(r)$'.format(chem[0], chem[1]), fontsize='xx-large')
-    plt.xlabel(r'$r\ /\ \AA$', fontsize='xx-large')
-    plt.subplots_adjust(left=0.15, bottom=0.37, right=0.95, top=0.63, wspace=0.2, hspace=0.2)
-    plt.xticks(fontsize='xx-large')
-    plt.yticks(fontsize='xx-large')
-    plt.xlim(0., rMax)
-    plt.hlines(1., 0., rMax, linestyle='dashed', linewidth=2)
+        plt.ylabel('Partial RDF$_{{{}}}$'.format(symbol1+symbol2)+' $(\AA^{-1})$', fontsize='x-large')
+    plt.xlabel('Distance $(\AA)$', fontsize='x-large')
+    plt.subplots_adjust(left=0.09, bottom=0.30, right=0.97, top=0.60, wspace=0.2, hspace=0.2)
+    from math import ceil
+    plt.xticks(range(1,int(ceil(rcut))), fontsize='x-large')
+    plt.yticks(fontsize='x-large')
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.xlim(0., rcut)
+    plt.ylim(args.rdf_lower, args.rdf_upper)
+    plt.axhline(rcut, linestyle='dashed', linewidth=1)
+    plt.title(out_fname[11:-4], pad=10)
+    plt.grid(alpha=0.2)
     plt.show()

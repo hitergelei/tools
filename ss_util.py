@@ -7,7 +7,52 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
-def rectify_curve(curve, rectify_cut):
+def str_slice_to_list(
+    str_slice,
+    obj_length=None,
+    ):
+    """
+    str_slice (str)  = String type slice. e.g. 3:-1:2
+    obj_length (int) = Length of object that will use this slice object. Set to None if unknown.
+    """
+    if obj_length:
+        obj_length = int(obj_length)
+
+    ## Main
+    if ':' in str_slice:
+        slice_list = [int(e) if e.strip() else None for e in str_slice.split(":")]
+        if len(slice_list) == 2:
+            slice_list.append(None)
+        elif len(slice_list) != 3:
+            raise ValueError('Slice option is unreadable. --> {}'.format(str_slice))
+    else:
+        slice_list = [int(str_slice), int(str_slice)+1, None]
+
+    ## Post-process : To achieve unity.
+    # 0
+    if slice_list[0] == None:
+        slice_list[0] = 0
+    elif obj_length and slice_list[0] < 0:
+        slice_list[0] += obj_length
+
+    # 1
+    if obj_length:
+        if slice_list[1] == None:
+            slice_list[1] = obj_length
+        elif slice_list[1] < 0:
+            slice_list[1] += obj_length
+
+    # 2
+    if slice_list[2] == None:
+        slice_list[2] = 1
+    elif obj_length and slice_list[2] < 0:
+        slice_list[2] += obj_length
+    return slice_list
+
+def rectify_curve(
+    curve,
+    rectify_cut,
+    ):
     iter = True
     while True:
         test = curve[1:] - curve[:-1]
@@ -17,7 +62,9 @@ def rectify_curve(curve, rectify_cut):
         curve = curve[peak_bool]
     return curve
 
-def get_chem_ind_arr(chemical_symbols):
+def get_chem_ind_arr(
+    chemical_symbols,
+    ):
     chem_arr = np.array(chemical_symbols)
     unique_chem = np.unique(chem_arr)
     ind = np.arange(len(chem_arr))
@@ -26,7 +73,11 @@ def get_chem_ind_arr(chemical_symbols):
         chem_ind_arr.append(ind[chem_arr==chem])
     return unique_chem, np.array(chem_ind_arr)
 
-def read_txt_matrix(file_name, start_line=0, end_line=-1):
+def read_txt_matrix(
+    file_name,
+    start_line=0,
+    end_line=-1,
+    ):
     mat = []
     with open(file_name, 'r') as f:
         for i in range(start_line):

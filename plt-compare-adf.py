@@ -18,14 +18,6 @@ def argparse():
     parser.add_argument('-b', '--label_list', type=str, nargs='+', default=None, help='Legend label list. len(label_list) == len(adf_npz_list). [default: no legend].')
     parser.add_argument('-s', '--lstyle_list', type=str, nargs='+', default=None, help='Line style list. len(lstyle_list) == len(adf_npz_list). [default: solid line].')
     parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. len(lcolor_list) == len(adf_npz_list). [default: automatic].')
-    # parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
-    # parser.add_argument('-r', '--rcut', type=float, default=3., help='Cutoff radius of the bonding pair. [default: 3.0]')
-    # parser.add_argument('-f', '--f_format', type=str, default=None, help='Input file format. [default: Automatic if ASE readable.]')
-    # parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. Zero means no smearing. [default: 0]')
-    # parser.add_argument('-a', '--no_average', dest='avg_bool', action='store_false', help='Not to take average over files. [default: take average]')
-    # parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
-    # parser.add_argument('-l', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
-    # parser.add_argument('-m', '--Nprocs', type=int, default=1, help='Number of process for multiprocessing. [Default: serial compute]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -105,6 +97,7 @@ if __name__ == '__main__':
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlim(0., 180.)
     plt.ylim(args.adf_lower, args.adf_upper)
+    plt.grid(alpha=0.2)
     ## Legend options
     if label_list:
         plt.legend(loc='best', fontsize='large')

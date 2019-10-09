@@ -7,7 +7,7 @@ def invert_chem_sym_num(inp):
     """
 
     ## Change input type to list
-    if type(inp) is list:
+    if type(inp) in (list, tuple):
         inp_list = inp
     else:
         inp_list = [inp]
