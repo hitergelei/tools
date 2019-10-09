@@ -107,7 +107,7 @@ if __name__ == '__main__':
             angd = gather[0,0]
             agr  = np.sum(gather[:,1], axis=0)
             nsum = np.sum(gather[:,2], axis=0)
-        agr /= dang ## Normalized to continueous version. Integral = average angle-pair numbers
+        agr /= dang ## Normalized to continueous version. Total adf: Integral = average angle-pair numbers && Sum of all possible partial adf == total adf
         if args.avg_bool:
             agr /= nsum
         print('Caculation ended. Elapse time = {} (s)'.format(time()-time_init))
