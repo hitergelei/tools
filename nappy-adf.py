@@ -44,7 +44,7 @@ if __name__ == '__main__':
     from chemical_symbol_number_inverter import invert_chem_sym_num as ics
 
     ## def
-    infiles  = args.file_list
+    file_list  = args.file_list
     symbol1  = args.symbol1
     symbol2  = args.symbol2
     symbol3  = args.symbol3
@@ -68,20 +68,20 @@ if __name__ == '__main__':
         slice_list[2] = 1
 
     fname = 'adf_saved/{}-slice_{}_{}_{}-_{}-{}-{}_dDeg-{}_rcut-{}_avg-{}.npz'.format(
-        infiles[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
+        file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
     try:
         assert args.load_bool == True
-        assert len(infiles) == 1
+        assert len(file_list) == 1
         npz = np.load('{}'.format(fname))
     except:
         if args.load_bool == True:
             print('Failed to load saved npz file. Calculation will be carried out')
-            print('Case 1) Number of input file must be 1 to load npz. len(infiles)=={}'.format(len(infiles)))
+            print('Case 1) Number of input file must be 1 to load npz. len(file_list)=={}'.format(len(file_list)))
             print('Case 2) Failed to load npz file "{}"'.format(fname))
 
         alist = []
         from ase.io import read
-        for infname in infiles:
+        for infname in file_list:
             read_obj = read(infname, args.image_slice)
             if isinstance(read_obj, list):
                 alist.extend(read_obj)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         print('Caculation ended. Elapse time = {} (s)'.format(time()-time_init))
         print('Totally {} atoms in {} images have been calculated'.format(nsum, len(alist)))
 
-        if args.save_bool and len(infiles) == 1:
+        if args.save_bool and len(file_list) == 1:
             from subprocess import call
             call('mkdir adf_saved', shell=True)
             np.savez(fname, angd=angd, agr=agr)
