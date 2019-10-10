@@ -97,7 +97,7 @@ if __name__ == '__main__':
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlim(0., rcut)
     plt.ylim(args.rdf_lower, args.rdf_upper)
-    plt.axhline(rcut, linestyle='dashed', linewidth=1)
+    plt.axhline(1., linestyle='dashed', linewidth=1, c='k')
     plt.title('tmp', pad=10)
     plt.grid(alpha=0.2)
     ## Legend options
