@@ -98,8 +98,9 @@ if __name__ == '__main__':
     plt.title('tmp', pad=10)
     plt.grid(alpha=0.2)
     ## Legend options
-    if label_list:
+    if label_list != [None]*len(label_list):
         plt.legend(loc='best', fontsize='large')
-    
+    else:
+        plt.legend().set_visible(False)
     plt.show()
 

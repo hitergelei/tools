@@ -60,7 +60,7 @@ if __name__ == '__main__':
     out_fname  = 'adf-saved/{}_slice-{}-{}-{}_sym-{}-{}-{}_dDeg-{}_rcut-{}_avg-{}_.npz'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
     out_fname2 = 'adf-saved/{}_slice-{}-{}-{}_sym-{}-{}-{}_dDeg-{}_rcut-{}_avg-{}_.npz'.format(
-        file_list[0], slice_list[2], slice_list[1], slice_list[0], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
+        file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol3, symbol2, symbol1, dang, rcut, avg_bool)
 
     ## Main
     try:
