@@ -82,7 +82,7 @@ if __name__ == '__main__':
     slice_list = str_slice_to_list(args.image_slice)
     # out file
     file_list = args.file_list
-    out_fname = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
+    out_fname  = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, nBin, rcut)
     out_fname2 = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol2, symbol1, nBin, rcut)

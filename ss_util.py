@@ -7,6 +7,13 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
+def get_number_of_lines(f_obj):
+    f_obj.seek(0)
+    for i, l in enumerate(f_obj):
+        pass
+    f_obj.seek(0)
+    return i + 1
+
 def str_slice_to_list(
     str_slice,
     obj_length=None,
@@ -24,29 +31,22 @@ def str_slice_to_list(
         if len(slice_list) == 2:
             slice_list.append(None)
         elif len(slice_list) != 3:
-            raise ValueError('Slice option is unreadable. --> {}'.format(str_slice))
+            raise ValueError('String slice option is unreadable. --> {}'.format(str_slice))
+    elif int(str_slice) == -1:
+        slice_list = [-1, None, None]
     else:
         slice_list = [int(str_slice), int(str_slice)+1, None]
 
     ## Post-process : To achieve unity.
-    # 0
-    if slice_list[0] == None:
-        slice_list[0] = 0
-    elif obj_length and slice_list[0] < 0:
-        slice_list[0] += obj_length
-
-    # 1
     if obj_length:
-        if slice_list[1] == None:
-            slice_list[1] = obj_length
-        elif slice_list[1] < 0:
-            slice_list[1] += obj_length
-
-    # 2
-    if slice_list[2] == None:
-        slice_list[2] = 1
-    elif obj_length and slice_list[2] < 0:
-        slice_list[2] += obj_length
+        slice_list = slice(*slice_list).indices(obj_length)
+    else:
+        # 0
+        if slice_list[0] == None:
+            slice_list[0] = 0
+        # 2
+        if slice_list[2] == None:
+            slice_list[2] = 1
     return slice_list
 
 def rectify_curve(

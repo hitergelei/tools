@@ -57,60 +57,74 @@ if __name__ == '__main__':
     from ss_util import str_slice_to_list
     slice_list = str_slice_to_list(args.image_slice)
     # out name
-    out_fname = 'adf-saved/{}_slice-{}-{}-{}_sym-{}-{}-{}_dDeg-{}_rcut-{}_avg-{}_.npz'.format(
+    out_fname  = 'adf-saved/{}_slice-{}-{}-{}_sym-{}-{}-{}_dDeg-{}_rcut-{}_avg-{}_.npz'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
+    out_fname2 = 'adf-saved/{}_slice-{}-{}-{}_sym-{}-{}-{}_dDeg-{}_rcut-{}_avg-{}_.npz'.format(
+        file_list[0], slice_list[2], slice_list[1], slice_list[0], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
 
     ## Main
     try:
         assert args.load_bool == True
         assert len(file_list) == 1
-        npz = np.load('{}'.format(out_fname))
+        npz = np.load(out_fname)
     except:
-        if args.load_bool:
-            print('Failed to load saved npz file. Calculation will be carried out')
-            print('Case 1) Number of input file must be 1 to load npz. len(file_list)=={}'.format(len(file_list)))
-            print('Case 2) Failed to load npz file "{}"'.format(out_fname))
-        alist = []
-        from ase.io import read
-        for infname in file_list:
-            read_obj = read(infname, args.image_slice)
-            if isinstance(read_obj, list):
-                alist.extend(read_obj)
-            else:
-                alist.append(read_obj)
-        if len(alist) == 0: raise ValueError('No an image provided.')
+        try:
+            assert args.load_bool == True
+            assert len(file_list) == 1
+            npz = np.load(out_fname2)
+        except:
+            do_calc = True
+            if args.load_bool:
+                print('Failed to load saved npz file. Calculation will be carried out')
+                print('Case 1) Number of input file must be 1 to load npz. len(file_list)=={}'.format(len(file_list)))
+                print('Case 2) Failed to load npz file "{}"'.format(out_fname))
+                print('             or equivalent data "{}"'.format(out_fname2))
+        else:
+            print('File "{}" has been loaded.'.format(out_fname2))
+            do_calc = False
+        if do_calc:
+            ## Read inputs
+            alist = []
+            from ase.io import read
+            for infname in file_list:
+                read_obj = read(infname, args.image_slice)
+                if isinstance(read_obj, list):
+                    alist.extend(read_obj)
+                else:
+                    alist.append(read_obj)
+            if len(alist) == 0: raise ValueError('No an image provided.')
 
-        ## Multiprocessing
-        from time import time
-        time_init = time()
-        print('Caculation started.')
-        from multiprocessing import Pool
-        pool = Pool(args.Nprocs)
-        tasks = [pool.apply_async(adf_gather, (alist[_::args.Nprocs], dang, rcut, symbol1, symbol2, symbol3)) for _ in range(args.Nprocs)]
+            ## Multiprocessing
+            from time import time
+            time_init = time()
+            print('Caculation started.')
+            from multiprocessing import Pool
+            pool = Pool(args.Nprocs)
+            tasks = [pool.apply_async(adf_gather, (alist[_::args.Nprocs], dang, rcut, symbol1, symbol2, symbol3)) for _ in range(args.Nprocs)]
 
-        gather = []
-        for task in tasks:
-            task.wait(10)
-            gather.append(task.get())
-        gather = np.array(gather)
+            gather = []
+            for task in tasks:
+                task.wait(10)
+                gather.append(task.get())
+            gather = np.array(gather)
 
-        for items in gather:
-            angd = gather[0,0]
-            agr  = np.sum(gather[:,1], axis=0)
-            nsum = np.sum(gather[:,2], axis=0)
-        agr /= dang ## Normalized to continueous version. Total adf: Integral = average angle-pair numbers && Sum of all possible partial adf == total adf
-        if args.avg_bool:
-            agr /= nsum
-        print('Caculation ended. Elapse time = {} (s)'.format(time()-time_init))
-        print('Totally {} atoms in {} images have been calculated'.format(nsum, len(alist)))
+            for items in gather:
+                angd = gather[0,0]
+                agr  = np.sum(gather[:,1], axis=0)
+                nsum = np.sum(gather[:,2], axis=0)
+            agr /= dang ## Normalized to continueous version. Total adf: Integral = average angle-pair numbers && Sum of all possible partial adf == total adf
+            if args.avg_bool:
+                agr /= nsum
+            print('Caculation ended. Elapse time = {} (s)'.format(time()-time_init))
+            print('Totally {} atoms in {} images have been calculated'.format(nsum, len(alist)))
 
-        if args.save_bool and len(file_list) == 1:
-            from subprocess import call
-            call('mkdir adf-saved', shell=True)
-            np.savez(out_fname, angd=angd, agr=agr)
-            print('=================================================================================================='.center(120))
-            print('ADF saved! ----------> {}'.format(out_fname).center(120))
-            print('=================================================================================================='.center(120))
+            if args.save_bool and len(file_list) == 1:
+                from subprocess import call
+                call('mkdir adf-saved', shell=True)
+                np.savez(out_fname, angd=angd, agr=agr)
+                print('=================================================================================================='.center(120))
+                print('ADF saved! ----------> {}'.format(out_fname).center(120))
+                print('=================================================================================================='.center(120))
     else:
         print('File "{}" has been loaded successfully.'.format(out_fname))
         angd, agr = npz['angd'], npz['agr']
