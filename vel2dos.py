@@ -2,12 +2,12 @@
 
 import numpy as np
 
-def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
+def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, dt):
     """
     atomic_mass_arr (array) : Array of atomic masses of all atoms in unit cell in amu (atomic mass unit).
     average_temp (float)    : Average temperature of provided ensemble trajectory in kelvin.
     velocity_arr (array)    : All of velocities in trajectory of all atoms. Array shape == ( len(traj), len(atoms), 3 )
-    d_t (float)             : Time interval of images provided in (ps) unit (ps^(-1) --> THz)
+    dt (float)             : Time interval of images provided in (ps) unit (ps^(-1) --> THz)
 
     ================================================
                         Theory                      
@@ -38,11 +38,11 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, d_t):
     image_num = len(velocity_arr)
     natoms = len(atomic_mass_arr)
     t_init = 0.
-    t_fin = (image_num-1) * d_t
+    t_fin = (image_num-1) * dt
     # Get discrete time domain
-    t = np.arange(t_init, t_fin+d_t, d_t)
+    t = np.arange(t_init, t_fin+dt, dt)
     # Get frequency domain
-    f = np.fft.rfftfreq(image_num) / d_t
+    f = np.fft.rfftfreq(image_num) / dt
     d_f = f[1] - f[0]
     # Reshape
     velocity_arr = np.reshape(velocity_arr, (image_num, natoms*3)).T
@@ -180,7 +180,7 @@ def argparse():
     This code will give you the phonon-(partial/total)DOS from MD trajectory.
     """)
     # Positional arguments
-    parser.add_argument('d_t', type=float, help='Time interval between images selected in unit of picosec.')
+    parser.add_argument('dt', type=float, help='Time interval between images selected in unit of picosec.')
     parser.add_argument('inp_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
@@ -210,18 +210,20 @@ if __name__ == '__main__':
     args = argparse()
 
     ## Read input params
-    d_t         = args.d_t
+    dt          = args.dt
     pdos_bool   = args.partial_DOS
     freqlim_low = args.freqlim_low
     freqlim_up  = args.freqlim_up
     DOS_low     = args.DOS_low
     DOS_up      = args.DOS_up
+    from ss_util import str_slice_to_list
+    slice_list = str_slice_to_list(args.image_slice)
     # inp_file_list
     from ase.io import read
     ## Main loop
     ADOS_list = []
     for i in range(len(args.inp_file_list)):
-        npz_name = '{}_dt{}_img{}.npz'.format(args.inp_file_list[i], d_t, args.image_slice)
+        npz_name = 'vel2dos-saved/{}_dt{}_img{}-{}-{}.npz'.format(args.inp_file_list[i], dt, slice_list[0], slice_list[1], slice_list[2])
         try:
             args.load_bool = True
             npz = np.load(npz_name)
@@ -244,8 +246,10 @@ if __name__ == '__main__':
             # Get average temperature
             average_temp = np.mean(temp_arr)
             # Get VACF
-            f, ADOS = velocity2phononPDOS(atomic_mass_arr, average_temp, v_arr, d_t)
+            f, ADOS = velocity2phononPDOS(atomic_mass_arr, average_temp, v_arr, dt)
             if args.save_bool:
+                from subprocess import call
+                call('mkdir vel2dos-saved', shell=True)
                 np.savez(npz_name, f=f, ADOS=ADOS)
         else:
             if i % 100 == 0:
@@ -266,7 +270,7 @@ if __name__ == '__main__':
             # txt.write('{:10.5e}'.format(sum[j]))
             # txt.write('\n')
     # # Print area (Normalization test)
-    # d_f = 1. / (d_t * (len(f)-1)*2)
+    # d_f = 1. / (dt * (len(f)-1)*2)
     # print(np.sum(ADOS) * d_f)
 
     ## Plot

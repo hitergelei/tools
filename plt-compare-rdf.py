@@ -59,13 +59,13 @@ if __name__ == '__main__':
     ## Prepare data
     symbol_list, nBin, rcut = [],[],[]
     for fname in fname_list:
-        symbol_tmp, nBin_tmp, rcut_tmp = fname.split('_')[-5:-2]
+        symbol_tmp, nBin_tmp, rcut_tmp = fname.split('_')[-4:-1]
         symbol_tmp = symbol_tmp.split('-')[1:]
         symbol_list.append(symbol_tmp); nBin.append(nBin_tmp); rcut.append(rcut_tmp)
         if nBin_tmp != nBin[0] or rcut_tmp != rcut[0]:
-            raise ValueError('Files are not proper to compare. Must have same "nBin, cutoff radii".')
-        if symbol_tmp != symbol_list[0] and symbol_tmp[::-1] != symbol_list[0][::-1]:
-            raise ValueError('Files are not proper to compare. Must have same "Chemical symbols".')
+            raise ValueError('Files are not proper to compare. \nMust have same "nBin, cutoff radii". {} != {} or {} != {}'.format(nBin_tmp, nBin[0], rcut_tmp, rcut[0]))
+        if symbol_tmp != symbol_list[0] and symbol_tmp[::-1] != symbol_list[0]:
+            raise ValueError('Files are not proper to compare. \nMust have same "Chemical symbols". {} != {}'.format(symbol_tmp, symbol_list[0]))
     symbol_list = symbol_list[0]
     nBin        = float(nBin[0].split('-')[1])
     rcut        = float(rcut[0].split('-')[1])

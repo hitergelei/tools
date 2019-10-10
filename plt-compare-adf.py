@@ -63,9 +63,9 @@ if __name__ == '__main__':
         symbol_tmp = symbol_tmp.split('-')[1:]
         symbol_list.append(symbol_tmp); dDeg.append(dDeg_tmp); rcut.append(rcut_tmp)
         if dDeg_tmp != dDeg[0] or rcut_tmp != rcut[0]:
-            raise ValueError('Files are not proper to compare. Must have same "dDeg, cutoff radii".')
-        if symbol_tmp != symbol_list[0] and symbol_tmp[::-1] != symbol_list[0][::-1]:
-            raise ValueError('Files are not proper to compare. Must have same "Chemical symbols".')
+            raise ValueError('Files are not proper to compare. Must have same "dDeg, cutoff radii". {} != {} or {} != {}'.format(dDeg_tmp, dDeg[0], rcut_tmp, rcut[0]))
+        if symbol_tmp != symbol_list[0] and symbol_tmp[::-1] != symbol_list[0]:
+            raise ValueError('Files are not proper to compare. Must have same "Chemical symbols". {} != {}'.format(symbol_tmp, symbol_list[0]))
     symbol_list = symbol_list[0]
     dDeg        = float(dDeg[0].split('-')[1])
     rcut        = float(rcut[0].split('-')[1])
