@@ -47,8 +47,8 @@ def argparse():
     parser.add_argument('-b', '--nBin', type=int, default=500, help='Number of bins. Default: 500')
     parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. Zero means no smearing. [default: 0]')
     parser.add_argument('-e', '--rectify-cut', type=float, default=None, help='All of drastic kink higher than this will be omitted. [Default: no rectify]')
-    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npz will not be saved. Default: Save array')
-    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npz will not be loaded. Default: Load if possible')
+    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npy will not be saved. Default: Save array')
+    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
     parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
     parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
     return parser.parse_args()
@@ -82,9 +82,9 @@ if __name__ == '__main__':
     slice_list = str_slice_to_list(args.image_slice)
     # out file
     file_list = args.file_list
-    out_fname = 'rdf_saved/{}-slice_{}_{}_{}-_{}-{}_nBin-{}_rcut-{}.npz'.format(
+    out_fname = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, nBin, rcut)
-    out_fname2 = 'rdf_saved/{}-slice_{}_{}_{}-_{}-{}_nBin-{}_rcut-{}.npz'.format(
+    out_fname2 = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol2, symbol1, nBin, rcut)
 
     ## Main
@@ -100,9 +100,9 @@ if __name__ == '__main__':
         except:
             do_calc = True
             if args.load_bool:
-                print('Failed to load saved npz file. Calculation will be carried out')
-                print('Case 1) Number of input file must be 1 to load npz. len(file_list)=={}'.format(len(file_list)))
-                print('Case 2) Failed to load npz file "{}"'.format(out_fname))
+                print('Failed to load saved npy file. Calculation will be carried out')
+                print('Case 1) Number of input file must be 1 to load npy. len(file_list)=={}'.format(len(file_list)))
+                print('Case 2) Failed to load npy file "{}"'.format(out_fname))
                 print('             or equivalent data "{}"'.format(out_fname2))
         else:
             print('File "{}" has been loaded.'.format(out_fname2))
@@ -121,7 +121,7 @@ if __name__ == '__main__':
             curve = get_RDF(alist, rcut, nBin, (symbol1, symbol2), log=True)
             if args.save_bool and len(file_list) == 1:
                 from subprocess import call
-                call('mkdir adf_saved', shell=True)
+                call('mkdir rdf-saved', shell=True)
                 np.save(out_fname, curve)
                 print('=================================================================================================='.center(120))
                 print('RDF saved! ----------> {}'.format(out_fname).center(120))
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     font = {'family':'Arial'}
     plt.rc('font', **font)
-    plt.plot(curve[:, 0], curve[:, 1], c='r')
+    plt.plot(curve[:,0], curve[:,1], c='r')
     if (symbol1, symbol2) == ('a', 'a'):
         plt.ylabel('Total RDF $(\AA^{-1})$', fontsize='x-large')
     else:

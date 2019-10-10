@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import numpy as np
 
 ## Functions
@@ -9,10 +8,10 @@ def argparse():
     This code will give you comparison graph of two ADFs
     """)
     # Positional arguments
-    parser.add_argument('adf_npz_list', type=str, nargs='+', help='ADF npz files. First file will be drawn by black solid line.')
+    parser.add_argument('adf_npz_list', type=str, nargs='+', help='ADF npz files.')
     # Optional arguments
-    parser.add_argument('-e', '--rectify_cut', type=float, default=0, help='Throw away data of kink larger than cutoff. [Default: 0]')
-    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. Zero means no smearing. [default: 0]')
+    parser.add_argument('-e', '--rectify_cut', type=float, default=0, help='Throw away data of kink larger than cutoff. [Default: no rectify]')
+    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. [default: 0]')
     parser.add_argument('-u', '--adf_upper', type=float, default=None, help='Upper bound for ADF plot [Default: automatic]')
     parser.add_argument('-l', '--adf_lower', type=float, default=0, help='Lower bound for ADF plot [Default: 0]')
     parser.add_argument('-b', '--label_list', type=str, nargs='+', default=None, help='Legend label list. len(label_list) == len(adf_npz_list). [default: no legend].')
@@ -56,16 +55,20 @@ if __name__ == '__main__':
         raise ValueError('len(lcolor_list)=={}  != len(adf_npz_list)=={}'.format(len(label_list), len(adf_npz_list)))
     if not lcolor_list:
         lcolor_list = [None]*len(adf_npz_list)
+
     ## Prepare data
-    chem, dDeg, rcut = [],[],[]
+    symbol_list, dDeg, rcut = [],[],[]
     for fname in fname_list:
-        chem_tmp, dDeg_tmp, rcut_tmp = fname.split('_')[-4:-1]
-        chem.append(chem_tmp); dDeg.append(dDeg_tmp); rcut.append(rcut_tmp)
-        if chem_tmp != chem[0] or dDeg_tmp != dDeg[0] or rcut_tmp != rcut[0]:
-            raise ValueError('Files are not proper to compare. Must have same "Chemical symbols, dDeg, cutoff radii".')
-    chem = chem[0].split('-')
-    dDeg = dDeg[0].split('-')[1]
-    rcut = rcut[0].split('-')[1]
+        symbol_tmp, dDeg_tmp, rcut_tmp = fname.split('_')[-5:-2]
+        symbol_tmp = symbol_tmp.split('-')[1:]
+        symbol_list.append(symbol_tmp); dDeg.append(dDeg_tmp); rcut.append(rcut_tmp)
+        if dDeg_tmp != dDeg[0] or rcut_tmp != rcut[0]:
+            raise ValueError('Files are not proper to compare. Must have same "dDeg, cutoff radii".')
+        if symbol_tmp != symbol_list[0] and symbol_tmp[::-1] != symbol_list[0][::-1]:
+            raise ValueError('Files are not proper to compare. Must have same "Chemical symbols".')
+    symbol_list = symbol_list[0]
+    dDeg        = float(dDeg[0].split('-')[1])
+    rcut        = float(rcut[0].split('-')[1])
 
     ## Rectify curve
     if rectify_cut:
@@ -80,16 +83,11 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     font = {'family':'Arial'}
     plt.rc('font', **font)
-    if label_list:
-        [plt.plot(angle_arr, adf_arr_list[i], label=label_list[i], linestyle=lstyle_list[i], c=lcolor_list[i]) for i in range(len(adf_arr_list))]
+    [plt.plot(angle_arr, adf_arr_list[i], label=label_list[i], linestyle=lstyle_list[i], c=lcolor_list[i]) for i in range(len(adf_arr_list))]
+    if symbol_list == ['a','a','a']:
+        plt.ylabel('Total ADF $(deg^{-1})$', fontsize='x-large')
     else:
-        plt.plot(angle_arr, adf_arr_list[0], c='k')
-        [plt.plot(angle_arr, adf_arr_list[i], linestyle='dashed') for i in range(1,len(adf_arr_list))]
-    if chem == ['a','a','a']:
-        plt.ylabel('Total ADF (deg$^{-1}$)', fontsize='x-large')
-    else:
-        print('Partial ADF (deg){}'.format(chem[0]+chem[1]+chem[2]))
-        plt.ylabel('Partial ADF$_{{{}}}$'.format(chem[0]+chem[1]+chem[2])+' (deg$^{-1}$)', fontsize='x-large')
+        plt.ylabel('Partial ADF$_{{{}}}$'.format(symbol_list[0]+symbol_list[1]+symbol_list[2])+' $(deg^{-1})$', fontsize='x-large')
     plt.xlabel('Bond angle (deg)', fontsize='x-large')
     plt.subplots_adjust(left=0.16, bottom=0.28, right=0.94, top=0.75, wspace=0.20, hspace=0.20)
     plt.xticks(range(0,181,20),fontsize='x-large')
@@ -97,6 +95,7 @@ if __name__ == '__main__':
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlim(0., 180.)
     plt.ylim(args.adf_lower, args.adf_upper)
+    plt.title('tmp', pad=10)
     plt.grid(alpha=0.2)
     ## Legend options
     if label_list:

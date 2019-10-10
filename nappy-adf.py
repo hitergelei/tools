@@ -57,7 +57,7 @@ if __name__ == '__main__':
     from ss_util import str_slice_to_list
     slice_list = str_slice_to_list(args.image_slice)
     # out name
-    out_fname = 'adf_saved/{}-slice_{}_{}_{}-_{}-{}-{}_dDeg-{}_rcut-{}_avg-{}.npz'.format(
+    out_fname = 'adf-saved/{}_slice-{}-{}-{}_sym-{}-{}-{}_dDeg-{}_rcut-{}_avg-{}_.npz'.format(
         file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, symbol3, dang, rcut, avg_bool)
 
     ## Main
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
         if args.save_bool and len(file_list) == 1:
             from subprocess import call
-            call('mkdir adf_saved', shell=True)
+            call('mkdir adf-saved', shell=True)
             np.savez(out_fname, angd=angd, agr=agr)
             print('=================================================================================================='.center(120))
             print('ADF saved! ----------> {}'.format(out_fname).center(120))
