@@ -35,18 +35,55 @@ print('Successively read dump file!'.center(120))
 log = open(log_f, "r")
 epot = []
 
+## Get first PotEng line number
 while True:
     line = log.readline()
-    llist = line.split()
-    seq = {}
-    for (i, x) in enumerate(llist):
-        seq[x] = i
+    field = line.split()
+    if 'PotEng' in field:
+        poteng_nword = field.index('PotEng') +2
+        epot.append(field[poteng_nword])
+        break
 
-    for word in llist:
-        if word == 'PotEng':
-            epot.append(llist[seq['PotEng']+2])
+## Get delta(PotEng line number)
+poteng_dline =1
+while True:
+    line = log.readline()
+    if not line:
+        poteng_dline = False # there is only 1 image
+        break
+    field = line.split()
+    if 'PotEng' in field:
+        epot.append(field[poteng_nword])
+        break
+    else:
+        poteng_dline +=1
 
-    if not line: break
+## Get rest of PotEng from now on
+if poteng_dline:
+    while True:
+        for i in range(poteng_dline):
+            line = log.readline()
+        if not line:
+            break
+        field = line.split()
+        if field[poteng_nword -2] == 'PotEng':
+            epot.append(line.split()[poteng_nword])
+        else:
+            break
+
+
+# while True:
+    # line = log.readline()
+    # llist = line.split()
+    # seq = {}
+    # for (i, x) in enumerate(llist):
+        # seq[x] = i
+
+    # for word in llist:
+        # if word == 'PotEng':
+            # epot.append(llist[seq['PotEng']+2])
+
+    # if not line: break
 
 if len(epot) != len(dump_inp):
     print(" ***** ERROR ***** The # of images in log file and dump file do not match\n")
