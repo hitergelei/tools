@@ -71,7 +71,6 @@ if poteng_dline:
         else:
             break
 
-
 # while True:
     # line = log.readline()
     # llist = line.split()
