@@ -148,7 +148,7 @@ if __name__ == '__main__':
     else:
         plt.ylabel('Partial ADF$_{{{}}}$'.format(symbol1+symbol2+symbol3)+' (deg$^{-1}$)', fontsize='x-large')
     plt.xlabel('Bond angle (deg)', fontsize='x-large')
-    plt.subplots_adjust(left=0.09, bottom=0.28, right=0.97, top=0.75, wspace=0.20, hspace=0.20)
+    plt.subplots_adjust(left=0.10, bottom=0.28, right=0.97, top=0.75, wspace=0.20, hspace=0.20)
     plt.xticks(range(20,181,20),fontsize='x-large')
     plt.yticks(fontsize='x-large')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
