@@ -7,10 +7,10 @@ def get_rotational_matrix(
     """
 
     Formula >>> a' = R @ a
-    new_basis (=a')    - Target basis set
-    ref_basis (=a) - Initial basis set
-    R            - Rotational matrix of coordinate rotation
-                   (If ref_basis is an identity, R = a'. (Rotational matrix itself)
+    new_basis (=a') - Target basis set
+    ref_basis (=a)  - Initial basis set
+    R               - Rotational matrix of coordinate rotation
+                       (If ref_basis is an identity, R = a'. (Rotational matrix itself)
     !!! NOTE !!! As you can see this function is almost useless. Just for notation purpose.
 
 e.g.   Ref.             New basis
@@ -19,7 +19,7 @@ e.g.   Ref.             New basis
      [0,0,1]]           [z1,z2,z3]]
 
     """
-    R = np.matmul(vec, np.linalg.inv(ref_vec))
+    R = np.matmul(new_basis, np.linalg.inv(ref_basis))
     return R
 
 def get_Euler_angles(vector):
