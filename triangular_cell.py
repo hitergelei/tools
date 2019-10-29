@@ -13,7 +13,13 @@ def to_upper_triangular_cell(cell):
     new_axis[1] = np.cross(new_axis[2], new_axis[0])
     for i in range(3):
         new_axis[i] /= np.linalg.norm(new_axis[i])
-    return np.matmul(cell, new_axis.T)
+    new_cell = np.matmul(cell, new_axis.T)
+    # Rectify once more
+    for i in range(3):
+        for j in range(3):
+            if i > j:
+                new_cell[i,j] = 0.
+    return new_cell
 
 def to_lower_triangular_cell(cell):
     """
@@ -26,7 +32,17 @@ def to_lower_triangular_cell(cell):
     new_axis[2] = np.cross(new_axis[0], new_axis[1])
     for i in range(3):
         new_axis[i] /= np.linalg.norm(new_axis[i])
-    return np.matmul(cell, new_axis.T)
+    for i in range(3):
+        for j in range(3):
+            if i > j:
+                new_axis[i,j] = 0.
+    new_cell = np.matmul(cell, new_axis.T)
+    # Rectify once more
+    for i in range(3):
+        for j in range(3):
+            if i < j:
+                new_cell[i,j] = 0.
+    return new_cell
 
 def argparse():
     import argparse
