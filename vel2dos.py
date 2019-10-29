@@ -69,6 +69,7 @@ def plot_total_DOS(
     DOS_low=None,
     DOS_up=None,
     flip_xy=True,
+    lcolor_list=None
     ):
     """
     f (arr)
@@ -85,6 +86,10 @@ def plot_total_DOS(
     elif unit is 'meV':
         from phonopy import units
         f *= units.THztoEv * 1e3
+    if not lcolor_list:
+        lcolor_list = [None]
+    elif len(lcolor_list) != 1:
+        raise ValueError('len(lcolor_list) must be 1. Now: lcolor_list=={}'.format(lcolor_list))
 
     ## Plot
     from matplotlib import pyplot as plt
@@ -92,13 +97,13 @@ def plot_total_DOS(
     plt.rc('font', **font)
     fig, ax = plt.subplots()
     if flip_xy:
-        ax.plot(DOS, f)
+        ax.plot(DOS, f, c=lcolor_list[0])
         ax.set_ylim((freqlim_low, freqlim_up))
         ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_xlim((DOS_low,DOS_up))
     else:
-        ax.plot(f, DOS)
+        ax.plot(f, DOS, c=lcolor_list[0])
         ax.set_xlim((freqlim_low, freqlim_up))
         ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
@@ -118,6 +123,8 @@ def plot_partial_DOS(
     DOS_low=None,
     DOS_up=None,
     flip_xy=True,
+    lcolor_list=None,
+    legend_bool=True,
     ):
     """
     f (arr)
@@ -146,6 +153,11 @@ def plot_partial_DOS(
     PDOS_list = []
     for spec_i in range(len(unique_spec)):
         PDOS_list.append(np.sum(np.sum(ADOS[pdos_indices[spec_i]],axis=0), axis=0))
+    if not lcolor_list:
+        lcolor_list = [None]*len(unique_spec)
+    elif len(lcolor_list) != len(unique_spec):
+        raise ValueError('len of    lcolor_list=={}   and    unique_spec=={}    must be same.'.format(lcolor_list, unique_spec))
+
 
     ## Plot
     from matplotlib import pyplot as plt
@@ -154,7 +166,7 @@ def plot_partial_DOS(
     fig, ax = plt.subplots()
     if flip_xy:
         for spec_i in range(len(unique_spec)):
-            ax.plot(PDOS_list[spec_i], f, label=unique_spec[spec_i])
+            ax.plot(PDOS_list[spec_i], f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
         ax.set_ylim((freqlim_low, freqlim_up))
         ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
@@ -162,7 +174,7 @@ def plot_partial_DOS(
         ax.set_xlim((DOS_low, DOS_up))
     else:
         for spec_i in range(len(unique_spec)):
-            ax.plot(f, PDOS_list[spec_i], label=unique_spec[spec_i])
+            ax.plot(f, PDOS_list[spec_i], label=unique_spec[spec_i], c=lcolor_list[spec_i])
         ax.set_xlim((freqlim_low, freqlim_up))
         ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
@@ -170,7 +182,10 @@ def plot_partial_DOS(
         ax.set_ylim((DOS_low, DOS_up))
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
-    plt.legend(fontsize='large')
+    if legend_bool:
+        plt.legend(fontsize='large')
+    else:
+        plt.legend().set_visible(False)
     plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)
     plt.show()
 
@@ -185,13 +200,15 @@ def argparse():
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-p', '--partial_DOS', action='store_true', help='If activated, return partial DOS. (If not, total DOS as default)')
-    parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. Zero as default.')
+    parser.add_argument('-l', '--freqlim_low', type=float, default=0.02, help='Set frequency lower limit for plot. [default: 0.02]')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
     parser.add_argument('-m', '--DOS_low', type=float, default=0., help='Set DOS lower limit for plot. Zero as default.')
     parser.add_argument('-v', '--DOS_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
     parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
+    parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
+    parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lcolor_list) == len(np.unique(chem)). For total DOS, len(lcolor_list) == 1  [default: automatic].')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -286,6 +303,8 @@ if __name__ == '__main__':
             DOS_low=DOS_low,
             DOS_up=DOS_up,
             flip_xy=True,
+            lcolor_list=args.lcolor_list,
+            legend_bool=args.legend_bool,
             )
     else:
         plot_total_DOS(
@@ -297,4 +316,5 @@ if __name__ == '__main__':
             DOS_low=DOS_low,
             DOS_up=DOS_up,
             flip_xy=True,
+            lcolor_list=args.lcolor_list,
             )
