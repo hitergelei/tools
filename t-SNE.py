@@ -5,7 +5,6 @@ import numpy as np
 from ase.io import read
 from subprocess import call
 
-
 ## Global params
 load = True
 ticks = False
@@ -26,7 +25,7 @@ multipole_order = [2]
 cutoff_radi     = 6.0
 cutoff_num      = [14, 14, 35]
 # t-SNE params
-object_spec   = 'Te'
+object_spec   = 'Ge'
 dimension     = 2
 if object_spec == 'Sb' or object_spec =='Ge':
     sample_rate   = [
@@ -168,12 +167,12 @@ if dimension == 3:
     for i in range(len(nums)):
         ax.scatter(x1[count:count+nums[i]],x2[count:count+nums[i]],x3[count:count+nums[i]], label=labels[i])
         count += nums[i]
-    # ax.legend(scatterpoints = 1, fontsize=20, loc='upper right')
+    # ax.legend(scatterpoints = 1, fontsize='large', loc='upper right')
 elif dimension == 2:
     for i in range(len(nums)):
         plt.scatter(x1[count:count+nums[i]],x2[count:count+nums[i]], s=20, alpha=1.0, label=labels[i])
         count += nums[i]
-    # plt.legend(scatterpoints = 1, fontsize='xx-large', loc='upper right')
+    plt.legend(scatterpoints = 1, fontsize='large', loc='upper right')
 if not ticks:
     plt.tick_params(
         axis='x',          # changes apply to the x-axis
