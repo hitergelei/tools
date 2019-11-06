@@ -386,7 +386,9 @@ def plot_band_and_dos(
     self = phonon
     proj_colors.reverse()
 
-    import matplotlib.pyplot as plt
+    from matplotlib import pyplot as plt
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
     if labels:
         from matplotlib import rc
         # rc('font',**{'family':'serif','sans-serif':['Times']})
@@ -395,9 +397,9 @@ def plot_band_and_dos(
     import matplotlib.gridspec as gridspec
     font = {'family':'Arial'}
     plt.rc('font', **font)
-    plt.figure(figsize=(20, 6))
-    gs = gridspec.GridSpec(1, 3, width_ratios=[7,4,1])
-    ax2 = plt.subplot(gs[0, 2])
+    # plt.figure(figsize=(10, 10))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[4,1])
+    ax2 = plt.subplot(gs[0, 1])
     if pdos_indices is None:
         self._total_dos.plot(ax2,
                              ylabel="",
@@ -415,7 +417,7 @@ def plot_band_and_dos(
     ax2.set_xticklabels([])
     plt.setp(ax2.get_yticklabels(), visible=False)
 
-    ax1 = plt.subplot(gs[0, 1], sharey=ax2)
+    ax1 = plt.subplot(gs[0, 0], sharey=ax2)
 
     #### projection
     self._band_structure._projections = None
@@ -425,16 +427,15 @@ def plot_band_and_dos(
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
     bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=labels)
-    plt.ylabel('Frequency ({})'.format(unit), fontsize=35)
+    plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')
 
-    plt.yticks(fontsize=35)
-    plt.xticks(fontsize=35)
-    plt.grid(True)
-    plt.subplots_adjust(wspace=0.0)
+    plt.tick_params(axis="both",direction="in", labelsize=24)
+    plt.grid(0.2)
+    plt.subplots_adjust(left=0.20, bottom=0.08, right=0.80, top=0.95, wspace=0.10, hspace=0.20)
     plt.ylim(ylim_lower, ylim_upper)
-    plt.tight_layout()
+    # plt.tight_layout()
 
     return plt
 
