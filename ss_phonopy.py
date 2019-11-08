@@ -306,16 +306,18 @@ def set_projection(phonon, proj_eigvec):
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
-def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=None, scatter_interval=1):
+def bs_plot(self, plt, ax, proj_size_factor, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels=None, scatter_interval=1):
     if self._projections is not None:
         #### Define key list
         key_list = list(self._projections.keys())
         if reverse_seq:
             key_list.reverse()
         #### Pick colors
-        proj_colors = proj_colors[len(proj_colors)-len(key_list):]
+        proj_facecolors = proj_facecolors[len(proj_facecolors)-len(key_list):]
+        proj_edgecolors = proj_edgecolors[len(proj_edgecolors)-len(key_list):]
         if reverse_seq:
-            proj_colors.reverse()
+            proj_facecolors.reverse()
+            proj_edgecolors.reverse()
         #### 
         legend = []
         #### Iter for projector eigenvectors
@@ -332,17 +334,16 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
                         distances[::scatter_interval],
                         freq.T[i][::scatter_interval],
                         (proj_size_factor * projections.T[i])[::scatter_interval],
-                        # c='none',
-                        c=proj_colors[-1],
                         alpha=proj_alpha,
-                        edgecolors='none',
-                        # edgecolors=proj_colors[-1],
+                        facecolors=proj_facecolors[-1],
+                        edgecolors=proj_edgecolors[-1],
                         label=key,
                         )
             #### Gather just the one sample legend
             legend.append(legend_tmp)
             #### Throw away used color
-            proj_colors.pop()
+            proj_facecolors.pop()
+            proj_edgecolors.pop()
         #### Legend plot
         if reverse_seq:
             legend.reverse(); key_list.reverse()
@@ -371,7 +372,8 @@ def plot_band_and_dos(
     unit             = 'THz',
     proj_eigvec      = None,
     proj_size_factor = 400.,
-    proj_colors      = ['r', 'g', 'b', 'c', 'm', 'y'],
+    proj_facecolors  = ['r', 'g', 'b', 'c', 'm', 'y'],
+    proj_edgecolors  = ['r', 'g', 'b', 'c', 'm', 'y'],
     proj_alpha       = 0.5,
     legend_bool      = False,
     ylim_lower       = None,
@@ -381,13 +383,14 @@ def plot_band_and_dos(
     ):
     """
     proj_eigvec = (dict) = Eigenvectors that will be used for projection. Keys of dict will be used as label for pyplot.
-    proj_colors = (list) = Use colors sequently. Duplication is possible.
+    proj_facecolors = (list) = Use colors sequently. Duplication is possible.
     reverse_seq = (bool) = Change sequence of plotting scatters. (Decides which one goes up. Only esthetic purpose.)
     """
 
     #### Variable setting
     self = phonon
-    proj_colors.reverse()
+    proj_facecolors.reverse()
+    proj_edgecolors.reverse()
 
     from matplotlib import pyplot as plt
     font = {'family':'Arial'}
@@ -429,7 +432,7 @@ def plot_band_and_dos(
         for key in proj_eigvec.keys():
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
-    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels, scatter_interval)
+    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels, scatter_interval)
     plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')

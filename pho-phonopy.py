@@ -4,8 +4,8 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-# calc = 'dpmd'
-calc = 'vasp'
+calc = 'dpmd'
+# calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
@@ -37,7 +37,8 @@ proj_size_factor   = 200
 proj_alpha         = 0.5
 save_svg           = True
 scatter_interval   = 1
-proj_colors        = ['g', 'r', 'b']
+proj_facecolors    = ['g', 'r', 'b']
+proj_edgecolors    = ['g', 'r', 'b']
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
@@ -47,8 +48,8 @@ total_dos_bool     = True
 doslim_up          = None
 doslim_low         = None
     ## Phonon arguments
-reverse_seq        = True
-# reverse_seq        = False
+# reverse_seq        = True
+reverse_seq        = False
 
 #
 if symmetry is True:
@@ -168,7 +169,8 @@ if phonon_or_pdos == 'phonon':
         unit             = unit,
         proj_eigvec      = mode_projection,
         proj_size_factor = proj_size_factor,
-        proj_colors      = proj_colors,
+        proj_facecolors  = proj_facecolors,
+        proj_edgecolors  = proj_edgecolors,
         proj_alpha       = proj_alpha,
         legend_bool      = legend_bool,
         ylim_lower       = freqlim_low,
