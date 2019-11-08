@@ -306,7 +306,7 @@ def set_projection(phonon, proj_eigvec):
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
-def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=None):
+def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=None, scatter_interval=1):
     if self._projections is not None:
         #### Define key list
         key_list = list(self._projections.keys())
@@ -329,12 +329,14 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_colors, proj_alpha, reverse_se
                 for i in range(len(freq.T)):
                     plt.plot(distances, freq.T[i], 'k-')
                     legend_tmp = plt.scatter(
-                        distances,
-                        freq.T[i],
-                        proj_size_factor * projections.T[i],
-                        proj_colors[-1],
+                        distances[::scatter_interval],
+                        freq.T[i][::scatter_interval],
+                        (proj_size_factor * projections.T[i])[::scatter_interval],
+                        # c='none',
+                        c=proj_colors[-1],
                         alpha=proj_alpha,
                         edgecolors='none',
+                        # edgecolors=proj_colors[-1],
                         label=key,
                         )
             #### Gather just the one sample legend
@@ -375,6 +377,7 @@ def plot_band_and_dos(
     ylim_lower       = None,
     ylim_upper       = None,
     reverse_seq      = False,
+    scatter_interval = 1,
     ):
     """
     proj_eigvec = (dict) = Eigenvectors that will be used for projection. Keys of dict will be used as label for pyplot.
@@ -426,7 +429,7 @@ def plot_band_and_dos(
         for key in proj_eigvec.keys():
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
-    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels=labels)
+    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, legend_bool, labels, scatter_interval)
     plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')

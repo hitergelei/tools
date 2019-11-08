@@ -4,8 +4,8 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-calc = 'dpmd'
-# calc = 'vasp'
+# calc = 'dpmd'
+calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
@@ -13,7 +13,7 @@ calc = 'dpmd'
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
 ## Params
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_rlx')
+atoms = vasp.read_vasp('POSCAR_1_Kooi')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.050
@@ -22,18 +22,22 @@ delta              = 0.050
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-# phonon_or_pdos     = 'phonon'
-phonon_or_pdos     = 'pdos'
+phonon_or_pdos     = 'phonon'
+# phonon_or_pdos     = 'pdos'
 freqlim_up         = 6.0
 freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = True
+legend_bool        = False
 plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
 # mode_projection    = None
 mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
+proj_size_factor   = 200
+proj_alpha         = 0.5
 save_svg           = True
+scatter_interval   = 1
+proj_colors        = ['g', 'r', 'b']
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
@@ -43,8 +47,8 @@ total_dos_bool     = True
 doslim_up          = None
 doslim_low         = None
     ## Phonon arguments
-# reverse_seq        = True
-reverse_seq        = False
+reverse_seq        = True
+# reverse_seq        = False
 
 #
 if symmetry is True:
@@ -163,13 +167,14 @@ if phonon_or_pdos == 'phonon':
         # labels           = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'],
         unit             = unit,
         proj_eigvec      = mode_projection,
-        proj_size_factor = 400.,
-        proj_colors      = ['g', 'r', 'b'],
-        proj_alpha       = 0.5,
+        proj_size_factor = proj_size_factor,
+        proj_colors      = proj_colors,
+        proj_alpha       = proj_alpha,
         legend_bool      = legend_bool,
         ylim_lower       = freqlim_low,
         ylim_upper       = freqlim_up,
         reverse_seq      = reverse_seq,
+        scatter_interval = scatter_interval,
         ).show()
     # Only band plot
     #ssp.plot_band(phonon, labels = ['G', 'X', 'U|K', 'G', 'L']).show()
