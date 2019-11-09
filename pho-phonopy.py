@@ -4,8 +4,8 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-# calc = 'dpmd'
-calc = 'vasp'
+calc = 'dpmd'
+# calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
@@ -28,7 +28,7 @@ freqlim_up         = 6.0
 freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = True
+legend_bool        = False
 plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
 # mode_projection    = None
