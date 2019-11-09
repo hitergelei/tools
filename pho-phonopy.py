@@ -4,8 +4,8 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-calc = 'dpmd'
-# calc = 'vasp'
+# calc = 'dpmd'
+calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
@@ -22,18 +22,18 @@ delta              = 0.050
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-phonon_or_pdos     = 'phonon'
-# phonon_or_pdos     = 'pdos'
+# phonon_or_pdos     = 'phonon'
+phonon_or_pdos     = 'pdos'
 freqlim_up         = 6.0
 freqlim_low        = -0.5
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = False
+legend_bool        = True
 plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
 # mode_projection    = None
 mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
-proj_size_factor   = 200
+scatter_max_size   = 200
 proj_alpha         = 0.5
 save_svg           = True
 scatter_interval   = 1
@@ -42,6 +42,8 @@ proj_edgecolors    = ['g', 'r', 'b']
     ## PDOS arguments
 pdos_precision     = 250
 chemical_pdos      = True
+proj_multiple_coef = 8.
+pdos_colors        = ['teal','firebrick','olive']
 flip_pdos_xy       = True
 dos_tetrahedron    = True
 total_dos_bool     = True
@@ -168,7 +170,7 @@ if phonon_or_pdos == 'phonon':
         # labels           = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'],
         unit             = unit,
         proj_eigvec      = mode_projection,
-        proj_size_factor = proj_size_factor,
+        scatter_max_size = scatter_max_size,
         proj_facecolors  = proj_facecolors,
         proj_edgecolors  = proj_edgecolors,
         proj_alpha       = proj_alpha,
@@ -195,8 +197,11 @@ if phonon_or_pdos == 'pdos':
         ssp.plot_pdos(
             phonon,
             chemical_pdos,
+            pdos_colors,
             total_dos_bool,
             mode_projection,
+            proj_multiple_coef,
+            proj_edgecolors,
             unit,
             freqlim_low,
             freqlim_up,

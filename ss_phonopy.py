@@ -306,7 +306,7 @@ def set_projection(phonon, proj_eigvec):
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
-def bs_plot(self, plt, ax, proj_size_factor, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels=None, scatter_interval=1):
+def bs_plot(self, plt, ax, scatter_max_size, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels=None, scatter_interval=1):
     if self._projections is not None:
         #### Define key list
         key_list = list(self._projections.keys())
@@ -333,17 +333,16 @@ def bs_plot(self, plt, ax, proj_size_factor, proj_facecolors, proj_edgecolors, p
                     legend_tmp = plt.scatter(
                         distances[::scatter_interval],
                         freq.T[i][::scatter_interval],
-                        (proj_size_factor * projections.T[i])[::scatter_interval],
+                        (scatter_max_size * projections.T[i])[::scatter_interval],
                         alpha=proj_alpha,
                         facecolors=proj_facecolors[-1],
                         edgecolors=proj_edgecolors[-1],
                         label=key,
                         )
-            #### Gather just the one sample legend
-            legend.append(legend_tmp)
-            #### Throw away used color
             proj_facecolors.pop()
             proj_edgecolors.pop()
+            #### Gather just the one sample legend
+            legend.append(legend_tmp)
         #### Legend plot
         if reverse_seq:
             legend.reverse(); key_list.reverse()
@@ -371,7 +370,7 @@ def plot_band_and_dos(
     labels           = None,
     unit             = 'THz',
     proj_eigvec      = None,
-    proj_size_factor = 400.,
+    scatter_max_size = 400.,
     proj_facecolors  = ['r', 'g', 'b', 'c', 'm', 'y'],
     proj_edgecolors  = ['r', 'g', 'b', 'c', 'm', 'y'],
     proj_alpha       = 0.5,
@@ -395,8 +394,8 @@ def plot_band_and_dos(
     from matplotlib import pyplot as plt
     font = {'family':'Arial'}
     plt.rc('font', **font)
-    if labels:
-        from matplotlib import rc
+    # if labels:
+        # from matplotlib import rc
         # rc('font',**{'family':'serif','sans-serif':['Times']})
         # rc('text', usetex=True)
 
@@ -432,83 +431,18 @@ def plot_band_and_dos(
         for key in proj_eigvec.keys():
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
-    bs_plot(self._band_structure, plt, ax1, proj_size_factor, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels, scatter_interval)
+    bs_plot(self._band_structure, plt, ax1, scatter_max_size, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels, scatter_interval)
     plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')
 
     plt.tick_params(axis="both",direction="in", labelsize=24)
-    plt.grid(0.2)
+    plt.grid(alpha=0.2)
     plt.subplots_adjust(left=0.20, bottom=0.08, right=0.80, top=0.95, wspace=0.10, hspace=0.20)
     plt.ylim(ylim_lower, ylim_upper)
     # plt.tight_layout()
 
     return plt
-
-    ################# old version backup (phonopy 1.13.2)
-    # import matplotlib.pyplot as plt
-    # import matplotlib.gridspec as gridspec
-    # if labels:
-        # from matplotlib import rc
-        # rc('font',**{'family':'serif','sans-serif':['Times']})
-        # rc('text', usetex=False)
-
-    # #### Variable setting
-    # proj_colors.reverse()
-
-    # plt.figure(figsize=(10, 6))
-    # gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1])
-    # ax1 = plt.subplot(gs[0, 0])
-    # ax1.xaxis.set_ticks_position('both')
-    # ax1.yaxis.set_ticks_position('both')
-    # ax1.xaxis.set_tick_params(which='both', direction='in')
-    # ax1.yaxis.set_tick_params(which='both', direction='in')
-
-    # #### projection
-    # phonon._band_structure._projections = None
-    # if proj_eigvec is not None:
-        # # dtype managing
-        # for key in proj_eigvec.keys():
-            # proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
-        # set_projection(phonon, proj_eigvec)
-
-    # bs_plot(phonon._band_structure, plt, ax1, proj_size_factor, proj_colors, proj_alpha, reverse_seq, labels=labels)
-    # if unit == 'meV':
-        # plt.ylabel('Frequency(meV)', fontsize=22)
-    # elif unit == 'THz':
-        # plt.ylabel('Frequency(THz)', fontsize=22)
-    # plt.xlabel('')
-    # plt.grid(True)
-    # plt.title('Phonon dispersion', fontsize=24)
-    # plt.yticks(fontsize=20)
-
-    # ax2 = plt.subplot(gs[0, 1], sharey=ax1)
-    # ax2.xaxis.set_ticks_position('both')
-    # ax2.yaxis.set_ticks_position('both')
-    # ax2.xaxis.set_tick_params(which='both', direction='in')
-    # ax2.yaxis.set_tick_params(which='both', direction='in')
-    # plt.subplots_adjust(wspace=0.08)
-    # plt.setp(ax2.get_yticklabels(), visible=False)
-
-    # if pdos_indices is None:
-        # phonon._total_dos.plot(plt,
-                               # ylabel="",
-                               # draw_grid=True,
-                               # flip_xy=True)
-    # else:
-        # phonon._pdos.plot(plt,
-                          # indices=pdos_indices,
-                          # ylabel="",
-                          # draw_grid=True,
-                          # flip_xy=True)
-
-    # ax2.set_xlim((0, None))
-    # plt.title('DOS', fontsize=24)
-    # plt.xlabel('')
-    # plt.xticks([])
-    # plt.ylim(ylim_lower, ylim_upper)
-
-    # return plt
 
 def two_dos_plot(
     phonon_dict,
@@ -600,8 +534,11 @@ def calc_dos(
 def plot_pdos(
     phonon,
     chemical_pdos,
+    pdos_colors,
     total_dos_bool,
     mode_projection,
+    proj_multiple_coef,
+    proj_colors,
     unit,
     freqlim_low,
     freqlim_up,
@@ -619,11 +556,17 @@ def plot_pdos(
         (unique_chem, pdos_indices) = (None, None)
     plt, ax = phonon.plot_projected_dos(
         pdos_indices,
+        pdos_colors,
         unique_chem,
         total_dos_bool,
         flip_xy=flip_pdos_xy,
         )
     if mode_projection:
+        if proj_colors:
+            proj_colors.reverse()
+        else:
+            proj_colors = [None]*len(mode_projections.keys())
+
         from phonopy.phonon.dos import get_pdos
         mode_pdos_list = []
         for mode in list(mode_projection.keys()):
@@ -632,33 +575,34 @@ def plot_pdos(
                 phonon._pdos_mode[mode]._partial_dos,
                 pdos_indices,
                 ))
-        mode_pdos = np.sum(mode_pdos_list, axis=1)
+        mode_pdos = proj_multiple_coef *np.sum(mode_pdos_list, axis=1)
         for pdos, mode in zip(mode_pdos, list(mode_projection.keys())):
             if flip_pdos_xy:
-                ax.plot(-pdos, phonon._pdos._frequency_points, linewidth=1, label=mode)
+                ax.plot(-pdos, phonon._pdos._frequency_points, linewidth=1, label=mode, c=proj_colors.pop())
             else:
-                ax.plot(phonon._pdos._frequency_points, -pdos, linewidth=1, label=mode)
+                ax.plot(phonon._pdos._frequency_points, -pdos, linewidth=1, label=mode, c=proj_colors.pop())
         mode_pdos_sum = np.sum(mode_pdos, axis=0)
         if flip_pdos_xy:
-            ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
+            ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
         else:
-            ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.3)
+            ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
 
     if flip_pdos_xy:
-        plt.xlabel('PDOS (arb. units.)',fontsize='xx-large')
-        plt.ylabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        plt.subplots_adjust(left=0.35, bottom=0.15, right=0.65, top=0.97, wspace=0.2, hspace=0.2)
+        plt.xlabel('PDOS (arb. units)',fontsize=24)
+        plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
+        plt.subplots_adjust(left=0.30, bottom=0.15, right=0.75, top=0.97, wspace=0.2, hspace=0.2)
         plt.ylim(freqlim_low, freqlim_up)
         plt.xlim(doslim_low, doslim_up)
     else:
-        plt.xlabel('Frequency ({})'.format(unit), fontsize='xx-large')
-        plt.ylabel('PDOS (arb. units.)',fontsize='xx-large')
+        plt.xlabel('Frequency ({})'.format(unit), fontsize=24)
+        plt.ylabel('PDOS (arb. units)',fontsize=24)
         plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
         plt.xlim(freqlim_low, freqlim_up)
         plt.ylim(doslim_low, doslim_up)
-    plt.xticks(fontsize='xx-large')
-    plt.yticks(fontsize='xx-large')
-    plt.legend(fontsize='large')
+    from math import ceil, floor
+    ax.set_yticks(range(int(ceil(freqlim_low)),int(floor(freqlim_up)+1),1))
+    ax.tick_params(axis="both",direction="in", labelsize=24)
+    plt.legend(fontsize='xx-large')
     if not legend_bool:
         plt.legend().remove()
     plt.grid(alpha=0.2)
