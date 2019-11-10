@@ -74,8 +74,8 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc):
 def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
     """ Calculate Force Constant with DPMD """
     forces = []
-    from ase.io.lammpsrun import read_lammps_dump as read_dump
-    from ase.io import write
+    # from ase.io.lammpsrun import read_lammps_dump as read_dump
+    from ase.io import read, write
     for i in range(len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir = get_subdir_name(i, disp)
@@ -83,7 +83,7 @@ def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
         call(['cp frozen_model.pb input.in '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
         call(['lmp-pos2lmp.awk POSCAR-'+str(i).zfill(3)+' > structure.in'], cwd = calc_dir+'/'+ndir, shell = True)
         call(['mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out'], cwd = calc_dir+'/'+ndir, shell = True)
-        atoms = read_dump(calc_dir+'/'+ndir+'/out.dump', index=0, order=True)
+        atoms = read(calc_dir+'/'+ndir+'/out.dump', index=0, format='lammps-dump', order=True)
         if i == 0:
             F_0 = atoms.get_forces(apply_constraint=False)
         else:
