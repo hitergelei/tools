@@ -74,7 +74,6 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc):
 def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
     """ Calculate Force Constant with DPMD """
     forces = []
-    # from ase.io.lammpsrun import read_lammps_dump as read_dump
     from ase.io import read, write
     for i in range(len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
