@@ -295,6 +295,7 @@ if __name__ == '__main__':
         atoms = read(args.inp_file_list[i], 0)
         plot_partial_DOS(
             f,
+            # ADOS/ f**2,
             ADOS,
             atoms.get_chemical_symbols(),
             unit='THz',
