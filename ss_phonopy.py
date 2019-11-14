@@ -387,8 +387,15 @@ def plot_band_and_dos(
 
     #### Variable setting
     self = phonon
-    proj_facecolors.reverse()
-    proj_edgecolors.reverse()
+    if proj_eigvec:
+        if proj_facecolors:
+            proj_facecolors.reverse()
+        else:
+            proj_facecolors = [None]* len(proj_eigvec.keys())
+        if proj_edgecolors:
+            proj_edgecolors.reverse()
+        else:
+            proj_edgecolors = [None]* len(proj_eigvec.keys())
 
     from matplotlib import pyplot as plt
     font = {'family':'Arial'}
