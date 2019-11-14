@@ -93,7 +93,7 @@ if __name__ == '__main__':
     plt.subplots_adjust(left=0.09, bottom=0.40, right=0.97, top=0.60, wspace=0.2, hspace=0.2)
     from math import ceil, floor
     plt.xticks(range(1,int(ceil(rcut))), fontsize='x-large')
-    plt.yticks(range(0,int(ceil(np.amax(rdf_arr_list))),2), fontsize='x-large')
+    plt.yticks(range(0,int(ceil(np.amax(rdf_arr_list))),1), fontsize='x-large')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlim(0., rcut)
     plt.ylim(args.rdf_lower, args.rdf_upper)

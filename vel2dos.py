@@ -209,6 +209,7 @@ def argparse():
     parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
     parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
     parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lcolor_list) == len(np.unique(chem)). For total DOS, len(lcolor_list) == 1  [default: automatic].')
+    parser.add_argument('-k', '--boson_peak', action='store_true', help='Plot g(f)/f**2 to seek boson peak. [default: False].')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -278,6 +279,10 @@ if __name__ == '__main__':
             # print(args.inp_file_list[i])
     ## Averaging ADOS
     ADOS = np.mean(ADOS_list, axis=0) * args.DOS_factor
+    ## Boson peak
+    if args.boson_peak:
+        ADOS /= f**2
+
     # ## write txt file
     # with open('tmp.txt', 'w') as txt:
         # sum = np.sum(np.sum(ADOS, axis=0), axis=0)
@@ -295,7 +300,6 @@ if __name__ == '__main__':
         atoms = read(args.inp_file_list[i], 0)
         plot_partial_DOS(
             f,
-            # ADOS/ f**2,
             ADOS,
             atoms.get_chemical_symbols(),
             unit='THz',
