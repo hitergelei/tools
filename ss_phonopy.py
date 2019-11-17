@@ -584,14 +584,14 @@ def plot_pdos(
         mode_pdos = proj_multiple_coef *np.sum(mode_pdos_list, axis=1)
         for pdos, mode in zip(mode_pdos, list(mode_projection.keys())):
             if flip_pdos_xy:
-                ax.plot(-pdos, phonon._pdos._frequency_points, linewidth=1, label=mode, c=proj_colors.pop())
+                ax.plot(-pdos, phonon._pdos._frequency_points, linewidth=2, label=mode, c=proj_colors.pop())
             else:
-                ax.plot(phonon._pdos._frequency_points, -pdos, linewidth=1, label=mode, c=proj_colors.pop())
-        mode_pdos_sum = np.sum(mode_pdos, axis=0)
-        if flip_pdos_xy:
-            ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
-        else:
-            ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
+                ax.plot(phonon._pdos._frequency_points, -pdos, linewidth=2, label=mode, c=proj_colors.pop())
+        # mode_pdos_sum = np.sum(mode_pdos, axis=0)
+        # if flip_pdos_xy:
+            # ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
+        # else:
+            # ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
 
     if flip_pdos_xy:
         plt.xlabel('PDOS (arb. units)',fontsize=24)
