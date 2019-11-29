@@ -16,19 +16,29 @@ predict_file_list = [
     # 'GST225-1_kooi-100K-small.traj',
     ]
 train_file_list = [
-    'GST225-1_kooi-100K-small.traj',
-    'GST225-2_Petrov-100K-small.traj',
+    # 'GST225-1_kooi-100K-small.traj',
+    # 'GST225-2_Petrov-100K-small.traj',
+    '7.7kooiNferGeTe-w-4phase.traj',
     'rlxed-ran.traj',
     ]
 multipole_order = [2]
 cutoff_radi     = 6.0
 cutoff_num      = [14, 14, 35]
+
+# Histogram
+# x_lim = None
+x_lim = (0.173412155158, 0.173412155160)
+# y_lim_upper = None
+y_lim_upper = (0.,400.)
+y_lim_lower = (0.,15.)
+bins  = 100
+
 # Reliability check params
-object_spec   = 'Te'
-if object_spec == 'Sb' or object_spec =='Ge':
-    compare_num = 20
+object_spec   = 'Ge'
+if object_spec == 'Ge' or object_spec =='Sb':
+    compare_num = 1
 elif object_spec == 'Te':
-    compare_num = 50
+    compare_num = 1
 # if object_spec == 'Sb' or object_spec =='Ge':
     # predict_sample_rate = [
         # # 4,
@@ -186,6 +196,7 @@ if load == False:
         # dist_norm = np.linalg.norm(predict_fgpts[i] - train_fgpts, axis=-1) / np.linalg.norm(predict_fgpts[i])
         # coverage.append(np.mean(np.sort(dist_norm)[:compare_num]))
     sim_avg = []
+    print(predict_fgpts.shape, train_fgpts.shape)
     for i in range(len(predict_fgpts)):
         similarity = np.exp(-np.linalg.norm(predict_fgpts[i] - train_fgpts, axis=-1))
         # Normalize
@@ -230,21 +241,19 @@ print('Average similarity = {:6.4f} (Higher is similar)'.format(avrg))
 
 ## Plot
 import matplotlib.pyplot as plt
+font = {'family':'Arial'}
+plt.rc('font', **font)
 fig, (ax1, ax2) = plt.subplots(2,1,sharex=True)
 # ax: Subplot only for ylabel
 ax = fig.add_subplot(111, frameon=False)
 ax.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
 ax.grid(False)
-# Histogram
-# x_min = None
-# x_max = None
-x_min = 0.135
-x_max = 0.21
-bins  = 100
-# n, bins, patches = ax1.hist(coverage, bins=bins, range=(x_min, x_max), facecolor='purple', alpha=0.70)
-# n, bins, patches = ax2.hist(coverage, bins=bins, range=(x_min, x_max), facecolor='purple', alpha=0.70)
-n, bins, patches = ax1.hist(sim_avg, bins=bins, range=None, facecolor='purple', alpha=0.70)
-n, bins, patches = ax2.hist(sim_avg, bins=bins, range=None, facecolor='purple', alpha=0.70)
+
+## Histogram
+# n, bins, patches = ax1.hist(coverage, bins=bins, range=x_lim, facecolor='purple', alpha=0.70)
+# n, bins, patches = ax2.hist(coverage, bins=bins, range=x_lim, facecolor='purple', alpha=0.70)
+n, bins, patches = ax1.hist(sim_avg, bins=bins, range=x_lim, facecolor='gray')#, alpha=0.70)
+n, bins, patches = ax2.hist(sim_avg, bins=bins, range=x_lim, facecolor='gray')#, alpha=0.70)
 max_height = np.sort(n)[-1]
 # Define title
 title = ''
@@ -256,15 +265,18 @@ for i in range(len(train_file_list)):
 ax1.set_title(title+'Normalized Distance Minimum Histo.')
 # ax2.set_xlabel('Total %d fgpts, average = %.4f, sigma = %.3f\nCompare number = %d, Object species = %s' % (len(coverage), avrg, std, compare_num, object_spec))
 ax2.set_xlabel('Total %d fgpts, average = %.4f, sigma = %.3f\nCompare number = %d, Object species = %s' % (len(sim_avg), avrg, std, compare_num, object_spec))
-ax.set_ylabel('population')
+ax.set_ylabel('population', fontsize='large')
 # Deviation bar (start from average)
 ax1.barh(7., std, height=.8, left=avrg, color='black')
 ax2.barh(7., std, height=.8, left=avrg, color='black')
-ax1.set_xlim(x_min, x_max)
-ax1.set_ylim(100.,max_height + 50)
-ax2.set_ylim(0.,15.)
+ax1.set_xlim(x_lim)
+# y_lim_upper = (100.,max_height + 50)
+ax1.set_ylim(y_lim_upper)
+ax2.set_ylim(y_lim_lower)
 
-ax1.grid(False)
-ax2.grid(False)
-plt.subplots_adjust(top=0.6, hspace=0.4, bottom=0.4)
+ax1.grid(alpha=0.2)
+ax2.grid(alpha=0.2)
+ax1.tick_params(axis="both",direction="in", labelsize='large')
+ax2.tick_params(axis="both",direction="in", labelsize='large')
+plt.subplots_adjust(top=0.6, hspace=0.1, bottom=0.4)
 plt.show()
