@@ -386,6 +386,16 @@ def random_position_generator(
         species = backbone.get_chemical_symbols()
     elif isinstance(species_kinds, list):
         species = []
+        num_vacancy = False
+        if 'V' in species_kinds:
+            vacancy_ind = species_kinds.index('V')
+            num_vacancy = species_spec[vacancy_ind]
+            #
+            species_bool = [True] *len(species_kinds)
+            species_bool[vacancy_ind] = False
+            #
+            species_kinds = list(np.array(species_kinds)[species_bool])
+            species_spec = list(np.array(species_spec)[species_bool])
         for i in range(len(species_kinds)):
             for j in range(species_spec[i]):
                 species.append(species_kinds[i])
@@ -481,6 +491,12 @@ def random_position_generator(
         # np.random.permutation(backbone.get_positions()), apply_constraint = False)
 
     ############### Main
+    if num_vacancy:
+        vacancy_ind = np.random.permutation(len(backbone))[:num_vacancy]
+        vacancy_bool = np.array([True] *len(backbone))
+        vacancy_bool[vacancy_ind] = False
+        backbone = backbone[vacancy_bool]
+    print(num_vacancy, vacancy_bool, vacancy_ind, vacancy_bool)
     new_atoms = backbone.copy()
     natoms = len(backbone)
     from time import time
