@@ -418,7 +418,7 @@ def random_position_generator(
             ' Please Check')
 
     # Covalent bond length expectation value
-    if except_kinds:
+    if list(except_kinds):
         coval_expect = covalent_expect(species+list(except_kinds))
     else:
         coval_expect = covalent_expect(species)
@@ -551,7 +551,7 @@ def random_position_generator(
     # Correct chemical symbols
     new_species = np.array(['XX']*len(new_atoms))
     new_species[shuffle_ind] = species
-    if except_kinds:
+    if list(except_kinds):
         new_species[except_ind] = except_kinds
     new_atoms.set_chemical_symbols(new_species)
     # Sort by chemical numbers
