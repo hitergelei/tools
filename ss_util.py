@@ -330,8 +330,8 @@ def random_position_generator(
     backbone,
     species_kinds = None,
     species_spec  = None,
-    except_ind    = None,
-    except_kinds  = None,
+    except_ind    = [],
+    except_kinds  = [],
     cutoff_radi   = None,
     cutoff_frac   = None,
     random_degree = 0.9,
@@ -418,7 +418,10 @@ def random_position_generator(
             ' Please Check')
 
     # Covalent bond length expectation value
-    coval_expect = covalent_expect(species+list(except_kinds))
+    if except_kinds:
+        coval_expect = covalent_expect(species+list(except_kinds))
+    else:
+        coval_expect = covalent_expect(species)
                 
     ############# cell strain adjust
     if strain_ratio is not None and strain is not None:
@@ -548,7 +551,8 @@ def random_position_generator(
     # Correct chemical symbols
     new_species = np.array(['XX']*len(new_atoms))
     new_species[shuffle_ind] = species
-    new_species[except_ind] = except_kinds
+    if except_kinds:
+        new_species[except_ind] = except_kinds
     new_atoms.set_chemical_symbols(new_species)
     # Sort by chemical numbers
     new_atoms = new_atoms[np.argsort(new_atoms.get_atomic_numbers())]
