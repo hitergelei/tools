@@ -330,6 +330,8 @@ def random_position_generator(
     backbone,
     species_kinds = None,
     species_spec  = None,
+    except_ind    = None,
+    except_kinds  = None,
     cutoff_radi   = None,
     cutoff_frac   = None,
     random_degree = 0.9,
@@ -346,9 +348,17 @@ def random_position_generator(
     species_kinds : list or None
         List of species kinds
         Identical to that of backbone object if None is provided.
+        "V" correspond to vacuum (remove atom from backbone).
     species_spec : list of int or None
-        Number of each species. Will be numbered sequently.
+        Number of each species. Order must be identical to order in species_kinds.
         Identical to that of backbone object if None is provided.
+    except_ind : list or None
+        List of indices of atoms that will not be shuffled or removed.
+        Equals to none if all atoms must be shuffled.
+    except_kinds : list or None
+        List of desired species of atoms in except_ind.
+        len(except_kinds) must equals to len(except_ind).
+        None if except_ind is None.
     cutoff_radi : Float
         Cutoff radius for minimal distance between atoms.
         If provided with cutoff_frac simultaneously, occurs error.
@@ -380,8 +390,12 @@ def random_position_generator(
 
     """
 
+    ## Pre-process
+    except_kinds = np.array(except_kinds)
+
+    ##
     backbone = backbone.copy()
-    ############### collect species_spec 
+    # Collect species_spec 
     if species_kinds is None and species_spec is None:
         species = backbone.get_chemical_symbols()
     elif isinstance(species_kinds, list):
@@ -397,14 +411,14 @@ def random_position_generator(
             species_kinds = list(np.array(species_kinds)[species_bool])
             species_spec = list(np.array(species_spec)[species_bool])
         for i in range(len(species_kinds)):
-            for j in range(species_spec[i]):
+            for j in range(species_spec[i]-np.sum(except_kinds == species_kinds[i])):
                 species.append(species_kinds[i])
     else:
         raise ValueError('Somethings wrong with species_kinds and species_spec variables.'
             ' Please Check')
 
-    ############## covalent bond length expectation value
-    coval_expect = covalent_expect(species)
+    # Covalent bond length expectation value
+    coval_expect = covalent_expect(species+list(except_kinds))
                 
     ############# cell strain adjust
     if strain_ratio is not None and strain is not None:
@@ -492,11 +506,13 @@ def random_position_generator(
 
     ############### Main
     if num_vacancy:
-        vacancy_ind = np.random.permutation(len(backbone))[:num_vacancy]
+        vacancy_ind = np.random.permutation(np.setdiff1d(range(len(backbone)), except_ind))[:num_vacancy]
         vacancy_bool = np.array([True] *len(backbone))
         vacancy_bool[vacancy_ind] = False
         backbone = backbone[vacancy_bool]
-    print(num_vacancy, vacancy_bool, vacancy_ind, vacancy_bool)
+        # Update except_ind
+        for i in range(len(except_ind)):
+            except_ind[i] -= np.sum(vacancy_ind < except_ind[i])
     new_atoms = backbone.copy()
     natoms = len(backbone)
     from time import time
@@ -524,11 +540,18 @@ def random_position_generator(
         if time_d > 5:
             new_atoms = empty_atoms.copy()
 
-    ############### shuffle positions
-    new_atoms.set_positions(
-        np.random.permutation(new_atoms.get_positions()), apply_constraint = False)
-    ############### correct chemical symbols
-    new_atoms.set_chemical_symbols(species)
+    # Shuffle positions
+    shuffle_ind = np.setdiff1d(range(len(new_atoms)), except_ind)
+    new_positions = new_atoms.get_positions().copy()
+    new_positions[shuffle_ind] = np.random.permutation(new_positions[shuffle_ind])
+    new_atoms.set_positions(new_positions, apply_constraint = False)
+    # Correct chemical symbols
+    new_species = np.array(['XX']*len(new_atoms))
+    new_species[shuffle_ind] = species
+    new_species[except_ind] = except_kinds
+    new_atoms.set_chemical_symbols(new_species)
+    # Sort by chemical numbers
+    new_atoms = new_atoms[np.argsort(new_atoms.get_atomic_numbers())]
 
     return new_atoms
 
