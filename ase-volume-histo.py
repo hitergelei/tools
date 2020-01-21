@@ -28,17 +28,18 @@ for atoms in alist:
 # Post process
 anum = len(alist[0])
 vol_list = np.array(vol_list)/anum
-average = np.mean(vol_list)
-std = np.std(vol_list)
+density_arr = 1./vol_list
+average = np.mean(density_arr)
+std = np.std(density_arr)
     
 ## plot
 from matplotlib import pyplot as plt
 font = {'family':'Arial'}
 plt.rc('font', **font)
-n, bins, patches = plt.hist(vol_list, bins=100, facecolor='gray', alpha=0.70)
+n, bins, patches = plt.hist(density_arr, bins=100, facecolor='gray', alpha=0.70)
 max_height = np.sort(n)[-10]
-plt.title('Volume Histogram (Ang^3/atom)', fontsize='x-large')
-plt.xlabel('%d images, average = %.3f, sigma = %.3f' % (len(vol_list), average, std), fontsize='x-large')
+plt.title('Density Histogram (atoms/Ang^3)', fontsize='x-large')
+plt.xlabel('%d images, average = %.3f, sigma = %.3f' % (len(density_arr), average, std), fontsize='x-large')
 plt.ylabel('population', fontsize='x-large')
 plt.barh(max_height/5, std, height=max_height/50, left=average, color='black')
 plt.tick_params(axis="both",direction="in", labelsize='x-large')
