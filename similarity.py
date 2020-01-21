@@ -8,37 +8,36 @@ from subprocess import call
 
 ## Hyper params
 load = True
+# load = False
 # line_up = False
 line_up = True
 # Fgpt params
 predict_file_list = [
-    'GST225-5_invfer-100K.traj',
-    # 'GST225-1_kooi-100K-small.traj',
+    'wrapped-gete-crystallization-upto400ps-interval10.traj',
     ]
 train_file_list = [
-    # 'GST225-1_kooi-100K-small.traj',
-    # 'GST225-2_Petrov-100K-small.traj',
-    '7.7kooiNferGeTe-w-4phase.traj',
-    'rlxed-ran.traj',
+    'gete-conv-md.traj',
+    'gete-ran.traj',
     ]
-multipole_order = [2]
+multipole_order = ['r', 2]
 cutoff_radi     = 6.0
-cutoff_num      = [14, 14, 35]
+cutoff_num      = [60, 60]
 
 # Histogram
-# x_lim = None
-x_lim = (0.173412155158, 0.173412155160)
-# y_lim_upper = None
-y_lim_upper = (0.,400.)
+x_lim = None
+# x_lim = (0.173412155158, 0.173412155160)
+y_lim_upper = None
+# y_lim_upper = (0.,400.)
 y_lim_lower = (0.,15.)
 bins  = 100
 
 # Reliability check params
 object_spec   = 'Ge'
-if object_spec == 'Ge' or object_spec =='Sb':
-    compare_num = 1
-elif object_spec == 'Te':
-    compare_num = 1
+compare_num = 1
+# if object_spec == 'Ge' or object_spec =='Sb':
+    # compare_num = 1
+# elif object_spec == 'Te':
+    # compare_num = 1
 # if object_spec == 'Sb' or object_spec =='Ge':
     # predict_sample_rate = [
         # # 4,
@@ -139,7 +138,7 @@ def get_fgpts(
     vec = vector(
         cutoff_radi     = cutoff_radi,
         cutoff_num      = cutoff_num,
-        multipole_order = multipole_order+['r'],
+        multipole_order = multipole_order,
         # one_box       = True,
         # logfile_name  = 'log.txt',
         )
@@ -152,12 +151,16 @@ def get_fgpts(
     atom_ind       = []
     fgpts          = []
     Euler_angles   = []
-    fgpt_vec_size = np.sum(cutoff_num) * (1+ len(multipole_order)*3)
+    if 'r' in multipole_order:
+        fgpt_vec_size = np.sum(cutoff_num) * (len(multipole_order)*3 - 2)
+    else:
+        fgpt_vec_size = np.sum(cutoff_num) * (len(multipole_order)*3)
     for i in range(len(file_list)):
         print("   >> Generating {:}'s fgpts <<".format(file_list[i]))
         alist = read(file_list[i], ':')
         # alist = alist[::sample_rate[i]]
         fgpts_tmp, Euler_tmp = vec.gen_fgpts('alist', alist, rotational_variation=True)
+        # fgpts_tmp = vec.gen_fgpts('alist', alist, rotational_variation=False)
         fgpts.extend(fgpts_tmp.reshape((-1,fgpt_vec_size)))
         Euler_angles.extend(Euler_tmp.reshape((-1,3)))
         nums.append(int(len(alist)*len(alist[0][np.array(alist[0].get_chemical_symbols())==object_spec])))
@@ -167,6 +170,7 @@ def get_fgpts(
         atom_ind.extend(list(np.arange(len(alist[0])).astype('str'))*len(alist))
     
     select = np.array(spec_ind) == object_spec
+    # select = np.array(([False]+[True]+[False]*34)*len(alist))
     fgpts = np.array(fgpts)[select]
     Euler_angles = np.array(Euler_angles)[select]
     indices = np.transpose(np.array([file_ind, img_ind, spec_ind, atom_ind]))[select]
@@ -196,12 +200,12 @@ if load == False:
         # dist_norm = np.linalg.norm(predict_fgpts[i] - train_fgpts, axis=-1) / np.linalg.norm(predict_fgpts[i])
         # coverage.append(np.mean(np.sort(dist_norm)[:compare_num]))
     sim_avg = []
-    print(predict_fgpts.shape, train_fgpts.shape)
     for i in range(len(predict_fgpts)):
         similarity = np.exp(-np.linalg.norm(predict_fgpts[i] - train_fgpts, axis=-1))
         # Normalize
         # Not implemented yet.
         sim_avg.append(np.mean(np.sort(similarity)[-compare_num:]))
+        # sim_avg.append(np.mean(np.sort(similarity)[int(len(similarity)/2)+10:][:compare_num]))
 
     ## Save
     # call(['mkdir saved-coverage'], shell=True)
