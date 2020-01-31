@@ -22,29 +22,31 @@ d_t    = 10 *units.fs
 t_step = 50000
 ############# calculator ############
 ### Vasp
-# from ase.calculators.vasp import Vasp
-# calc = Vasp()
-# atoms.set_calculator(calc)
-# calc.read_incar()
-# calc.read_kpoints()
+from kpoints_gen import get_grid_num, write_KPOINTS
+write_KPOINTS(get_grid_num(atoms.get_cell(), 45))
+from ase.calculators.vasp import Vasp
+calc = Vasp()
+atoms.set_calculator(calc)
+calc.read_incar()
+calc.read_kpoints()
 ### LJ potential
 # from ase.calculators.lj import LennardJones as LJ
 # calc = LJ(epsilon=120 *units.kB, sigma=0.34 *units.nm)
 # atoms.set_calculator(calc)
 ### Lammps
-calc = LAMMPS(
-    specorder=['Ge','Te'],
-    parameters={
-        'units':'metal',
-        'boundary':'p p p',
-        'box':'tilt large',
-        'pair_style':'deepmd frozen_model.pb',
-        'pair_coeff':' ',
-        'mass':['1 72.64', '2 127.60'],
-        },
-    files=['frozen_model.pb'],
-    # keep_tmp_files=True,
-    )
+# calc = LAMMPS(
+    # specorder=['Ge','Te'],
+    # parameters={
+        # 'units':'metal',
+        # 'boundary':'p p p',
+        # 'box':'tilt large',
+        # 'pair_style':'deepmd frozen_model.pb',
+        # 'pair_coeff':' ',
+        # 'mass':['1 72.64', '2 127.60'],
+        # },
+    # files=['frozen_model.pb'],
+    # # keep_tmp_files=True,
+    # )
 atoms.set_calculator(calc)
 
 ########### Relaxation #############
