@@ -2,7 +2,7 @@
 
 import numpy as np
 
-def wrap_alist(alist):
+def wrap_alist(alist, log=False):
     for i in range(len(alist)):
         ## Backup results info
         if hasattr(alist[i]._calc, 'results'):
@@ -15,7 +15,7 @@ def wrap_alist(alist):
             alist[i]._calc.results = results
             alist[i]._calc.atoms = alist[i].copy()
         #### Print every 1000 process
-        if i % 1000 == 0: 
+        if log and i % 1000 == 0: 
             print((str(i)+'-th image wrapped').center(120))
     return alist
 
@@ -46,5 +46,5 @@ if __name__ == '__main__':
     if not isinstance(alist, list):
         alist = [alist]
 
-    alist = wrap_alist(alist)
+    alist = wrap_alist(alist, log=True)
     write('wrapped-'+alist_file, wrapped_alist, format='traj')
