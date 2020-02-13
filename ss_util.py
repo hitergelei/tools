@@ -277,6 +277,10 @@ def count2list(dict_in):
     return list_out
 
 def list2count(list_inp):
+    """
+    input: list.
+    output: dict of counts of elements.
+    """
     keys = list(set(list_inp))
     dict_out = dict()
     for i in keys:
@@ -286,6 +290,13 @@ def list2count(list_inp):
     return dict_out
 
 def list2numlist(list_inp):
+    """
+    input: list of any element types.
+    output: list of integers. Numbers are assigned sequently to elements of first appearing.
+    ex)
+    inp: ['b', 'a', 'a', 'd', 'a', 'c']
+    out: [ 0 ,  1 ,  1 ,  2 ,  1 ,  3 ]
+    """
     numlist = []
     keys=dict()
     i=0
