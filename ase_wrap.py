@@ -46,5 +46,5 @@ if __name__ == '__main__':
     if not isinstance(alist, list):
         alist = [alist]
 
-    alist = wrap_alist(alist, log=True)
+    wrapped_alist = wrap_alist(alist, log=True)
     write('wrapped-'+alist_file, wrapped_alist, format='traj')
