@@ -337,7 +337,7 @@ def covalent_expect(input):
     expect_value = r_sum / tot_num
     return expect_value
 
-def random_position_generator(
+def random_atoms_gen(
     backbone,
     species_kinds = None,
     species_spec  = None,
@@ -345,11 +345,12 @@ def random_position_generator(
     except_kinds  = [],
     cutoff_radi   = None,
     cutoff_frac   = None,
-    random_degree = 0.9,
+    random_degree = 0.0,
     strain        = None,
     strain_ratio  = [1.,1.,1.],
     vacuum        = None,
     vacuum_ratio  = None,
+    log           = True,
     ):
     """ 
     generate randomly positioned image base on backbone structure
@@ -359,10 +360,11 @@ def random_position_generator(
     species_kinds : list or None
         List of species kinds
         Identical to that of backbone object if None is provided.
-        "V" correspond to vacuum (remove atom from backbone).
+        "V" correspond to vacuum or vacancy (remove atom from backbone).
     species_spec : list of int or None
         Number of each species. Order must be identical to order in species_kinds.
         Identical to that of backbone object if None is provided.
+        "V" correspond to vacuum or vacancy (remove atom from backbone).
     except_ind : list or None
         List of indices of atoms that will not be shuffled or removed.
         Equals to none if all atoms must be shuffled.
@@ -409,6 +411,7 @@ def random_position_generator(
     # Collect species_spec 
     if species_kinds is None and species_spec is None:
         species = backbone.get_chemical_symbols()
+        num_vacancy = False
     elif isinstance(species_kinds, list):
         species = []
         num_vacancy = False
@@ -493,26 +496,28 @@ def random_position_generator(
     elif cutoff_frac is not None:
         cutoff_r = coval_expect * 2 * cutoff_frac
     else:
-        cutoff_r = coval_expect * 2 * 0.9
+        cutoff_r = 0.
 
     ############### get random adjust radius
     supercell = make_supercell(backbone,[[2,0,0],[0,2,0],[0,0,2]])
     from ase.optimize.precon.neighbors import estimate_nearest_neighbour_distance as rNN
     rdf_1st_peak = rNN(supercell)
+    # rdf_1st_peak = 0.
     ran_radi = rdf_1st_peak / 2 * random_degree
-    print("")
-    print("********* Please check carefully !!!! ***********".center(80))
-    print(("RDF 1st peak / 2 == %.2f" %(rdf_1st_peak/2)).center(80))
-    print(("random radius degree == %.2f" %(random_degree)).center(80))
-    print(("==> random adjust radius == %.2f" %(ran_radi)).center(80))
-    print(("it is %.2f %% of covalent bond length expectation value." %
-        (ran_radi / coval_expect * 100)).center(80))
-    print("")
-    print(("cf ) covalent bond length expectation value == %.2f" % coval_expect).center(80))
-    print(("cf ) cutoff radius == %.2f" % cutoff_r).center(80))
-    print(("cf ) cutoff radius / covalent bond expectation*2 == %.2f %%" % 
-        (cutoff_r / coval_expect / 2 * 100)).center(80))
-    print("")
+    if log:
+        print("")
+        print("********* Please check carefully !!!! ***********".center(80))
+        print(("RDF 1st peak / 2 == %.2f" %(rdf_1st_peak/2)).center(80))
+        print(("random radius degree == %.2f" %(random_degree)).center(80))
+        print(("==> random adjust radius == %.2f" %(ran_radi)).center(80))
+        print(("it is %.2f %% of covalent bond length expectation value." %
+            (ran_radi / coval_expect * 100)).center(80))
+        print("")
+        print(("cf ) covalent bond length expectation value == %.2f" % coval_expect).center(80))
+        print(("cf ) cutoff radius == %.2f" % cutoff_r).center(80))
+        print(("cf ) cutoff radius / covalent bond expectation*2 == %.2f %%" % 
+            (cutoff_r / coval_expect / 2 * 100)).center(80))
+        print("")
 
     # ############### shuffle positions
     # backbone.set_positions(
@@ -545,7 +550,8 @@ def random_position_generator(
             time_f = time()
             time_d = time_f - time_i
             if np.amin(dist + np.eye(len(dist))*100) > cutoff_r:
-                print("( %d th / %d ) new atom position found" % (len(new_atoms), natoms))
+                if log:
+                    print("( %d th / %d ) new atom position found" % (len(new_atoms), natoms))
                 break
             elif time_d > 5:
                 break
