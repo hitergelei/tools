@@ -324,25 +324,23 @@ def covalent_expect(input):
     from ase.data import covalent_radii
     
     if isinstance(input, list):
-        species_dict = list2count(input)
+        num_spec_dict = list2count(input)
     elif isinstance(input, dict):
-        species_dict = input
+        num_spec_dict = input
     else:
         raise TypeError("input is not list nor dict")
     
-    tot_num = sum(species_dict.values())
+    tot_num = sum(num_spec_dict.values())
     r_sum = 0
-    for key, value in species_dict.items():
+    for key, value in num_spec_dict.items():
         r_sum += covalent_radii[s2n([key])] * value
     expect_value = r_sum / tot_num
     return expect_value
 
 def random_atoms_gen(
     backbone,
-    species_kinds = None,
-    species_spec  = None,
-    except_ind    = [],
-    except_kinds  = [],
+    num_spec_dict = None,
+    fix_ind_dict  = None,
     cutoff_radi   = None,
     cutoff_frac   = None,
     random_degree = 0.0,
@@ -350,6 +348,7 @@ def random_atoms_gen(
     strain_ratio  = [1.,1.,1.],
     vacuum        = None,
     vacuum_ratio  = None,
+    max_trial_sec = 5,
     log           = True,
     ):
     """ 
@@ -357,87 +356,100 @@ def random_atoms_gen(
 
     backbone : An ASE atoms object
         Which will be backbone position.
-    species_kinds : list or None
-        List of species kinds
-        Identical to that of backbone object if None is provided.
-        "V" correspond to vacuum or vacancy (remove atom from backbone).
-    species_spec : list of int or None
-        Number of each species. Order must be identical to order in species_kinds.
-        Identical to that of backbone object if None is provided.
-        "V" correspond to vacuum or vacancy (remove atom from backbone).
-    except_ind : list or None
-        List of indices of atoms that will not be shuffled or removed.
-        Equals to none if all atoms must be shuffled.
-    except_kinds : list or None
-        List of desired species of atoms in except_ind.
-        len(except_kinds) must equals to len(except_ind).
-        None if except_ind is None.
+
+    num_spec_dict : dict or None
+        Number of each species. Identical to that of the backbone object's if None is provided.
+        "V" correspond to vacancy (remove atom from the backbone).
+        Note the following condition must be satisfied.
+            --> np.sum(num_spec_dict.values()) == len(backbone)
+        E.g.) {'Ge': 4, 'Te': 4, 'V': 2}
+            Condition: the backbone structure must have 10 atoms, totally.
+
+    fix_ind_dict : dict or None
+        Dict of atomic indices in the backbone for each species whose positions will be fixed.
+        Note that every fixed atom will also have positional deviation, eventually.
+        Set to "None" if all atoms' positions must be shuffled.
+        E.g.) {'Te': [0, 2, 4, 6]}
+            * I.e. Te atoms will be placed at the position of those indices in the backbone, and others will be shffled.
+
     cutoff_radi : Float
         Cutoff radius for minimal distance between atoms.
         If provided with cutoff_frac simultaneously, occurs error.
+        Both cutoff_radi and cutoff_frac are not provided, set to be zero.
+
     cutoff_frac : Float
         Set cutoff_radi as length scaled as 
         expectation value of covalent bonds of every atomic species.
         If provided with cutoff_radi simultaneously, occurs error.
+        Both cutoff_radi and cutoff_frac are not provided, set to be zero.
+
     random_degree : Float
         Value of how much fraction of half of RDF nearest neighbor distance of backbone
         will be used as radius (from backbone) of generating new candidates.
+
     strain : List of three floats e.g. [0,0,5]
         Values specify how much you magnify the provided backbone cell.
         Cell gets longer along lattice vectors.
         positions will stay scaled positions of backbone atoms.
+
     strain_ratio : List of three floats e.g. [1,1.1,1]
         Values specify how much you magnify the provided backbone cell.
         Cell gets longer along lattice vectors.
         positions will stay scaled positions of backbone atoms.
+
     vacuum : List of three floats e.g. [0,0,5]
         Values specify how much you magnify the provided backbone cell with vacuum.
         Cell gets longer along lattice vectors.
         positions will stay absolute positions of backbone atoms.
         insert vacuum after strain (if provided)
+
     vacuum_ratio : List of three floats e.g. [1,1.1,1]
         Values specify how much you magnify the provided backbone cell with vacuum.
         Cell gets longer along lattice vectors.
         positions will stay absolute positions of backbone atoms.
         insert vacuum after strain (if provided)
 
-    """
+    max_trial_sec : float
+        Maximum number of trials to get a new atomic position.
+        If fails for more than "max_trial_sec" seconds, start to find new atoms from scratch.
 
-    ## Pre-process
-    except_kinds = np.array(except_kinds)
+    """
 
     ##
     backbone = backbone.copy()
-    # Collect species_spec 
-    if species_kinds is None and species_spec is None:
-        species = backbone.get_chemical_symbols()
-        num_vacancy = False
-    elif isinstance(species_kinds, list):
-        species = []
-        num_vacancy = False
-        if 'V' in species_kinds:
-            vacancy_ind = species_kinds.index('V')
-            num_vacancy = species_spec[vacancy_ind]
-            #
-            species_bool = [True] *len(species_kinds)
-            species_bool[vacancy_ind] = False
-            #
-            species_kinds = list(np.array(species_kinds)[species_bool])
-            species_spec = list(np.array(species_spec)[species_bool])
-        for i in range(len(species_kinds)):
-            for j in range(species_spec[i]-np.sum(except_kinds == species_kinds[i])):
-                species.append(species_kinds[i])
+    # Get spec_list and num_spec_dict
+    if num_spec_dict is None:
+        spec_list = backbone.get_chemical_symbols()
+        from ss_util import list2count
+        num_spec_dict = list2count(spec_list)
+        num_vacancy = 0
+
+    # Get spec_list.
     else:
-        raise ValueError('Somethings wrong with species_kinds and species_spec variables.'
-            ' Please Check')
+        from ss_util import count2list
+        if 'V' in num_spec_dict.keys():
+            num_vacancy = num_spec_dict['V']
+            del(num_spec_dict['V'])
+        else:
+            num_vacancy = 0
+
+        spec_list = count2list(num_spec_dict)
+
+    # Get num_fix_dict
+    num_fix_dict = {}
+    if fix_ind_dict: 
+        if 'V' not in fix_ind_dict.keys():
+            fix_ind_dict['V'] = []
+        for key, value in fix_ind_dict.items():
+            num_fix_dict[key] = len(value)
+            if key == 'V' and num_vacancy == 0:
+                raise ValueError('The fix_ind_dict can not have "V", if num_spec_dict do not have "V"')
 
     # Covalent bond length expectation value
-    if list(except_kinds):
-        coval_expect = covalent_expect(species+list(except_kinds))
-    else:
-        coval_expect = covalent_expect(species)
+    from ss_utile import covalent_expect
+    coval_expect = covalent_expect(spec_list)
                 
-    ############# cell strain adjust
+    ## Cell strain adjustment.
     if strain_ratio is not None and strain is not None:
         raise ValueError("strain_ratio & strain parameters provided simultaneously. \
             Just provide one.")
@@ -462,7 +474,7 @@ def random_atoms_gen(
             scale_atoms = True,
             )
 
-    ############# cell vacuum adjust
+    ## Vacuum layer adjustment.
     if vacuum_ratio is not None and vacuum is not None:
         raise ValueError("vacuum_ratio & vacuum parameters provided simultaneously. \
             Just provide one.")
@@ -487,7 +499,7 @@ def random_atoms_gen(
             scale_atoms = True,
             )
 
-    ############## determine cutoff radius
+    ## Determine cutoff radius.
     if cutoff_radi is not None and cutoff_frac is not None:
         raise ValueError("cutoff_radi & cutoff_frac parameters provided simultaneously. \
             Just provide one.")
@@ -498,7 +510,7 @@ def random_atoms_gen(
     else:
         cutoff_r = 0.
 
-    ############### get random adjust radius
+    ## Get random adjust radius
     supercell = make_supercell(backbone,[[2,0,0],[0,2,0],[0,0,2]])
     from ase.optimize.precon.neighbors import estimate_nearest_neighbour_distance as rNN
     rdf_1st_peak = rNN(supercell)
@@ -506,71 +518,85 @@ def random_atoms_gen(
     ran_radi = rdf_1st_peak / 2 * random_degree
     if log:
         print("")
-        print("********* Please check carefully !!!! ***********".center(80))
-        print(("RDF 1st peak / 2 == %.2f" %(rdf_1st_peak/2)).center(80))
-        print(("random radius degree == %.2f" %(random_degree)).center(80))
-        print(("==> random adjust radius == %.2f" %(ran_radi)).center(80))
-        print(("it is %.2f %% of covalent bond length expectation value." %
-            (ran_radi / coval_expect * 100)).center(80))
+        print("********* Please check carefully !!!! ***********".center(120))
+        print("RDF 1st peak / 2 == {.2f}".format(rdf_1st_peak/2).center(120))
+        print("Positional deviation degree == {.2f}".format(random_degree).center(120))
+        print("==> Random deviation radius == {.2f}".format(ran_radi).center(120))
+        print("it is {.2f} % of covalent-bond-length expectation value.".format(ran_radi / coval_expect * 100).center(120))
         print("")
-        print(("cf ) covalent bond length expectation value == %.2f" % coval_expect).center(80))
-        print(("cf ) cutoff radius == %.2f" % cutoff_r).center(80))
-        print(("cf ) cutoff radius / covalent bond expectation*2 == %.2f %%" % 
-            (cutoff_r / coval_expect / 2 * 100)).center(80))
+        print("C.f. ) covalent-bond-length expectation value == {.2f}".format(coval_expect).center(120))
+        print("C.f. ) cutoff radius == {.2f}".format(cutoff_r).center(120))
+        print("C.f. ) cutoff radius / covalent bond expectation*2 == {.2f} %".format(cutoff_r / coval_expect / 2 * 100).center(120))
         print("")
 
-    # ############### shuffle positions
-    # backbone.set_positions(
-        # np.random.permutation(backbone.get_positions()), apply_constraint = False)
+    ## Main
+    if num_vacancy != 0:
+        # Choose vacancy indices.
+        vacancy_ind = np.random.permutation(
+            np.setdiff1d(
+                range(len(backbone)),
+                fix_ind_dict.values(),
+                ),
+            )[:num_vacancy - num_fix_dict['V']]
+        # Add fixed-vacancy indicies to the array.
+        vacancy_ind = np.concatenate(vacancy_ind, fix_ind_dict['V']).astype(int)
 
-    ############### Main
-    if num_vacancy:
-        vacancy_ind = np.random.permutation(np.setdiff1d(range(len(backbone)), except_ind))[:num_vacancy]
+        # Remove vacancies from the backbone.
         vacancy_bool = np.array([True] *len(backbone))
         vacancy_bool[vacancy_ind] = False
         backbone = backbone[vacancy_bool]
-        # Update except_ind
-        for i in range(len(except_ind)):
-            except_ind[i] -= np.sum(vacancy_ind < except_ind[i])
+
+        # Update fix_ind_dict.
+        del(fix_ind_dict['V'])
+        for key, value in fix_ind_dict.items():
+            for i in range(len(value)):
+                value[i] -= np.sum(vacancy_ind < value[i])
+            fix_ind_dict[key] = value
+
     new_atoms = backbone.copy()
     natoms = len(backbone)
-    from time import time
     for i in range(natoms):
         new_atoms.pop()
     empty_atoms = new_atoms.copy()
 
+    from time import time
     while len(new_atoms) < natoms:
+        # Start time of this loop.
         time_i = time()
         while True:
+            # Attach one more atom.
             new_atoms.append(backbone.copy()[len(new_atoms)])
+            # Give positional deviation to the lastest atom.
             posi = new_atoms.get_positions()
             posi[-1] += (np.random.rand(3)-0.5) * 2 * ran_radi
             new_atoms.set_positions(posi, apply_constraint = False)
+            # Get all distances.
             dist = new_atoms.get_all_distances(mic = True)
+            # Get elapsed time of this loop.
             time_f = time()
             time_d = time_f - time_i
-            if np.amin(dist + np.eye(len(dist))*100) > cutoff_r:
+            # If the latest atom is properly positioned, break this loop.
+            if np.amin(dist + np.eye(len(dist))*999) > cutoff_r:
                 if log:
                     print("( %d th / %d ) new atom position found" % (len(new_atoms), natoms))
                 break
-            elif time_d > 5:
-                break
-            else:
+            # If the latest atom is too close to another atom, remove the latest one.
+            elif time_d < max_trial_sec:
                 new_atoms.pop()
-        if time_d > 5:
-            new_atoms = empty_atoms.copy()
+            # If failed for more than "max_trial_sec" seconds, restart from scratch.
+            else:
+                del(new_atoms)
+                new_atoms = empty_atoms.copy()
+                break
 
     # Shuffle positions
-    shuffle_ind = np.setdiff1d(range(len(new_atoms)), except_ind)
+    shuffle_ind = np.setdiff1d(range(len(new_atoms)), fix_ind_dict.values())
     new_positions = new_atoms.get_positions().copy()
     new_positions[shuffle_ind] = np.random.permutation(new_positions[shuffle_ind])
     new_atoms.set_positions(new_positions, apply_constraint = False)
-    # Correct chemical symbols
-    new_species = np.array(['XX']*len(new_atoms))
-    new_species[shuffle_ind] = species
-    if list(except_kinds):
-        new_species[except_ind] = except_kinds
-    new_atoms.set_chemical_symbols(new_species)
+    
+    ## Set the chemical symbols
+    new_atoms.set_chemical_symbols(spec_list)
     # Sort by chemical numbers
     new_atoms = new_atoms[np.argsort(new_atoms.get_atomic_numbers())]
 

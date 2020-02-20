@@ -8,7 +8,7 @@ from ase.md.velocitydistribution import Stationary
 from ase import units
 from ase.build import make_supercell
 import datetime
-from ss_util import random_position_generator as RPG
+from ss_util import random_atoms_gen as RAG
 from ase.calculators.lammpsrun import LAMMPS
 import os
 
