@@ -330,10 +330,10 @@ def covalent_expect(input):
     else:
         raise TypeError("input is not list nor dict")
     
-    tot_num = sum(num_spec_dict.values())
+    tot_num = np.sum(list(num_spec_dict.values()))
     r_sum = 0
     for key, value in num_spec_dict.items():
-        r_sum += covalent_radii[s2n([key])] * value
+        r_sum += covalent_radii[s2n([key])[0]] * value
     expect_value = r_sum / tot_num
     return expect_value
 
@@ -416,17 +416,16 @@ def random_atoms_gen(
     """
 
     ##
+    from ss_util import count2list, list2count
     backbone = backbone.copy()
     # Get spec_list and num_spec_dict
     if num_spec_dict is None:
         spec_list = backbone.get_chemical_symbols()
-        from ss_util import list2count
         num_spec_dict = list2count(spec_list)
         num_vacancy = 0
 
     # Get spec_list.
     else:
-        from ss_util import count2list
         if 'V' in num_spec_dict.keys():
             num_vacancy = num_spec_dict['V']
             del(num_spec_dict['V'])
@@ -435,18 +434,24 @@ def random_atoms_gen(
 
         spec_list = count2list(num_spec_dict)
 
-    # Get num_fix_dict
+    # Get num_fix_dict and num_shffl_spec_dict
     num_fix_dict = {}
+    num_shffl_spec_dict = num_spec_dict.copy()
     if fix_ind_dict: 
         if 'V' not in fix_ind_dict.keys():
             fix_ind_dict['V'] = []
+            num_shffl_spec_dict['V'] = 0
         for key, value in fix_ind_dict.items():
             num_fix_dict[key] = len(value)
+            num_shffl_spec_dict[key] -= len(value)
             if key == 'V' and num_vacancy == 0:
                 raise ValueError('The fix_ind_dict can not have "V", if num_spec_dict do not have "V"')
 
+    # Get shffl_spec_list.
+    shffl_spec_list = count2list(num_shffl_spec_dict)
+
     # Covalent bond length expectation value
-    from ss_utile import covalent_expect
+    from ss_util import covalent_expect
     coval_expect = covalent_expect(spec_list)
                 
     ## Cell strain adjustment.
@@ -519,14 +524,14 @@ def random_atoms_gen(
     if log:
         print("")
         print("********* Please check carefully !!!! ***********".center(120))
-        print("RDF 1st peak / 2 == {.2f}".format(rdf_1st_peak/2).center(120))
-        print("Positional deviation degree == {.2f}".format(random_degree).center(120))
-        print("==> Random deviation radius == {.2f}".format(ran_radi).center(120))
-        print("it is {.2f} % of covalent-bond-length expectation value.".format(ran_radi / coval_expect * 100).center(120))
+        print("RDF 1st peak / 2 == {:.2f}".format(rdf_1st_peak/2).center(120))
+        print("Positional deviation degree == {:.2f}".format(random_degree).center(120))
+        print("==> Random deviation radius == {:.2f}".format(ran_radi).center(120))
+        print("it is {:.2f} % of covalent-bond-length expectation value.".format(ran_radi / coval_expect * 100).center(120))
         print("")
-        print("C.f. ) covalent-bond-length expectation value == {.2f}".format(coval_expect).center(120))
-        print("C.f. ) cutoff radius == {.2f}".format(cutoff_r).center(120))
-        print("C.f. ) cutoff radius / covalent bond expectation*2 == {.2f} %".format(cutoff_r / coval_expect / 2 * 100).center(120))
+        print("C.f. ) covalent-bond-length expectation value == {:.2f}".format(coval_expect).center(120))
+        print("C.f. ) cutoff radius == {:.2f}".format(cutoff_r).center(120))
+        print("C.f. ) cutoff radius / covalent bond expectation *2 == {:.2f} %".format(cutoff_r / coval_expect / 2 * 100).center(120))
         print("")
 
     ## Main
@@ -535,11 +540,11 @@ def random_atoms_gen(
         vacancy_ind = np.random.permutation(
             np.setdiff1d(
                 range(len(backbone)),
-                fix_ind_dict.values(),
+                np.concatenate(list(fix_ind_dict.values())),
                 ),
             )[:num_vacancy - num_fix_dict['V']]
         # Add fixed-vacancy indicies to the array.
-        vacancy_ind = np.concatenate(vacancy_ind, fix_ind_dict['V']).astype(int)
+        vacancy_ind = np.concatenate([vacancy_ind, fix_ind_dict['V']]).astype(int)
 
         # Remove vacancies from the backbone.
         vacancy_bool = np.array([True] *len(backbone))
@@ -578,7 +583,7 @@ def random_atoms_gen(
             # If the latest atom is properly positioned, break this loop.
             if np.amin(dist + np.eye(len(dist))*999) > cutoff_r:
                 if log:
-                    print("( %d th / %d ) new atom position found" % (len(new_atoms), natoms))
+                    print("( {} th / {} ) new atom position found".format(len(new_atoms), natoms))
                 break
             # If the latest atom is too close to another atom, remove the latest one.
             elif time_d < max_trial_sec:
@@ -590,13 +595,19 @@ def random_atoms_gen(
                 break
 
     # Shuffle positions
-    shuffle_ind = np.setdiff1d(range(len(new_atoms)), fix_ind_dict.values())
+    shuffle_ind = np.setdiff1d(range(len(new_atoms)), np.concatenate(list(fix_ind_dict.values())))
     new_positions = new_atoms.get_positions().copy()
     new_positions[shuffle_ind] = np.random.permutation(new_positions[shuffle_ind])
     new_atoms.set_positions(new_positions, apply_constraint = False)
     
+    # Correct chemical symbols
+    new_species = np.array(['XX']*len(new_atoms))
+    new_species[shuffle_ind] = shffl_spec_list
+    if fix_ind_dict:
+        new_species[np.concatenate(list(fix_ind_dict.values()))] = count2list(num_fix_dict)
+
     ## Set the chemical symbols
-    new_atoms.set_chemical_symbols(spec_list)
+    new_atoms.set_chemical_symbols(new_species)
     # Sort by chemical numbers
     new_atoms = new_atoms[np.argsort(new_atoms.get_atomic_numbers())]
 
@@ -665,7 +676,7 @@ class Logger(object):
             else:
                 tic = self.tics[toc]
             dt = (time.time() - tic) # ssrokyz start
-            dt = ' %.1f sec.' % dt # ssrokyz end
+            dt = ' {:.1f} sec.'.format(dt) # ssrokyz end
         if self.file.closed:
             self.file = open(self.filename, 'a')
         if no_space or (no_space == None and toc):
