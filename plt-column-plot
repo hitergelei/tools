@@ -20,8 +20,8 @@ def argparse():
     parser.add_argument('-x', '--x_axis', type=int, default=0, help='Column number of x-axis data. Zero(Line number) as default.')
     parser.add_argument('-n', '--line_slice', type=_parse_slice, default=':', help='e.g. 200:1000:10  Specified slice of rows of data will be used. Default: automatic')
     parser.add_argument('-l', '--log_scale', action='store_true', help='If provided, Plot y axis as log scale.')
-    parser.add_argument('-c', '--color_list', type=str, nargs='+', default=None, help='Scatter color list. len(color_list) == len(y_axis). [default: Automatic].')
-    parser.add_argument('-b', '--label_list', type=str, nargs='+', default=None, help='Legend label list. len(label_list) == len(y_axis). [default: Column number]. If you want no legend, set it "none"')
+    parser.add_argument('-c', '--color_list', type=str, nargs='+', default=[], help='Scatter color list. len(color_list) == len(y_axis). [default: Automatic].')
+    parser.add_argument('-b', '--label_list', type=str, nargs='+', default=[], help='Legend label list. len(label_list) == len(y_axis). [default: Column number]. If you want no legend, set it "none"')
     return parser.parse_args()
 
 if __name__ == '__main__':
