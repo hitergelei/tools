@@ -39,7 +39,7 @@ plt.rc('font', **font)
 n, bins, patches = plt.hist(density_arr, bins=100, facecolor='gray', alpha=0.70)
 max_height = np.sort(n)[-10]
 plt.title('Density Histogram (atoms/Ang^3)', fontsize='x-large')
-plt.xlabel('%d images, average = %.3f, sigma = %.3f' % (len(density_arr), average, std), fontsize='x-large')
+plt.xlabel('%d images, average = %.4e, sigma = %.4e' % (len(density_arr), average, std), fontsize='x-large')
 plt.ylabel('population', fontsize='x-large')
 plt.barh(max_height/5, std, height=max_height/50, left=average, color='black')
 plt.tick_params(axis="both",direction="in", labelsize='x-large')
