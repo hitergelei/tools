@@ -170,7 +170,8 @@ def plot_partial_DOS(
         ax.set_ylim((freqlim_low, freqlim_up))
         ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
+        ax.plot(np.sum(PDOS_list,axis=0), f, color='k', label='Total')
+        # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((DOS_low, DOS_up))
     else:
         for spec_i in range(len(unique_spec)):
@@ -178,7 +179,8 @@ def plot_partial_DOS(
         ax.set_xlim((freqlim_low, freqlim_up))
         ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
-        ax.fill_betweenx(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
+        ax.plot(f, np.sum(PDOS_list,axis=0), color='k', label='Total')
+        # ax.fill_betweenx(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_ylim((DOS_low, DOS_up))
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
