@@ -3,7 +3,6 @@ from ase import Atoms, Atom
 import ase.io
 from ase.io import read, write, trajectory
 from ase.io.trajectory import Trajectory as Traj
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution as Max
 from ase.md.velocitydistribution import Stationary
 from ase import units
 from ase.build import make_supercell
@@ -63,6 +62,7 @@ atoms.set_calculator(calc)
 ########### dynamics ###############
 #### Initialization
 ## Maxwell-Boltzmann distribution
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution as Max
 Max(atoms, temp * 1)
 ## Multiply
 # atoms.arrays['momenta'] *= temp / units.kB / atoms.get_temperature()
