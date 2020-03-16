@@ -51,6 +51,8 @@ def argparse():
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
     parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
     parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
+    parser.add_argument('-x', '--xtick_list', type=float, nargs='+', default=None, help='Specify x ticks. [Default: automatic]')
+    parser.add_argument('-y', '--ytick_list', type=float, nargs='+', default=None, help='Specify y ticks. [Default: automatic]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -154,9 +156,15 @@ if __name__ == '__main__':
         plt.ylabel('Partial RDF$_{{{}}}$'.format(symbol1+symbol2)+' $(\AA^{-1})$', fontsize='x-large')
     plt.xlabel('Distance $(\AA)$', fontsize='x-large')
     plt.subplots_adjust(left=0.09, bottom=0.30, right=0.97, top=0.60, wspace=0.2, hspace=0.2)
-    from math import ceil
-    plt.xticks(range(1,int(ceil(rcut))), fontsize='x-large')
-    plt.yticks(fontsize='x-large')
+    if args.xtick_list is not None:
+        plt.xticks(args.xtick_list ,fontsize='x-large')
+    else:
+        from math import ceil
+        plt.xticks(range(1,int(ceil(rcut))), fontsize='x-large')
+    if args.ytick_list is not None:
+        plt.yticks(args.ytick_list ,fontsize='x-large')
+    else:
+        plt.yticks(fontsize='x-large')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlim(0., rcut)
     plt.ylim(args.rdf_lower, args.rdf_upper)
