@@ -446,6 +446,11 @@ def random_atoms_gen(
             num_shffl_spec_dict[key] -= len(value)
             if key == 'V' and num_vacancy == 0:
                 raise ValueError('The fix_ind_dict can not have "V", if num_spec_dict do not have "V"')
+    else:
+        fix_ind_dict = {}
+        for key in fix_ind_dict.keys():
+            fix_ind_dict[key] = []
+            num_fix_dict[key] = 0
 
     # Get shffl_spec_list.
     shffl_spec_list = count2list(num_shffl_spec_dict)
@@ -603,7 +608,7 @@ def random_atoms_gen(
     # Correct chemical symbols
     new_species = np.array(['XX']*len(new_atoms))
     new_species[shuffle_ind] = shffl_spec_list
-    if fix_ind_dict:
+    if list(np.concatenate(list(fix_ind_dict.values()))):
         new_species[np.concatenate(list(fix_ind_dict.values()))] = count2list(num_fix_dict)
 
     ## Set the chemical symbols
