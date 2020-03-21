@@ -448,9 +448,11 @@ def random_atoms_gen(
                 raise ValueError('The fix_ind_dict can not have "V", if num_spec_dict do not have "V"')
     else:
         fix_ind_dict = {}
-        for key in fix_ind_dict.keys():
+        for key in num_spec_dict.keys():
             fix_ind_dict[key] = []
             num_fix_dict[key] = 0
+        fix_ind_dict['V'] = []
+        num_fix_dict['V'] = 0
 
     # Get shffl_spec_list.
     shffl_spec_list = count2list(num_shffl_spec_dict)
