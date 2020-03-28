@@ -11,6 +11,8 @@ def get_bonding_neighbors(
     alist,
     bond_cutoff,
     bonding_rules=None,
+    dtype='float64',
+    log_fname=False,
     ):
     """
     bond_cutoff (Float)
@@ -32,14 +34,14 @@ def get_bonding_neighbors(
         box.append(alist[i].get_cell())
         coord.append(alist[i].get_scaled_positions())
     #--> shape of (len_alist, 3, 3)
-    box   = np.array(box)
+    box   = np.array(box, dtype=dtype)
     #--> shape of (len_alist, len_atoms, 3)
-    coord = np.array(coord)
+    coord = np.array(coord, dtype=dtype)
 
     # Get relative coords
     #--> shape of (len_alist, len_atoms, len_atoms, 3)
     rel_coord = ((np.tile(np.expand_dims(coord, axis=1), [1, len_atoms, 1, 1]) - np.expand_dims(coord, axis=2) + \
-        [0.5, 0.5, 0.5]) % 1.0 - [0.5, 0.5, 0.5]) @ np.reshape(box, [len_alist, 1, 3, 3])
+        np.array([0.5, 0.5, 0.5], dtype=dtype)) % 1.0 - np.array([0.5, 0.5, 0.5], dtype=dtype)) @ np.reshape(box, [len_alist, 1, 3, 3])
     #--> shape of (len_alist, len_atoms, len_atoms, 5)
     concat = np.concatenate(
         (
@@ -54,7 +56,11 @@ def get_bonding_neighbors(
     indices = []
     lengths = []
     directions = []
+    if log_fname:
+        log = open(log_fname, 'w')
     for i in range(len_alist):
+        if log_fname:
+            log.write('Step {}\n'.format(i))
         indices_i = []
         lengths_i = []
         directions_i = []
