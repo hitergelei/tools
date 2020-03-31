@@ -512,15 +512,20 @@ class Structure_analyses(object):
         xticklabels[0] = 'inf'
         plt.xticks(xticks, rotation=45, labels=xticklabels)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.title('cut={} $\AA$ & {} deg, bond={}-{}, len_alist #{}'.format(
+        title = 'cut={} $\AA$ & {} deg, bond={}-{}'.format(
             bond_cutoff,
             angle_cutoff,
             self.bonding_rules_str[0],
             self.bonding_rules_str[1],
-            len(alist_ind_list),
-            ), fontsize='x-large')
+            )
+        if len(alist_ind_list) == 1:
+            title += ', atoms_ind #{}'.format(alist_ind_list[0])
+        else:
+            title += ', len_alist #{}'.format(len(alist_ind_list))
+        plt.title(title, fontsize='x-large')
         plt.xlabel('Length of a chain', fontsize='x-large')
         plt.ylabel('Population', fontsize='x-large')
+        plt.subplots_adjust(bottom=0.14, left=0.15)
         plt.grid(alpha=0.5)
         plt.show()
 
