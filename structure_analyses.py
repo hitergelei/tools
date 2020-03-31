@@ -573,8 +573,11 @@ class Structure_analyses(object):
         alist=[]
         for i in range(len(chains)):
             for j in range(len(chains[i])):
-                if chain_length is not None and len(chains[i][j]) == chain_length:
-                    alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
+                if chain_length:
+                    if len(chains[i][j])-1 == chain_length:
+                        alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
+                    else:
+                        pass
                 else:
                     alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
         view(alist)

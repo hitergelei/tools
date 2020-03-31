@@ -6,8 +6,8 @@ import numpy as np
 angle_cutoff = 135.
 bond_cutoff = 3.7
 bonding_rules = [['Ge','Sb'], ['Te']]
-step_intvl = 1
-alist_ind_list = list(range(0,4500,step_intvl))
+step_intvl = 400
+alist_ind_list = list(range(0,180001,step_intvl))
 # alist_ind_list = list(range(0,2000,step_intvl))
 # alist_ind_list = list(range(10))
 # alist_ind_list = [180000]
@@ -15,9 +15,8 @@ time_intvl = 10 * step_intvl / 1000 # (ps)
 
 from structure_analyses import Structure_analyses
 sa = Structure_analyses(
-    # 'lmp-result.traj',
-    'gst-cubic-md-last50.traj',
-    # 'GST-melting.traj'
+    'lmp-result.traj',
+    # 'gst-cubic-md-last50.traj',
     # 'test.traj',
     )
 
@@ -45,17 +44,17 @@ sa = Structure_analyses(
     # angle_cutoff,
     # bond_cutoff,
     # bonding_rules,
-    # alist_ind_list,
-    # # [175000]
+    # # alist_ind_list,
+    # [15000]
     # # load_bool=False,
     # # save_bool=False,
     # )
 
 sa.view_chains(
-    # 0,
     angle_cutoff,
     bond_cutoff,
     bonding_rules,
-    alist_ind_list,
-    chain_length=15,
+    [15000],
+    # alist_ind_list,
+    chain_length=2,
     )
