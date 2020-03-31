@@ -475,8 +475,6 @@ class Structure_analyses(object):
         save_bool=True,
         ):
         """
-        alist_ind (int)
-            - Index of image in the alist file that you wanna see.
         alist_ind_list (list or None)
             - List of indices of atoms object in alist to load.
         """
@@ -501,17 +499,25 @@ class Structure_analyses(object):
                     length_histo[l] += n
                 else:
                     length_histo[l] = n
+        l = np.array(list(length_histo.keys()))
+        n = np.array(list(length_histo.values()))
         
         # Plot
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
-        plt.bar(length_histo.keys(), length_histo.values(), color='k', alpha=0.5)
-        xticks = range(0,np.max(list(length_histo.keys())),2)
+        fig, ax1 = plt.subplots()
+
+        ax1.bar(l, n/np.sum(n)*100., color='k', alpha=0.5)
+
+        xmax = np.max(list(length_histo.keys()))
+        plt.xlim(-1, xmax+1)
+        xticks = range(0, xmax+1, 2)
         xticklabels = list(xticks)
         xticklabels[0] = 'inf'
         plt.xticks(xticks, rotation=45, labels=xticklabels)
-        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.xlabel('Length of chain', fontsize='x-large')
+
         title = 'cut={} $\AA$ & {} deg, bond={}-{}'.format(
             bond_cutoff,
             angle_cutoff,
@@ -523,40 +529,47 @@ class Structure_analyses(object):
         else:
             title += ', len_alist #{}'.format(len(alist_ind_list))
         plt.title(title, fontsize='x-large')
-        plt.xlabel('Length of a chain', fontsize='x-large')
-        plt.ylabel('Population', fontsize='x-large')
-        plt.subplots_adjust(bottom=0.14, left=0.15)
-        plt.grid(alpha=0.5)
+
+        # Different scale on the right axis.
+        ax2 = ax1.twinx()
+        ax2.bar(l, n, color='k', alpha=0.5)
+        ax1.tick_params(axis="both",direction="in", labelsize='x-large')
+        ax2.tick_params(axis="both",direction="in", labelsize='x-large')
+        ax1.set_ylabel('Population (%)', fontsize='x-large')
+        ax2.set_ylabel('Population', fontsize='x-large')
+        plt.subplots_adjust(bottom=0.14, left=0.10, right=0.88)
+        ax1.grid(alpha=0.5)
         plt.show()
 
     def view_chains(
         self,
-        alist_ind,
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
+        alist_ind_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind (int)
-            - Index of image in the alist file that you wanna see.
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
         """
 
-        chain = self.get_chain_set(
+        chains = self.get_chain_set(
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            [alist_ind],
+            alist_ind_list,
             load_bool,
             save_bool,
-            )[0]
+            )
 
         from ase.io import read
         from ase.visualize import view
         alist=[]
-        for c in chain:
-            alist.append(read(self.alist_file, alist_ind)[np.unique(c)])
+        for chain in chains:
+            for c in chain:
+                alist.append(read(self.alist_file, alist_ind)[np.unique(c)])
         view(alist)
 
     def get_avg_coord_nums(

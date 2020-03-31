@@ -45,7 +45,7 @@ sa.plot_chain_length_histo(
     bond_cutoff,
     bonding_rules,
     # alist_ind_list,
-    [179000]
+    [175000]
     # load_bool=False,
     # save_bool=False,
     )
