@@ -547,12 +547,16 @@ class Structure_analyses(object):
         bond_cutoff,
         bonding_rules=None,
         alist_ind_list=None,
+        chain_length=None,
         load_bool=True,
         save_bool=True,
         ):
         """
         alist_ind_list (list or None)
             - List of indices of atoms object in alist to load.
+        chain_length (int or None)
+            - Chain length of that you wanna see.
+            - If None, show all.
         """
 
         chains = self.get_chain_set(
@@ -567,9 +571,12 @@ class Structure_analyses(object):
         from ase.io import read
         from ase.visualize import view
         alist=[]
-        for chain in chains:
-            for c in chain:
-                alist.append(read(self.alist_file, alist_ind)[np.unique(c)])
+        for i in range(len(chains)):
+            for j in range(len(chains[i])):
+                if chain_length is not None and len(chains[i][j]) == chain_length:
+                    alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
+                else:
+                    alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
         view(alist)
 
     def get_avg_coord_nums(
