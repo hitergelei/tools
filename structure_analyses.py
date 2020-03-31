@@ -300,12 +300,15 @@ class Structure_analyses(object):
         bond_cutoff,
         bonding_rules=None,
         alist_ind_list=None,
+        inf_as_zero=False,
         load_bool=True,
         save_bool=True,
         ):
         """
         alist_ind_list (list or None)
             - List of indices of atoms object in alist to load.
+        inf_as_zero (bool)
+            - If true, return the length of infinite chain as zero.
         return (list)
             - List of chain lengths.
             - Note) Chain length of 0 means infinite chain (due to periodicity). 
@@ -325,10 +328,10 @@ class Structure_analyses(object):
         for i in range(len(chain_set)):
             lengths_i = []
             for j in range(len(chain_set[i])):
-                if chain_set[i][j][:2] != chain_set[i][j][-2:]:
-                    lengths_i.append(len(chain_set[i][j])-1)
-                else:
+                if chain_set[i][j][:2] == chain_set[i][j][-2:] and inf_as_zero:
                     lengths_i.append(0)
+                else:
+                    lengths_i.append(len(chain_set[i][j])-1)
             lengths.append(lengths_i)
         return lengths
 
@@ -339,6 +342,7 @@ class Structure_analyses(object):
         bonding_rules=None,
         alist_ind_list=None,
         time_intvl=1.,
+        inf_as_zero=False,
         load_bool=True,
         save_bool=True,
         ):
@@ -349,6 +353,8 @@ class Structure_analyses(object):
             - This is used only in plots.
             - Time interval in picoseconds between two atoms objects included in alist_ind_list.
             - Default is 1. (x-axis will be just bin index.)
+        inf_as_zero (bool)
+            - If true, let the length of infinite chain as zero.
         """
 
         lengths = self.get_chain_lengths(
@@ -356,6 +362,7 @@ class Structure_analyses(object):
             bond_cutoff,
             bonding_rules,
             alist_ind_list,
+            inf_as_zero,
             load_bool,
             save_bool,
             )
@@ -444,6 +451,7 @@ class Structure_analyses(object):
             bond_cutoff,
             bonding_rules,
             alist_ind_list,
+            True,
             load_bool,
             save_bool,
             )
@@ -454,53 +462,62 @@ class Structure_analyses(object):
             length_histo.append({})
             l_unique, l_count = np.unique(lengths[i], return_counts=True)
             for l_u, l_c in zip(l_unique, l_count):
-                if l_u == 0:
-                    length_histo[-1]['inf'] = l_c
-                else:
-                    length_histo[-1][l_u] = l_c
+                length_histo[-1][l_u] = l_c
         return length_histo
 
     def plot_chain_length_histo(
         self,
-        alist_ind,
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
+        alist_ind_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
         alist_ind (int)
             - Index of image in the alist file that you wanna see.
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
         """
+        #
+        if alist_ind_list is None:
+            from ase.io import read
+            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
 
-        if not isinstance(alist_ind, int):
-            raise NotImplementedError(
-                'plot_chain_length_histo function is only available'
-                ' for the cases, type(alist_ind) == int'
-                )
-        length_histo = self.get_chain_length_histo(
+        length_histo_list = self.get_chain_length_histo(
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            [alist_ind],
+            alist_ind_list,
             load_bool,
             save_bool,
-            )[0]
+            )
+
+        length_histo = {}
+        for l_h in length_histo_list:
+            for l, n in list(l_h.items()):
+                if l in length_histo.keys():
+                    length_histo[l] += n
+                else:
+                    length_histo[l] = n
         
         # Plot
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
         plt.bar(length_histo.keys(), length_histo.values(), color='k', alpha=0.5)
-        plt.xticks(range(0,np.max(list(length_histo.keys())),2))
+        xticks = range(0,np.max(list(length_histo.keys())),2)
+        xticklabels = list(xticks)
+        xticklabels[0] = 'inf'
+        plt.xticks(xticks, rotation=45, labels=xticklabels)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.title('cut={} $\AA$ & {} deg, bond={}-{}, atoms #{}'.format(
+        plt.title('cut={} $\AA$ & {} deg, bond={}-{}, len_alist #{}'.format(
             bond_cutoff,
             angle_cutoff,
             self.bonding_rules_str[0],
             self.bonding_rules_str[1],
-            alist_ind,
+            len(alist_ind_list),
             ), fontsize='x-large')
         plt.xlabel('Length of a chain', fontsize='x-large')
         plt.ylabel('Population', fontsize='x-large')
