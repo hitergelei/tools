@@ -548,6 +548,7 @@ def random_atoms_gen(
             np.setdiff1d(
                 range(len(backbone)),
                 np.concatenate(list(fix_ind_dict.values())),
+                True,
                 ),
             )[:num_vacancy - num_fix_dict['V']]
         # Add fixed-vacancy indicies to the array.
@@ -602,7 +603,7 @@ def random_atoms_gen(
                 break
 
     # Shuffle positions
-    shuffle_ind = np.setdiff1d(range(len(new_atoms)), np.concatenate(list(fix_ind_dict.values())))
+    shuffle_ind = np.setdiff1d(range(len(new_atoms)), np.concatenate(list(fix_ind_dict.values())), True)
     new_positions = new_atoms.get_positions().copy()
     new_positions[shuffle_ind] = np.random.permutation(new_positions[shuffle_ind])
     new_atoms.set_positions(new_positions, apply_constraint = False)

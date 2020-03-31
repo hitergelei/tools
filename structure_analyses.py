@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+    Young-Jae Choi
+    Computational Nano-Physics Laboratory
+    Physics Dept. POSTECH, Pohang, South Korea.
+"""
+
 import numpy as np
 
 def get_neighbors(
@@ -89,21 +95,14 @@ class Structure_analyses(object):
     def __init__(
         self,
         alist_file,
-        alist_ind_list=None,
         ):
         """
         alist_file (str)
             - ASE readable alist file name including path.
             - All atoms objects must have same sequencies of chemcial symbols along the atomic indices.
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         """
         #
         self.alist_file = alist_file
-        if alist_ind_list is None:
-            from ase.io import read
-            alist_ind_list = np.range(len(read(alist_file, ':')))
-        self.alist_ind_list = alist_ind_list
         #
         from ase.io import read
         atoms = read(alist_file, 0)
@@ -112,19 +111,25 @@ class Structure_analyses(object):
         self.types_dict = {}
         for ty in self.types_unique:
             self.types_dict[ty] = self.types == ty
-        self.len_alist = len(alist_ind_list)
         self.len_atoms = len(self.types)
 
     def produce_neighbor_info(
         self,
         bond_cutoff,
         bonding_rules=None,
+        alist_ind_list=None,
         returns=['indices', 'lengths', 'directions'],
         load_bool=True,
         save_bool=True,
         ):
         """
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
         """
+        #
+        if alist_ind_list is None:
+            from ase.io import read
+            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
         #
         self.bond_cutoff = bond_cutoff
         if bonding_rules is not None:
@@ -139,54 +144,416 @@ class Structure_analyses(object):
         for ret in ['indices', 'lengths', 'directions']:
             info[ret] = []
         #
-        for alist_ind in self.alist_ind_list:
+        from ase.io import read
+        import pickle as pckl
+        from subprocess import call
+        for alist_ind in alist_ind_list:
             # File
-            from ase.io import read
             atoms = read(self.alist_file, alist_ind)
 
             # Calc
-            import pickle as pckl
             #
-            path = 'neigh_saved/{}.d/{}-{}-{}/{}'.format(self.alist_file, bond_cutoff, self.bonding_rules_str[0], self.bonding_rules_str[1], alist_ind)
+            path = 'neigh_saved/{}.d/{}-{}-{}/{}'.format(
+                self.alist_file,
+                bond_cutoff,
+                self.bonding_rules_str[0],
+                self.bonding_rules_str[1],
+                alist_ind,
+                )
             try:
                 assert load_bool == True
-                print('Trying to load pckl files')
-                indices_i   = pckl.load(open('{}/indices.pckl'   .format(path), 'rb'))
-                lengths_i   = pckl.load(open('{}/lengths.pckl'   .format(path), 'rb'))
+                print('Trying to load pckl files.')
+                indices_i    = pckl.load(open('{}/indices.pckl'   .format(path), 'rb'))
+                lengths_i    = pckl.load(open('{}/lengths.pckl'   .format(path), 'rb'))
                 directions_i = pckl.load(open('{}/directions.pckl'.format(path), 'rb'))
             except:
-                print('Failed to load pckl files')
+                print('Failed to load pckl files from {}.'.format(path))
                 indices_i, lengths_i, directions_i = get_neighbors([atoms], bond_cutoff, bonding_rules, dtype='float32')
                 indices_i    = indices_i[0]
                 lengths_i    = lengths_i[0]
                 directions_i = directions_i[0]
                 #save
                 if save_bool:
-                    from subprocess import call
                     call('mkdir -p {}'.format(path), shell=True)
                     pckl.dump(indices_i,    open('{}/indices.pckl'   .format(path), 'wb'))
                     pckl.dump(lengths_i,    open('{}/lengths.pckl'   .format(path), 'wb'))
                     pckl.dump(directions_i, open('{}/directions.pckl'.format(path), 'wb'))
-                    print('Saved pckl files')
+                    print('Saved pckl files at {}.'.format(path))
             else:
-                print('Loaded pckl files')
+                print('Loaded pckl files.')
             # Gather
             info['indices']   .append(indices_i)
             info['lengths']   .append(lengths_i)
             info['directions'].append(directions_i)
         return [info[ret] for ret in returns]
 
-    def get_avg_coord_nums(
+    def get_chain_set(
         self,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        alist_ind_list=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        angle_cutoff (float)
+            - In degree.
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
+        """
+        #
+        if alist_ind_list is None:
+            from ase.io import read
+            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
+        #
+        indices, directions = self.produce_neighbor_info(
+            bond_cutoff,
+            bonding_rules,
+            alist_ind_list,
+            returns=['indices', 'directions'],
+            load_bool=load_bool,
+            save_bool=save_bool,
+            )
+
+        import pickle as pckl
+        from subprocess import call
+        chain_set = []
+        for i in range(len(alist_ind_list)):
+            alist_ind = alist_ind_list[i]
+            print('Getting chain set of image #{}'.format(alist_ind))
+            path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
+                self.alist_file,
+                bond_cutoff,
+                self.bonding_rules_str[0],
+                self.bonding_rules_str[1],
+                alist_ind,
+                angle_cutoff,
+                )
+            try:
+                assert load_bool == True
+                print('Trying to load chain_set.pckl file.')
+                chain_set_i = pckl.load(open('{}/chain_set.pckl'.format(path), 'rb'))
+            except:
+                print('Failed to load {}/chain_set.pckl file.'.format(path))
+            else:
+                print('Loaded {}/chain_set.pckl file.'.format(path))
+                chain_set.append(chain_set_i)
+                continue
+
+            # Gather Chain pieces.
+            chain_pieces = []
+            for j in range(self.len_atoms):
+                # Get upper triangle due to the duplications
+                #--> shape of [number of bonds for atom j]*2
+                cosines = np.triu(directions[i][j] @ directions[i][j].T, 1)
+                chain_sites = np.transpose(np.where(cosines < np.cos(angle_cutoff / 180 * np.pi)))
+                for inds in chain_sites:
+                    #--> shape of (3,)
+                    chain_pieces.append(list(np.concatenate((indices[i][j][inds], [j]))[[0,2,1]]))
+            # Classify chain pieces.
+            chain_set_i = []
+            while chain_pieces:
+                new_chain = chain_pieces.pop()
+                # Extend head or tail.
+                while 1:
+                    changed = False
+                    head = new_chain[:2]
+                    tail = new_chain[-2:]
+                    for p in range(len(chain_pieces)):
+                        if chain_pieces[p][:2] == tail:
+                            new_chain.append(chain_pieces[p][2])
+                            del(chain_pieces[p])
+                            changed = True
+                            break
+                        elif chain_pieces[p][:2] == head[::-1]:
+                            new_chain = new_chain[::-1]
+                            new_chain.append(chain_pieces[p][2])
+                            del(chain_pieces[p])
+                            changed = True
+                            break
+                        elif chain_pieces[p][-2:] == head:
+                            new_chain = new_chain[::-1]
+                            new_chain.append(chain_pieces[p][0])
+                            del(chain_pieces[p])
+                            changed = True
+                            break
+                        elif chain_pieces[p][-2:] == tail[::-1]:
+                            new_chain.append(chain_pieces[p][0])
+                            del(chain_pieces[p])
+                            changed = True
+                            break
+                    if not changed:
+                        chain_set_i.append(new_chain)
+                        break
+            chain_set.append(chain_set_i)
+            #save
+            if save_bool:
+                call('mkdir {}'.format(path), shell=True)
+                pckl.dump(chain_set_i, open('{}/chain_set.pckl'.format(path), 'wb'))
+                print('Saved {}/chain_set.pckl file.'.format(path))
+        return chain_set
+
+    def get_chain_lengths(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        alist_ind_list=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
+        return (list)
+            - List of chain lengths.
+            - Note) Chain length of 0 means infinite chain (due to periodicity). 
+                    They have a tail same as its head.
+        """
+        chain_set = self.get_chain_set(
+            angle_cutoff,
+            bond_cutoff,
+            bonding_rules,
+            alist_ind_list,
+            load_bool,
+            save_bool,
+            )
+
+        # Get chain lenghts.
+        lengths = []
+        for i in range(len(chain_set)):
+            lengths_i = []
+            for j in range(len(chain_set[i])):
+                if chain_set[i][j][:2] != chain_set[i][j][-2:]:
+                    lengths_i.append(len(chain_set[i][j])-1)
+                else:
+                    lengths_i.append(0)
+            lengths.append(lengths_i)
+        return lengths
+
+    def plot_chain_length_stat(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        alist_ind_list=None,
+        time_intvl=1.,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
+        time_intvl (float)
+            - This is used only in plots.
+            - Time interval in picoseconds between two atoms objects included in alist_ind_list.
+            - Default is 1. (x-axis will be just bin index.)
+        """
+
+        lengths = self.get_chain_lengths(
+            angle_cutoff,
+            bond_cutoff,
+            bonding_rules,
+            alist_ind_list,
+            load_bool,
+            save_bool,
+            )
+
+        # Get info
+        num_chain = []
+        sum_chain = []
+        # max_chain = []
+        for i in range(len(lengths)):
+            num_chain.append(len(lengths[i]))
+            sum_chain.append(np.sum(lengths[i]))
+            # max_chain.append(np.max(lengths[i]))
+        num_chain = np.array(num_chain, dtype='int')
+        sum_chain = np.array(sum_chain, dtype='int')
+        # max_chain = np.array(max_chain, dtype='int')
+
+        # Plot
+        time_arr = np.arange(len(lengths)) * time_intvl
+        from matplotlib import pyplot as plt
+        font = {'family':'Arial'}
+        plt.rc('font', **font)
+        fig, ax1 = plt.subplots()
+        ax1.plot(
+            time_arr,
+            sum_chain,
+            label='Sum of lengths',
+            c='k',
+            )
+        # ax1.plot(
+            # time_arr,
+            # max_chain,
+            # label='Max. of lengths',
+            # c='k',
+            # )
+        ax2 = ax1.twinx()
+        # ax2.plot(
+            # time_arr,
+            # num_chain,
+            # label='Num. of chains',
+            # c='b',
+            # )
+        ax2.plot(
+            time_arr,
+            sum_chain / num_chain,
+            label='Mean of lengths',
+            c='r',
+            )
+        ax1.tick_params(axis="both",direction="in", labelsize='x-large')
+        ax2.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='r')
+        plt.title('cut={} $\AA$ & {} deg, bond={}-{}, t-intvl={}'.format(
+            bond_cutoff,
+            angle_cutoff,
+            self.bonding_rules_str[0],
+            self.bonding_rules_str[1],
+            time_intvl,
+            ), fontsize='x-large')
+        plt.xlabel('Time (ps)', fontsize='x-large')
+        ax1.set_ylabel('Sum of chain lengths', fontsize='x-large')
+        ax2.set_ylabel('Mean of chain lengths', fontsize='x-large')
+        ax1.grid(alpha=0.5)
+        plt.subplots_adjust(left=0.16, right=0.90)
+        # plt.legend()
+        plt.show()
+
+    def get_chain_length_histo(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        alist_ind_list=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
+            - Note) Only available for cases, len(alist_ind_list) == 1.
+        """
+
+        if alist_ind_list is None:
+            from ase.io import read
+            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
+
+        lengths = self.get_chain_lengths(
+            angle_cutoff,
+            bond_cutoff,
+            bonding_rules,
+            alist_ind_list,
+            load_bool,
+            save_bool,
+            )
+
+        # Get counts
+        length_histo = []
+        for i in range(len(lengths)):
+            length_histo.append({})
+            l_unique, l_count = np.unique(lengths[i], return_counts=True)
+            for l_u, l_c in zip(l_unique, l_count):
+                if l_u == 0:
+                    length_histo[-1]['inf'] = l_c
+                else:
+                    length_histo[-1][l_u] = l_c
+        return length_histo
+
+    def plot_chain_length_histo(
+        self,
+        alist_ind,
+        angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
         load_bool=True,
         save_bool=True,
         ):
+        """
+        alist_ind (int)
+            - Index of image in the alist file that you wanna see.
+        """
+
+        if not isinstance(alist_ind, int):
+            raise NotImplementedError(
+                'plot_chain_length_histo function is only available'
+                ' for the cases, type(alist_ind) == int'
+                )
+        length_histo = self.get_chain_length_histo(
+            angle_cutoff,
+            bond_cutoff,
+            bonding_rules,
+            [alist_ind],
+            load_bool,
+            save_bool,
+            )[0]
+        
+        # Plot
+        from matplotlib import pyplot as plt
+        font = {'family':'Arial'}
+        plt.rc('font', **font)
+        plt.bar(length_histo.keys(), length_histo.values(), color='k', alpha=0.5)
+        plt.xticks(range(0,np.max(list(length_histo.keys())),2))
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.title('cut={} $\AA$ & {} deg, bond={}-{}, atoms #{}'.format(
+            bond_cutoff,
+            angle_cutoff,
+            self.bonding_rules_str[0],
+            self.bonding_rules_str[1],
+            alist_ind,
+            ), fontsize='x-large')
+        plt.xlabel('Length of a chain', fontsize='x-large')
+        plt.ylabel('Population', fontsize='x-large')
+        plt.grid(alpha=0.5)
+        plt.show()
+
+    def view_chains(
+        self,
+        alist_ind,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        alist_ind (int)
+            - Index of image in the alist file that you wanna see.
+        """
+
+        chain = self.get_chain_set(
+            angle_cutoff,
+            bond_cutoff,
+            bonding_rules,
+            [alist_ind],
+            load_bool,
+            save_bool,
+            )[0]
+
+        from ase.io import read
+        from ase.visualize import view
+        alist=[]
+        for c in chain:
+            alist.append(read(self.alist_file, alist_ind)[np.unique(c)])
+        view(alist)
+
+    def get_avg_coord_nums(
+        self,
+        bond_cutoff,
+        bonding_rules=None,
+        alist_ind_list=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
+        """
 
         indices = self.produce_neighbor_info(
             bond_cutoff,
             bonding_rules,
+            alist_ind_list,
             returns=['indices'],
             load_bool=load_bool,
             save_bool=save_bool,
@@ -196,7 +563,7 @@ class Structure_analyses(object):
         num_bonds = {}
         for ty in self.types_unique:
             num_bonds[ty] = []
-        for i in range(self.len_alist):
+        for i in range(len(indices)):
             for ty in self.types_unique:
                 num_bonds[ty].append(0)
             for j in range(self.len_atoms):
@@ -206,28 +573,47 @@ class Structure_analyses(object):
 
     def plot_avg_coord_nums(
         self,
-        num_bonds,
+        bond_cutoff,
+        bonding_rules=None,
+        alist_ind_list=None,
         time_intvl=1.,
+        load_bool=True,
+        save_bool=True,
         ):
         """
-        num_bonds (dict)
-            - Can be obtained from function, self.get_avg_coord_nums.
+        alist_ind_list (list or None)
+            - List of indices of atoms object in alist to load.
         time_intvl (float)
             - This is used only in plots.
             - Time interval in picoseconds between two atoms objects included in alist_ind_list.
             - Default is 1. (x-axis will be just bin index.)
         """
 
+        num_bonds = self.get_avg_coord_nums(
+            bond_cutoff,
+            bonding_rules,
+            alist_ind_list,
+            load_bool,
+            save_bool,
+            )
+
+        # Plot
+        time_arr = np.arange(len(num_bonds)) * time_intvl
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
         colors = ['r','b','k','g','m','y']
-        colors=colors[::-1]
+        colors = colors[::-1]
         for ty in self.types_unique:
-            plt.plot(np.arange(self.len_alist) *time_intvl, np.array(num_bonds[ty])/np.sum(self.types_dict[ty]), c=colors.pop(), label=ty)
+            plt.plot(
+                time_arr,
+                np.array(num_bonds[ty])/np.sum(self.types_dict[ty]),
+                label=ty,
+                c=colors.pop(),
+                )
         plt.legend()
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.title('cut={} $\AA$, bond={}-{}, t-intvl={}'.format(self.bond_cutoff, self.bonding_rules_str[0], self.bonding_rules_str[1], time_intvl), fontsize='x-large')
+        plt.title('cut={} $\AA$, bond={}-{}, t-intvl={}'.format(bond_cutoff, self.bonding_rules_str[0], self.bonding_rules_str[1], time_intvl), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.ylabel('Average coordination number', fontsize='x-large')
         plt.grid(alpha=0.5)
