@@ -95,41 +95,58 @@ class Structure_analyses(object):
     def __init__(
         self,
         alist_file,
+        alist_slice=':',
+        dt=0.01,
         ):
         """
         alist_file (str)
             - ASE readable alist file name including path.
             - All atoms objects must have same sequencies of chemcial symbols along the atomic indices.
+        alist_slice (str)
+            - Slice in python style.
+        dt (float)
+            - Time interval between atoms images of (alist_file).
+            - Unit of picosecond.
+            - Note) This parameter is independent to (alist_slice).
+            - Default) 0.01 ps
         """
         #
         self.alist_file = alist_file
         #
         from ase.io import read
-        atoms = read(alist_file, 0)
-        self.types = np.array(atoms.get_chemical_symbols())
+        self.alist = read(alist_file, alist_slice)
+        if not isinstance(self.alist, list):
+            self.alist = [self.alist]
+        self.len_alist = len(self.alist)
+        self.len_atoms = len(self.alist[0])
+        # Get slice
+        from ss_util import str_slice_to_list
+        slice_list = str_slice_to_list(alist_slice)
+        if slice_list[1] == None:
+            slice_list[1] = slice_list[0] +slice_list[2] *self.len_alist
+        self.alist_slice = '{}:{}:{}'.format(*slice_list)
+        self.dt = dt *slice_list[2]
+        # Make alist_ind_list
+        self.alist_ind_list = np.arange(slice_list[1])[slice(*slice_list)]
+
+        # Types
+        self.types = np.array(self.alist[0].get_chemical_symbols())
         self.types_unique = np.unique(self.types)
         self.types_dict = {}
         for ty in self.types_unique:
             self.types_dict[ty] = self.types == ty
-        self.len_atoms = len(self.types)
+        #
 
     def produce_neighbor_info(
         self,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         returns=['indices', 'lengths', 'directions'],
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         """
-        #
-        if alist_ind_list is None:
-            from ase.io import read
-            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
         #
         self.bond_cutoff = bond_cutoff
         if bonding_rules is not None:
@@ -147,9 +164,10 @@ class Structure_analyses(object):
         from ase.io import read
         import pickle as pckl
         from subprocess import call
-        for alist_ind in alist_ind_list:
+        for i in range(self.len_alist):
             # File
-            atoms = read(self.alist_file, alist_ind)
+            alist_ind = self.alist_ind_list[i]
+            atoms = self.alist[i]
 
             # Calc
             #
@@ -192,25 +210,17 @@ class Structure_analyses(object):
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
         angle_cutoff (float)
             - In degree.
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         """
-        #
-        if alist_ind_list is None:
-            from ase.io import read
-            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
         #
         indices, directions = self.produce_neighbor_info(
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             returns=['indices', 'directions'],
             load_bool=load_bool,
             save_bool=save_bool,
@@ -219,8 +229,8 @@ class Structure_analyses(object):
         import pickle as pckl
         from subprocess import call
         chain_set = []
-        for i in range(len(alist_ind_list)):
-            alist_ind = alist_ind_list[i]
+        for i in range(len(self.alist_ind_list)):
+            alist_ind = self.alist_ind_list[i]
             print('Getting chain set of image #{}'.format(alist_ind))
             path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
                 self.alist_file,
@@ -299,14 +309,11 @@ class Structure_analyses(object):
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         inf_as_zero=False,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         inf_as_zero (bool)
             - If true, return the length of infinite chain as zero.
         return (list)
@@ -318,7 +325,6 @@ class Structure_analyses(object):
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             load_bool,
             save_bool,
             )
@@ -340,19 +346,11 @@ class Structure_analyses(object):
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
-        time_intvl=1.,
         inf_as_zero=False,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
-        time_intvl (float)
-            - This is used only in plots.
-            - Time interval in picoseconds between two atoms objects included in alist_ind_list.
-            - Default is 1. (x-axis will be just bin index.)
         inf_as_zero (bool)
             - If true, let the length of infinite chain as zero.
         """
@@ -361,7 +359,6 @@ class Structure_analyses(object):
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             inf_as_zero,
             load_bool,
             save_bool,
@@ -380,7 +377,7 @@ class Structure_analyses(object):
         # max_chain = np.array(max_chain, dtype='int')
 
         # Plot
-        time_arr = np.arange(len(lengths)) * time_intvl
+        time_arr = np.arange(len(lengths)) * self.dt
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
@@ -417,7 +414,7 @@ class Structure_analyses(object):
             angle_cutoff,
             self.bonding_rules_str[0],
             self.bonding_rules_str[1],
-            time_intvl,
+            self.dt,
             ), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         ax1.set_ylabel('Sum of chain lengths', fontsize='x-large')
@@ -432,25 +429,16 @@ class Structure_analyses(object):
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
-            - Note) Only available for cases, len(alist_ind_list) == 1.
         """
-
-        if alist_ind_list is None:
-            from ase.io import read
-            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
 
         lengths = self.get_chain_lengths(
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             True,
             load_bool,
             save_bool,
@@ -470,24 +458,17 @@ class Structure_analyses(object):
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         """
         #
-        if alist_ind_list is None:
-            from ase.io import read
-            alist_ind_list = np.arange(len(read(self.alist_file, ':')))
 
         length_histo_list = self.get_chain_length_histo(
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             load_bool,
             save_bool,
             )
@@ -524,10 +505,10 @@ class Structure_analyses(object):
             self.bonding_rules_str[0],
             self.bonding_rules_str[1],
             )
-        if len(alist_ind_list) == 1:
-            title += ', atoms_ind #{}'.format(alist_ind_list[0])
+        if len(self.alist_ind_list) == 1:
+            title += ', atoms_ind #{}'.format(self.alist_ind_list[0])
         else:
-            title += ', len_alist #{}'.format(len(alist_ind_list))
+            title += ', len_alist #{}'.format(len(self.alist_ind_list))
         plt.title(title, fontsize='x-large')
 
         # Different scale on the right axis.
@@ -546,14 +527,11 @@ class Structure_analyses(object):
         angle_cutoff,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         chain_length=None,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         chain_length (int or None)
             - Chain length of that you wanna see.
             - If None, show all.
@@ -563,42 +541,36 @@ class Structure_analyses(object):
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             load_bool,
             save_bool,
             )
 
-        from ase.io import read
-        from ase.visualize import view
-        alist=[]
+        new_alist=[]
         for i in range(len(chains)):
             for j in range(len(chains[i])):
                 if chain_length:
                     if len(chains[i][j])-1 == chain_length:
-                        alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
+                        new_alist.append(self.alist[i][np.unique(chains[i][j])])
                     else:
                         pass
                 else:
-                    alist.append(read(self.alist_file, alist_ind_list[i])[np.unique(chains[i][j])])
-        view(alist)
+                    new_alist.append(self.alist[i][np.unique(chains[i][j])])
+        from ase.visualize import view
+        view(new_alist)
 
     def get_avg_coord_nums(
         self,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
         """
 
         indices = self.produce_neighbor_info(
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             returns=['indices'],
             load_bool=load_bool,
             save_bool=save_bool,
@@ -620,30 +592,21 @@ class Structure_analyses(object):
         self,
         bond_cutoff,
         bonding_rules=None,
-        alist_ind_list=None,
-        time_intvl=1.,
         load_bool=True,
         save_bool=True,
         ):
         """
-        alist_ind_list (list or None)
-            - List of indices of atoms object in alist to load.
-        time_intvl (float)
-            - This is used only in plots.
-            - Time interval in picoseconds between two atoms objects included in alist_ind_list.
-            - Default is 1. (x-axis will be just bin index.)
         """
 
         num_bonds = self.get_avg_coord_nums(
             bond_cutoff,
             bonding_rules,
-            alist_ind_list,
             load_bool,
             save_bool,
             )
 
         # Plot
-        time_arr = np.arange(len(num_bonds)) * time_intvl
+        time_arr = np.arange(len(list(num_bonds.values())[0])) *self.dt 
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
@@ -658,9 +621,118 @@ class Structure_analyses(object):
                 )
         plt.legend()
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.title('cut={} $\AA$, bond={}-{}, t-intvl={}'.format(bond_cutoff, self.bonding_rules_str[0], self.bonding_rules_str[1], time_intvl), fontsize='x-large')
+        plt.title('cut={} $\AA$, bond={}-{}, t-intvl={}'.format(bond_cutoff, self.bonding_rules_str[0], self.bonding_rules_str[1], self.dt), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.ylabel('Average coordination number', fontsize='x-large')
+        plt.grid(alpha=0.5)
+        plt.show()
+
+    def get_positional_deviation(
+        self,
+        in_num_avg=10,
+        out_num_avg=10,
+        out_avg_dn=10,
+        return_intvl=None,
+        ):
+        """
+        in_num_avg (int)
+            - For each time, the position will be defined as the average of positions of images in alist[i: i+in_num_avg].
+        out_num_avg (int)
+            - For each time, the positional deviation will be averaged for (out_num_avg) images.
+        out_avg_dn (int)
+            - Image sampling interval for averaging the positional-deviation.
+        return_intvl (int or None)
+            - Return the positional deviation every (return_intvl) steps.
+            - Must be an integer multiple of the (out_avg_dn).
+            - If None, Set to be same as (out_avg_dn).
+        """
+        #
+        if not return_intvl:
+            return_intvl = out_avg_dn
+        # Gather data.
+        positions = []
+        cells     = []
+        temps     = []
+        for i in range(self.len_alist):
+            positions.append(self.alist[i].get_scaled_positions())
+            cells    .append(self.alist[i].get_cell())
+            temps    .append(self.alist[i].get_temperature())
+        positions = np.array(positions)
+        cells     = np.array(cells)
+        temps     = np.array(temps)
+
+        # Inner average.
+        avg_positions = []
+        avg_cells     = []
+        avg_temps     = []
+        for i in range(0, self.len_alist -in_num_avg, out_avg_dn):
+            avg_positions.append(np.mean(positions[i: i+in_num_avg], axis=0))
+            avg_cells    .append(np.mean(cells    [i: i+in_num_avg], axis=0))
+            avg_temps    .append(np.mean(temps    [i: i+in_num_avg], axis=0))
+        avg_positions = np.array(avg_positions)
+        avg_cells     = np.array(avg_cells    )
+        avg_temps     = np.array(avg_temps    )
+        len_bin = len(avg_positions)
+        return_intvl //= out_avg_dn
+
+        # Outer average.
+        # avg_positions --> shape of (len_bin, len_atoms, 3)
+        # avg_cells     --> shape of (len_bin, 3, 3)
+        # avg_temps     --> shape of (len_bin)
+        #
+        mean_disp = []
+        for i in range(0, len_bin -out_num_avg, return_intvl):
+            mean_disp.append(
+                np.mean(
+                    np.linalg.norm(
+                        np.reshape(((avg_positions[i+1: i+1 +out_num_avg] \
+                            -np.expand_dims(avg_positions[i], axis=0) +np.array([0.5]*3) % 1.0) \
+                            -np.array([0.5]*3)) @ cells[i], [-1, self.len_atoms, 3]),
+                        axis=2,
+                        ),
+                    axis=0,
+                    ),
+                )
+
+        # mean_disp --> shape of (len_bin, len_atoms)
+        mean_disp = np.array(mean_disp)
+        mean_disp_temp = mean_disp / np.sqrt(np.expand_dims(temps[:len(mean_disp)], axis=1))
+        return mean_disp, mean_disp_temp
+
+    def plot_positional_deviation(
+        self,
+        in_num_avg=10,
+        out_num_avg=10,
+        out_avg_dn=10,
+        return_intvl=None,
+        ):
+        """
+        """
+        #
+        if not return_intvl:
+            return_intvl = out_avg_dn
+        mean_disp, mean_disp_temp = self.get_positional_deviation(
+            in_num_avg,
+            out_num_avg,
+            out_avg_dn,
+            return_intvl,
+            )
+
+        dt = self.dt *return_intvl
+        from matplotlib import pyplot as plt
+        font = {'family':'Arial'}
+        plt.rc('font', **font)
+        plt.plot(np.arange(len(mean_disp)) *dt, np.mean(mean_disp, axis=1), c='r')
+        # plt.plot(np.arange(len(mean_disp))*dt, np.mean(mean_disp_temp, axis=1), c='r')
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.title('slice={}, INA={}, ONA={}, OAD={}'.format(
+            self.alist_slice,
+            in_num_avg,
+            out_num_avg,
+            out_avg_dn,
+            ), fontsize='x-large')
+        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.ylabel('Averaged positional deviation ($\AA$)', fontsize='x-large')
         plt.grid(alpha=0.5)
         plt.show()
 
