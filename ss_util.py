@@ -22,6 +22,9 @@ def str_slice_to_list(
     str_slice (str)  = String type slice. e.g. 3:-1:2
     obj_length (int) = Length of object that will use this slice object. Set to None if unknown.
     """
+
+    #
+    str_slice = str(str_slice)
     if obj_length:
         obj_length = int(obj_length)
 

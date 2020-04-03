@@ -127,7 +127,7 @@ class Structure_analyses(object):
         self.alist_slice = '{}:{}:{}'.format(*slice_list)
         self.dt = dt *slice_list[2]
         # Make alist_ind_list
-        self.alist_ind_list = np.arange(slice_list[1])[slice(*slice_list)]
+        self.alist_ind_list = np.arange(slice_list[1], dtype=np.int32)[slice(*slice_list)]
 
         # Types
         self.types = np.array(self.alist[0].get_chemical_symbols())
@@ -185,7 +185,7 @@ class Structure_analyses(object):
                 lengths_i    = pckl.load(open('{}/lengths.pckl'   .format(path), 'rb'))
                 directions_i = pckl.load(open('{}/directions.pckl'.format(path), 'rb'))
             except:
-                print('Failed to load pckl files from {}.'.format(path))
+                print('Failed to load pckl files from {}'.format(path))
                 indices_i, lengths_i, directions_i = get_neighbors([atoms], bond_cutoff, bonding_rules, dtype='float32')
                 indices_i    = indices_i[0]
                 lengths_i    = lengths_i[0]
@@ -196,7 +196,7 @@ class Structure_analyses(object):
                     pckl.dump(indices_i,    open('{}/indices.pckl'   .format(path), 'wb'))
                     pckl.dump(lengths_i,    open('{}/lengths.pckl'   .format(path), 'wb'))
                     pckl.dump(directions_i, open('{}/directions.pckl'.format(path), 'wb'))
-                    print('Saved pckl files at {}.'.format(path))
+                    print('Saved pckl files at {}'.format(path))
             else:
                 print('Loaded pckl files.')
             # Gather
@@ -217,18 +217,24 @@ class Structure_analyses(object):
         angle_cutoff (float)
             - In degree.
         """
+
         #
-        indices, directions = self.produce_neighbor_info(
+        cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
+        #
+        indices, lengths, directions = self.produce_neighbor_info(
             bond_cutoff,
             bonding_rules,
-            returns=['indices', 'directions'],
+            returns=['indices', 'lengths', 'directions'],
             load_bool=load_bool,
             save_bool=save_bool,
             )
 
         import pickle as pckl
         from subprocess import call
-        chain_set = []
+        ind_set      = []
+        bond_direcs  = []
+        bond_lengths = []
+        chain_vec    = []
         for i in range(len(self.alist_ind_list)):
             alist_ind = self.alist_ind_list[i]
             print('Getting chain set of image #{}'.format(alist_ind))
@@ -242,67 +248,151 @@ class Structure_analyses(object):
                 )
             try:
                 assert load_bool == True
-                print('Trying to load chain_set.pckl file.')
-                chain_set_i = pckl.load(open('{}/chain_set.pckl'.format(path), 'rb'))
+                print('Trying to load pckl files.')
+                ind_set_i      = pckl.load(open('{}/ind_set.pckl'     .format(path), 'rb'))
+                bond_direcs_i  = pckl.load(open('{}/bond_direcs.pckl' .format(path), 'rb'))
+                bond_lengths_i = pckl.load(open('{}/bond_lengths.pckl'.format(path), 'rb'))
+                chain_vec_i    = pckl.load(open('{}/chain_vec.pckl'   .format(path), 'rb'))
             except:
-                print('Failed to load {}/chain_set.pckl file.'.format(path))
+                print('Failed to load pckl files from {}'.format(path))
             else:
-                print('Loaded {}/chain_set.pckl file.'.format(path))
-                chain_set.append(chain_set_i)
+                print('Loaded pckl files from {}'.format(path))
+                ind_set     .append(ind_set_i)
+                bond_direcs .append(bond_direcs_i)
+                bond_lengths.append(bond_lengths_i)
+                chain_vec   .append(chain_vec_i)
                 continue
 
-            # Gather Chain pieces.
-            chain_pieces = []
+            # Gather three-bodied chain pieces.
+            piece_inds = []
+            piece_direcs = []
+            piece_lengths = []
             for j in range(self.len_atoms):
                 # Get upper triangle due to the duplications
                 #--> shape of [number of bonds for atom j]*2
                 cosines = np.triu(directions[i][j] @ directions[i][j].T, 1)
-                chain_sites = np.transpose(np.where(cosines < np.cos(angle_cutoff / 180 * np.pi)))
-                for inds in chain_sites:
-                    #--> shape of (3,)
-                    chain_pieces.append(list(np.concatenate((indices[i][j][inds], [j]))[[0,2,1]]))
+                bond_inds = np.transpose(np.where(cosines < cos_cutoff))
+                for inds in bond_inds:
+                    #                    --> shape of (3,)
+                    piece_inds   .append(list(np.concatenate((indices[i][j][inds], [j]))[[0,2,1]]))
+                    #                    --> shape of (2, 3)
+                    piece_direcs .append(directions[i][j][inds])
+                    piece_direcs[-1][0] *= -1.
+                    #                    --> shape of (2,)
+                    piece_lengths.append(lengths[i][j][inds])
             # Classify chain pieces.
-            chain_set_i = []
-            while chain_pieces:
-                new_chain = chain_pieces.pop()
+            #--> Ragged tensor in shape of ((number of chains in an image), (length of a chain))
+            ind_set_i      = []
+            bond_direcs_i  = []
+            bond_lengths_i = []
+            chain_vec_i    = []
+            while piece_inds:
+                ind_set_tmp      = list(piece_inds   .pop())
+                bond_direcs_tmp  = list(piece_direcs .pop())
+                bond_lengths_tmp = list(piece_lengths.pop())
+                chain_vec_tmp    = np.sum(
+                    bond_direcs_tmp * np.expand_dims(bond_lengths_tmp, axis=1),
+                    axis=0,
+                    )
                 # Extend head or tail.
                 while 1:
                     changed = False
-                    head = new_chain[:2]
-                    tail = new_chain[-2:]
-                    for p in range(len(chain_pieces)):
-                        if chain_pieces[p][:2] == tail:
-                            new_chain.append(chain_pieces[p][2])
-                            del(chain_pieces[p])
+                    chain_direc = chain_vec_tmp / np.linalg.norm(chain_vec_tmp)
+                    head = ind_set_tmp[:2]
+                    tail = ind_set_tmp[-2:]
+                    for p in range(len(piece_inds)):
+                        if piece_inds[p][:2] == tail and (piece_direcs[p][1] @ chain_direc) > -cos_cutoff:
+                            #
+                            ind_set_tmp.append(piece_inds[p][2])
+                            del(piece_inds[p])
+                            #
+                            bond_direcs_tmp.append(piece_direcs[p][1])
+                            del(piece_direcs[p])
+                            #
+                            bond_lengths_tmp.append(piece_lengths[p][1])
+                            del(piece_lengths[p])
+                            #
+                            chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
+                            #
                             changed = True
                             break
-                        elif chain_pieces[p][:2] == head[::-1]:
-                            new_chain = new_chain[::-1]
-                            new_chain.append(chain_pieces[p][2])
-                            del(chain_pieces[p])
+                        elif piece_inds[p][:2] == head[::-1] and (piece_direcs[p][1] @ (-chain_direc)) > -cos_cutoff:
+                            #
+                            ind_set_tmp = ind_set_tmp[::-1]
+                            ind_set_tmp.append(piece_inds[p][2])
+                            del(piece_inds[p])
+                            #
+                            bond_direcs_tmp = bond_direcs_tmp[::-1]
+                            bond_direcs_tmp.append(piece_direcs[p][1])
+                            del(piece_direcs[p])
+                            #
+                            bond_lengths_tmp = bond_lengths_tmp[::-1]
+                            bond_lengths_tmp.append(piece_lengths[p][1])
+                            del(piece_lengths[p])
+                            #
+                            chain_vec_tmp *= -1.
+                            chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
+                            #
                             changed = True
                             break
-                        elif chain_pieces[p][-2:] == head:
-                            new_chain = new_chain[::-1]
-                            new_chain.append(chain_pieces[p][0])
-                            del(chain_pieces[p])
+                        elif piece_inds[p][-2:] == head and (piece_direcs[p][0] @ chain_direc) > -cos_cutoff:
+                            #
+                            ind_set_tmp = ind_set_tmp[::-1]
+                            ind_set_tmp.append(piece_inds[p][0])
+                            del(piece_inds[p])
+                            #
+                            bond_direcs_tmp = bond_direcs_tmp[::-1]
+                            bond_direcs_tmp.append(-piece_direcs[p][0])
+                            del(piece_direcs[p])
+                            #
+                            bond_lengths_tmp = bond_lengths_tmp[::-1]
+                            bond_lengths_tmp.append(piece_lengths[p][0])
+                            del(piece_lengths[p])
+                            #
+                            chain_vec_tmp *= -1.
+                            chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
+                            #
                             changed = True
                             break
-                        elif chain_pieces[p][-2:] == tail[::-1]:
-                            new_chain.append(chain_pieces[p][0])
-                            del(chain_pieces[p])
+                        elif piece_inds[p][-2:] == tail[::-1] and (-piece_direcs[p][0] @ chain_direc) > -cos_cutoff:
+                            #
+                            ind_set_tmp.append(piece_inds[p][0])
+                            del(piece_inds[p])
+                            #
+                            bond_direcs_tmp.append(-piece_direcs[p][0])
+                            del(piece_direcs[p])
+                            #
+                            bond_lengths_tmp.append(piece_lengths[p][0])
+                            del(piece_lengths[p])
+                            #
+                            chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
                             changed = True
                             break
                     if not changed:
-                        chain_set_i.append(new_chain)
+                        ind_set_i     .append(ind_set_tmp)
+                        bond_direcs_i .append(bond_direcs_tmp)
+                        bond_lengths_i.append(bond_lengths_tmp)
+                        chain_vec_i   .append(chain_vec_tmp)
                         break
-            chain_set.append(chain_set_i)
-            #save
+
+            #--> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
+            ind_set     .append(ind_set_i)
+            #--> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain), 3)
+            bond_direcs .append(bond_direcs_i)
+            #--> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
+            bond_lengths.append(bond_lengths_i)
+            #--> Ragged tensor in shape of (len_alist, (number of chains in an image), 3)
+            chain_vec   .append(chain_vec_i)
+            # Save
             if save_bool:
                 call('mkdir {}'.format(path), shell=True)
-                pckl.dump(chain_set_i, open('{}/chain_set.pckl'.format(path), 'wb'))
-                print('Saved {}/chain_set.pckl file.'.format(path))
-        return chain_set
+                pckl.dump(ind_set_i,      open('{}/ind_set.pckl'     .format(path), 'wb'))
+                pckl.dump(bond_direcs_i,  open('{}/bond_direcs.pckl' .format(path), 'wb'))
+                pckl.dump(bond_lengths_i, open('{}/bond_lengths.pckl'.format(path), 'wb'))
+                pckl.dump(chain_vec     , open('{}/chain_vec.pckl'   .format(path), 'wb'))
+                print('Saved pckl files at {}'.format(path))
+        # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
+        return ind_set, bond_direcs, bond_lengths, chain_vec
 
     def get_chain_lengths(
         self,
@@ -321,7 +411,7 @@ class Structure_analyses(object):
             - Note) Chain length of 0 means infinite chain (due to periodicity). 
                     They have a tail same as its head.
         """
-        chain_set = self.get_chain_set(
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
@@ -331,13 +421,13 @@ class Structure_analyses(object):
 
         # Get chain lenghts.
         lengths = []
-        for i in range(len(chain_set)):
+        for i in range(len(ind_set)):
             lengths_i = []
-            for j in range(len(chain_set[i])):
-                if chain_set[i][j][:2] == chain_set[i][j][-2:] and inf_as_zero:
+            for j in range(len(ind_set[i])):
+                if ind_set[i][j][:2] == ind_set[i][j][-2:] and inf_as_zero:
                     lengths_i.append(0)
                 else:
-                    lengths_i.append(len(chain_set[i][j])-1)
+                    lengths_i.append(len(ind_set[i][j])-1)
             lengths.append(lengths_i)
         return lengths
 
