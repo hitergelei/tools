@@ -7,6 +7,9 @@
 """
 
 import numpy as np
+import datetime
+import pickle as pckl
+from subprocess import call
 
 def get_neighbors(
     alist,
@@ -89,6 +92,67 @@ def get_neighbors(
         directions.append(directions_i)
     return indices, lengths, directions
 
+def get_3body_chain_pieces(
+    indices,
+    lengths,
+    directions,
+    angle_cutoff,
+    load_path=None,
+    save_path=None,
+    ):
+    """
+    indices (list)
+        - Ragged tensor in shape of (len_atoms, (number of bondings))
+    lengths (list)
+        - Ragged tensor in shape of (len_atoms, (number of bondings))
+    directions (list)
+        - Ragged tensor in shape of (len_atoms, (number of bondings), 3)
+    save_path (str or None)
+        - Make sure that the path already exists before this function runs.
+    """
+
+    try:
+        assert load_path
+        print('    Trying to load 3body piece pckl files.')
+        piece_inds    = pckl.load(open('{}/piece_inds.pckl'   .format(load_path), 'rb'))
+        piece_lengths = pckl.load(open('{}/piece_lengths.pckl'.format(load_path), 'rb'))
+        piece_direcs  = pckl.load(open('{}/piece_direcs.pckl' .format(load_path), 'rb'))
+    except:
+        print('Failed to load pckl files from {}'.format(load_path))
+    else:
+        print('Loaded pckl files from {}'.format(load_path))
+        return piece_inds, piece_lengths, piece_direcs
+
+    # Main
+    len_atoms = len(indices)
+    #
+    cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
+    #
+    piece_inds    = []
+    piece_lengths = []
+    piece_direcs  = []
+    for i in range(len_atoms):
+        # Gather three-body chain pieces.
+        # Get upper triangle due to the duplications
+        #--> shape of [number of bonds for atom j]*2
+        cosines = np.triu(directions[i] @ directions[i].T, 1)
+        bond_inds = np.transpose(np.where(cosines < cos_cutoff))
+        for inds in bond_inds:
+            #                    --> shape of (3,)
+            piece_inds   .append(list(np.concatenate((indices[i][inds], [i]))[[0,2,1]]))
+            #                    --> shape of (2,)
+            piece_lengths.append(lengths[i][inds])
+            #                    --> shape of (2, 3)
+            piece_direcs .append(directions[i][inds])
+            piece_direcs[-1][0] *= -1.
+    if save_path is not None:
+        call('mkdir -p {}'.format(save_path), shell=True)
+        pckl.dump(piece_inds   , open('{}/piece_inds.pckl'      .format(save_path), 'wb'))
+        pckl.dump(piece_lengths, open('{}/piece_lengths.pckl'   .format(save_path), 'wb'))
+        pckl.dump(piece_direcs , open('{}/piece_direcs.pckl'.format(save_path), 'wb'))
+        print('Saved pckl files at {}'.format(save_path))
+    return piece_inds, piece_lengths, piece_direcs
+
 class Structure_analyses(object):
     """
     """
@@ -162,8 +226,6 @@ class Structure_analyses(object):
             info[ret] = []
         #
         from ase.io import read
-        import pickle as pckl
-        from subprocess import call
         for i in range(self.len_alist):
             # File
             alist_ind = self.alist_ind_list[i]
@@ -180,7 +242,7 @@ class Structure_analyses(object):
                 )
             try:
                 assert load_bool == True
-                print('Trying to load pckl files.')
+                print('    Trying to load pckl files.')
                 indices_i    = pckl.load(open('{}/indices.pckl'   .format(path), 'rb'))
                 lengths_i    = pckl.load(open('{}/lengths.pckl'   .format(path), 'rb'))
                 directions_i = pckl.load(open('{}/directions.pckl'.format(path), 'rb'))
@@ -196,9 +258,9 @@ class Structure_analyses(object):
                     pckl.dump(indices_i,    open('{}/indices.pckl'   .format(path), 'wb'))
                     pckl.dump(lengths_i,    open('{}/lengths.pckl'   .format(path), 'wb'))
                     pckl.dump(directions_i, open('{}/directions.pckl'.format(path), 'wb'))
-                    print('Saved pckl files at {}'.format(path))
+                    print('Saved pckl files.'.format(path))
             else:
-                print('Loaded pckl files.')
+                print('Loaded pckl files from {}'.format(path))
             # Gather
             info['indices']   .append(indices_i)
             info['lengths']   .append(lengths_i)
@@ -229,15 +291,12 @@ class Structure_analyses(object):
             save_bool=save_bool,
             )
 
-        import pickle as pckl
-        from subprocess import call
         ind_set      = []
         bond_direcs  = []
         bond_lengths = []
         chain_vec    = []
         for i in range(len(self.alist_ind_list)):
             alist_ind = self.alist_ind_list[i]
-            print('Getting chain set of image #{}'.format(alist_ind))
             path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
                 self.alist_file,
                 bond_cutoff,
@@ -248,7 +307,7 @@ class Structure_analyses(object):
                 )
             try:
                 assert load_bool == True
-                print('Trying to load pckl files.')
+                print('    Trying to load pckl files.')
                 ind_set_i      = pckl.load(open('{}/ind_set.pckl'     .format(path), 'rb'))
                 bond_direcs_i  = pckl.load(open('{}/bond_direcs.pckl' .format(path), 'rb'))
                 bond_lengths_i = pckl.load(open('{}/bond_lengths.pckl'.format(path), 'rb'))
@@ -263,23 +322,16 @@ class Structure_analyses(object):
                 chain_vec   .append(chain_vec_i)
                 continue
 
-            # Gather three-bodied chain pieces.
-            piece_inds = []
-            piece_direcs = []
-            piece_lengths = []
-            for j in range(self.len_atoms):
-                # Get upper triangle due to the duplications
-                #--> shape of [number of bonds for atom j]*2
-                cosines = np.triu(directions[i][j] @ directions[i][j].T, 1)
-                bond_inds = np.transpose(np.where(cosines < cos_cutoff))
-                for inds in bond_inds:
-                    #                    --> shape of (3,)
-                    piece_inds   .append(list(np.concatenate((indices[i][j][inds], [j]))[[0,2,1]]))
-                    #                    --> shape of (2, 3)
-                    piece_direcs .append(directions[i][j][inds])
-                    piece_direcs[-1][0] *= -1.
-                    #                    --> shape of (2,)
-                    piece_lengths.append(lengths[i][j][inds])
+            # Gather three-body chain pieces.
+
+            piece_inds, piece_lengths, piece_direcs = get_3body_chain_pieces(
+                indices,
+                lengths,
+                directions,
+                angle_cutoff,
+                path,
+                path,
+                )
             # Classify chain pieces.
             #--> Ragged tensor in shape of ((number of chains in an image), (length of a chain))
             ind_set_i      = []
@@ -389,8 +441,8 @@ class Structure_analyses(object):
                 pckl.dump(ind_set_i,      open('{}/ind_set.pckl'     .format(path), 'wb'))
                 pckl.dump(bond_direcs_i,  open('{}/bond_direcs.pckl' .format(path), 'wb'))
                 pckl.dump(bond_lengths_i, open('{}/bond_lengths.pckl'.format(path), 'wb'))
-                pckl.dump(chain_vec     , open('{}/chain_vec.pckl'   .format(path), 'wb'))
-                print('Saved pckl files at {}'.format(path))
+                pckl.dump(chain_vec_i   , open('{}/chain_vec.pckl'   .format(path), 'wb'))
+                print('Saved pckl files.'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
         return ind_set, bond_direcs, bond_lengths, chain_vec
 
@@ -474,9 +526,9 @@ class Structure_analyses(object):
         fig, ax1 = plt.subplots()
         ax1.plot(
             time_arr,
-            sum_chain,
-            label='Sum of lengths',
-            c='k',
+            sum_chain / num_chain,
+            label='Mean of lengths',
+            c='r',
             )
         # ax1.plot(
             # time_arr,
@@ -493,12 +545,13 @@ class Structure_analyses(object):
             # )
         ax2.plot(
             time_arr,
-            sum_chain / num_chain,
-            label='Mean of lengths',
-            c='r',
+            sum_chain,
+            label='Sum of lengths',
+            c='k',
             )
-        ax1.tick_params(axis="both",direction="in", labelsize='x-large')
-        ax2.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='r')
+        ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='r')
+        ax1.tick_params(axis="x",direction="in", labelsize='x-large')
+        ax2.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.title('cut={} $\AA$ & {} deg, bond={}-{}, t-intvl={}'.format(
             bond_cutoff,
             angle_cutoff,
@@ -507,10 +560,10 @@ class Structure_analyses(object):
             self.dt,
             ), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
-        ax1.set_ylabel('Sum of chain lengths', fontsize='x-large')
-        ax2.set_ylabel('Mean of chain lengths', fontsize='x-large')
+        ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
+        ax2.set_ylabel('Sum of chain lengths', fontsize='x-large')
         ax1.grid(alpha=0.5)
-        plt.subplots_adjust(left=0.16, right=0.90)
+        plt.subplots_adjust(left=0.10, right=0.80)
         # plt.legend()
         plt.show()
 
@@ -612,6 +665,136 @@ class Structure_analyses(object):
         ax1.grid(alpha=0.5)
         plt.show()
 
+    def classify_3body_pieces_by_type(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        Return dictionary of classified 3-body pieces' info.
+        """
+
+        #
+        cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
+        #
+        indices, lengths, directions = self.produce_neighbor_info(
+            bond_cutoff,
+            bonding_rules,
+            returns=['indices', 'lengths', 'directions'],
+            load_bool=load_bool,
+            save_bool=save_bool,
+            )
+        #
+        piece_inds    = []
+        piece_lengths = []
+        # piece_direcs  = []
+        for i in range(len(indices)):
+            #
+            path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
+                self.alist_file,
+                bond_cutoff,
+                self.bonding_rules_str[0],
+                self.bonding_rules_str[1],
+                self.alist_ind_list[i],
+                angle_cutoff,
+                )
+            piece_inds_i, piece_lengths_i, piece_direcs_i = get_3body_chain_pieces(
+                indices[i],
+                lengths[i],
+                directions[i],
+                angle_cutoff,
+                path,
+                path,
+                )
+            piece_inds   .append(piece_inds_i)
+            piece_lengths.append(piece_lengths_i)
+            # piece_direcs .append(piece_direcs_i)
+        del(indices, lengths, directions)
+
+        # Classify by species.
+        length_dict = {}
+        # direc_dict = {}
+        for ty in self.types_unique:
+            length_dict[ty] = []
+            # direc_dict[ty] = []
+        for i in range(len(piece_inds)):
+            #
+            length_i_dict = {}
+            # direc_i_dict = {}
+            for ty in self.types_unique:
+                length_i_dict[ty] = []
+                # direc_i_dict[ty] = []
+            for j in range(len(piece_inds[i])):
+                #
+                ty = self.types[piece_inds[i][j][1]]
+                length_i_dict[ty].append(piece_lengths[i][j])
+                # direc_i_dict[ty].append(piece_direcs[i][j])
+            #
+            for ty in self.types_unique:
+                #                      --> shape of (number of pieces of a type-kind in an image, 2)
+                length_dict[ty].append(length_i_dict[ty])
+                # direc_dict[ty].append(direc_i_dict[ty])
+        #      --> shape of (len_alist, (number of pieces of a type-kind in an image), 2)
+        return length_dict #, direc_dict
+        
+    def plot_3body_pieces_stat(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        bonding_rules=None,
+        num_bins=100,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        Plot bond-length correlation.
+        """
+        length_dict = self.classify_3body_pieces_by_type(
+            angle_cutoff,
+            bond_cutoff,
+            bonding_rules,
+            load_bool,
+            save_bool,
+            )
+        # Concate
+        flat_length_dict = {}
+        for ty in self.types_unique:
+            concat = np.concatenate(length_dict[ty], axis=0)
+            flat_length_dict[ty] = np.concatenate([concat, concat[:,::-1]], axis=0)
+
+        # Plot
+        from matplotlib import pyplot as plt
+        font = {'family':'Arial'}
+        plt.rc('font', **font)
+        fig, ax_list = plt.subplots(1,len(self.types_unique))
+        ax_list = list(ax_list[::-1])
+        for ty in self.types_unique:
+            ax = ax_list.pop()
+            histo = ax.hist2d(
+                flat_length_dict[ty][:,0],
+                flat_length_dict[ty][:,1],
+                bins=num_bins,
+                cmap='RdBu_r',
+                density=True
+                )
+            # y = x line
+            bmin = np.min(histo[1])
+            bmax = np.max(histo[1])
+            ax.plot([bmin, bmax], [bmin, bmax], c='k')
+            # Style
+            ax.set_title('{}-center'.format(ty), fontsize='x-large')
+            ax.set_aspect(1)
+            ax.tick_params(axis="both",direction="in", labelsize='x-large')
+            cb = plt.colorbar(histo[3], ax=ax, fraction=0.04, pad=0.03)
+            if not ax_list:
+                cb.set_label('Normalized Density', fontsize='x-large', labelpad=10)
+            cb.ax.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.subplots_adjust(left=0.10, bottom=0.10, right=0.90, top=0.90, wspace=0.30)
+        plt.show()
+
     def view_chains(
         self,
         angle_cutoff,
@@ -627,7 +810,7 @@ class Structure_analyses(object):
             - If None, show all.
         """
 
-        chains = self.get_chain_set(
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
             angle_cutoff,
             bond_cutoff,
             bonding_rules,
@@ -636,15 +819,15 @@ class Structure_analyses(object):
             )
 
         new_alist=[]
-        for i in range(len(chains)):
-            for j in range(len(chains[i])):
+        for i in range(len(ind_set)):
+            for j in range(len(ind_set[i])):
                 if chain_length:
-                    if len(chains[i][j])-1 == chain_length:
-                        new_alist.append(self.alist[i][np.unique(chains[i][j])])
+                    if len(ind_set[i][j])-1 == chain_length:
+                        new_alist.append(self.alist[i][np.unique(ind_set[i][j])])
                     else:
                         pass
                 else:
-                    new_alist.append(self.alist[i][np.unique(chains[i][j])])
+                    new_alist.append(self.alist[i][np.unique(ind_set[i][j])])
         from ase.visualize import view
         view(new_alist)
 
