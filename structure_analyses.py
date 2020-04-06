@@ -14,7 +14,7 @@ from subprocess import call
 def get_neighbors(
     alist,
     bond_cutoff,
-    bonding_rules=None,
+    bond_rules=None,
     dtype='float64',
     log_fname=None,
     ):
@@ -23,7 +23,7 @@ def get_neighbors(
         - If memory issue occurs, use this function iteratively with smaller size of atoms list.
     bond_cutoff (Float)
         - Cutoff distance for neighbor.
-    bonding_rules (None or list including two groups.)
+    bond_rules (None or list including two groups.)
         - Only the elements in the other group will be considered as neighbor.
             e.g.) [(['Ge','Sb'],['Te'])]
         - None --> Ignore chemical kinds.
@@ -31,9 +31,9 @@ def get_neighbors(
     len_alist = len(alist)
     len_atoms = len(alist[0])
     types = np.array(alist[0].get_chemical_symbols())
-    if bonding_rules is not None:
-        group1_bool = np.sum([types == t for t in bonding_rules[0]], axis=0).astype(bool)
-        group2_bool = np.sum([types == t for t in bonding_rules[1]], axis=0).astype(bool)
+    if bond_rules is not None:
+        group1_bool = np.sum([types == t for t in bond_rules[0]], axis=0).astype(bool)
+        group2_bool = np.sum([types == t for t in bond_rules[1]], axis=0).astype(bool)
     box   = []
     coord = []
     for i in range(len_alist):
@@ -73,7 +73,7 @@ def get_neighbors(
         for j in range(len_atoms):
             # Cut out wrong bonds and atoms far away.
             type_mask = np.tile([True], len_atoms)
-            if bonding_rules is not None:
+            if bond_rules is not None:
                 if group1_bool[j]:
                     type_mask = group2_bool.copy()
                 else:
@@ -113,7 +113,7 @@ def get_3body_chain_pieces(
 
     try:
         assert load_path
-        print('    Trying to load 3body piece pckl files.')
+        print(' *  Trying to load 3body piece pckl files.')
         piece_inds    = pckl.load(open('{}/piece_inds.pckl'   .format(load_path), 'rb'))
         piece_lengths = pckl.load(open('{}/piece_lengths.pckl'.format(load_path), 'rb'))
         piece_direcs  = pckl.load(open('{}/piece_direcs.pckl' .format(load_path), 'rb'))
@@ -132,18 +132,21 @@ def get_3body_chain_pieces(
     piece_lengths = []
     piece_direcs  = []
     for i in range(len_atoms):
+        indices_i    = np.array(indices[i])
+        lengths_i    = np.array(lengths[i])
+        directions_i = np.array(directions[i])
         # Gather three-body chain pieces.
         # Get upper triangle due to the duplications
         #--> shape of [number of bonds for atom j]*2
-        cosines = np.triu(directions[i] @ directions[i].T, 1)
+        cosines = np.triu(directions_i @ directions_i.T, 1)
         bond_inds = np.transpose(np.where(cosines < cos_cutoff))
         for inds in bond_inds:
             #                    --> shape of (3,)
-            piece_inds   .append(list(np.concatenate((indices[i][inds], [i]))[[0,2,1]]))
+            piece_inds   .append(list(np.concatenate((indices_i[inds], [i]))[[0,2,1]]))
             #                    --> shape of (2,)
-            piece_lengths.append(lengths[i][inds])
+            piece_lengths.append(lengths_i[inds])
             #                    --> shape of (2, 3)
-            piece_direcs .append(directions[i][inds])
+            piece_direcs .append(directions_i[inds])
             piece_direcs[-1][0] *= -1.
     if save_path is not None:
         call('mkdir -p {}'.format(save_path), shell=True)
@@ -204,7 +207,7 @@ class Structure_analyses(object):
     def produce_neighbor_info(
         self,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         returns=['indices', 'lengths', 'directions'],
         load_bool=True,
         save_bool=True,
@@ -213,13 +216,13 @@ class Structure_analyses(object):
         """
         #
         self.bond_cutoff = bond_cutoff
-        if bonding_rules is not None:
-            self.bonding_rules_str = ['', '']
+        if bond_rules is not None:
+            self.bond_rules_str = ['', '']
             for i in range(2):
-                for j in range(len(bonding_rules[i])):
-                    self.bonding_rules_str[i] += bonding_rules[i][j]
+                for j in range(len(bond_rules[i])):
+                    self.bond_rules_str[i] += bond_rules[i][j]
         else:
-            self.bonding_rules_str = ['all', 'all']
+            self.bond_rules_str = ['all', 'all']
         #
         info = {}
         for ret in ['indices', 'lengths', 'directions']:
@@ -236,19 +239,19 @@ class Structure_analyses(object):
             path = 'neigh_saved/{}.d/{}-{}-{}/{}'.format(
                 self.alist_file,
                 bond_cutoff,
-                self.bonding_rules_str[0],
-                self.bonding_rules_str[1],
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
                 alist_ind,
                 )
             try:
                 assert load_bool == True
-                print('    Trying to load pckl files.')
+                print(' *  Trying to load neighbor-info pckl files.')
                 indices_i    = pckl.load(open('{}/indices.pckl'   .format(path), 'rb'))
                 lengths_i    = pckl.load(open('{}/lengths.pckl'   .format(path), 'rb'))
                 directions_i = pckl.load(open('{}/directions.pckl'.format(path), 'rb'))
             except:
                 print('Failed to load pckl files from {}'.format(path))
-                indices_i, lengths_i, directions_i = get_neighbors([atoms], bond_cutoff, bonding_rules, dtype='float32')
+                indices_i, lengths_i, directions_i = get_neighbors([atoms], bond_cutoff, bond_rules, dtype='float32')
                 indices_i    = indices_i[0]
                 lengths_i    = lengths_i[0]
                 directions_i = directions_i[0]
@@ -271,7 +274,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -285,7 +288,7 @@ class Structure_analyses(object):
         #
         indices, lengths, directions = self.produce_neighbor_info(
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             returns=['indices', 'lengths', 'directions'],
             load_bool=load_bool,
             save_bool=save_bool,
@@ -300,14 +303,14 @@ class Structure_analyses(object):
             path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
                 self.alist_file,
                 bond_cutoff,
-                self.bonding_rules_str[0],
-                self.bonding_rules_str[1],
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
                 alist_ind,
                 angle_cutoff,
                 )
             try:
                 assert load_bool == True
-                print('    Trying to load pckl files.')
+                print(' *  Trying to load chain-info pckl files.')
                 ind_set_i      = pckl.load(open('{}/ind_set.pckl'     .format(path), 'rb'))
                 bond_direcs_i  = pckl.load(open('{}/bond_direcs.pckl' .format(path), 'rb'))
                 bond_lengths_i = pckl.load(open('{}/bond_lengths.pckl'.format(path), 'rb'))
@@ -325,9 +328,9 @@ class Structure_analyses(object):
             # Gather three-body chain pieces.
 
             piece_inds, piece_lengths, piece_direcs = get_3body_chain_pieces(
-                indices,
-                lengths,
-                directions,
+                indices[i],
+                lengths[i],
+                directions[i],
                 angle_cutoff,
                 path,
                 path,
@@ -450,7 +453,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         inf_as_zero=False,
         load_bool=True,
         save_bool=True,
@@ -466,7 +469,7 @@ class Structure_analyses(object):
         ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
             angle_cutoff,
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             load_bool,
             save_bool,
             )
@@ -487,7 +490,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         inf_as_zero=False,
         load_bool=True,
         save_bool=True,
@@ -500,7 +503,7 @@ class Structure_analyses(object):
         lengths = self.get_chain_lengths(
             angle_cutoff,
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             inf_as_zero,
             load_bool,
             save_bool,
@@ -555,8 +558,8 @@ class Structure_analyses(object):
         plt.title('cut={} $\AA$ & {} deg, bond={}-{}, t-intvl={}'.format(
             bond_cutoff,
             angle_cutoff,
-            self.bonding_rules_str[0],
-            self.bonding_rules_str[1],
+            self.bond_rules_str[0],
+            self.bond_rules_str[1],
             self.dt,
             ), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
@@ -571,7 +574,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -581,7 +584,7 @@ class Structure_analyses(object):
         lengths = self.get_chain_lengths(
             angle_cutoff,
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             True,
             load_bool,
             save_bool,
@@ -600,7 +603,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -611,7 +614,7 @@ class Structure_analyses(object):
         length_histo_list = self.get_chain_length_histo(
             angle_cutoff,
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             load_bool,
             save_bool,
             )
@@ -645,8 +648,8 @@ class Structure_analyses(object):
         title = 'cut={} $\AA$ & {} deg, bond={}-{}'.format(
             bond_cutoff,
             angle_cutoff,
-            self.bonding_rules_str[0],
-            self.bonding_rules_str[1],
+            self.bond_rules_str[0],
+            self.bond_rules_str[1],
             )
         if len(self.alist_ind_list) == 1:
             title += ', atoms_ind #{}'.format(self.alist_ind_list[0])
@@ -669,7 +672,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -682,7 +685,7 @@ class Structure_analyses(object):
         #
         indices, lengths, directions = self.produce_neighbor_info(
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             returns=['indices', 'lengths', 'directions'],
             load_bool=load_bool,
             save_bool=save_bool,
@@ -696,8 +699,8 @@ class Structure_analyses(object):
             path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
                 self.alist_file,
                 bond_cutoff,
-                self.bonding_rules_str[0],
-                self.bonding_rules_str[1],
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
                 self.alist_ind_list[i],
                 angle_cutoff,
                 )
@@ -744,7 +747,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         num_bins=100,
         load_bool=True,
         save_bool=True,
@@ -755,14 +758,16 @@ class Structure_analyses(object):
         length_dict = self.classify_3body_pieces_by_type(
             angle_cutoff,
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             load_bool,
             save_bool,
             )
         # Concate
         flat_length_dict = {}
+        avgs = {}
         for ty in self.types_unique:
             concat = np.concatenate(length_dict[ty], axis=0)
+            avgs[ty] = np.mean(concat)
             flat_length_dict[ty] = np.concatenate([concat, concat[:,::-1]], axis=0)
 
         # Plot
@@ -786,12 +791,20 @@ class Structure_analyses(object):
             ax.plot([bmin, bmax], [bmin, bmax], c='k')
             # Style
             ax.set_title('{}-center'.format(ty), fontsize='x-large')
+            ax.set_xlabel('mean={}'.format(avgs[ty]), fontsize='x-large')
             ax.set_aspect(1)
             ax.tick_params(axis="both",direction="in", labelsize='x-large')
             cb = plt.colorbar(histo[3], ax=ax, fraction=0.04, pad=0.03)
             if not ax_list:
                 cb.set_label('Normalized Density', fontsize='x-large', labelpad=10)
             cb.ax.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.suptitle('{}, slice={}, AC={}, BC={}, BR={}'.format(
+            self.alist_file,
+            self.alist_slice,
+            angle_cutoff,
+            bond_cutoff,
+            bond_rules,
+            ), fontsize='x-large')
         plt.subplots_adjust(left=0.10, bottom=0.10, right=0.90, top=0.90, wspace=0.30)
         plt.show()
 
@@ -799,7 +812,7 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         chain_length=None,
         load_bool=True,
         save_bool=True,
@@ -813,7 +826,7 @@ class Structure_analyses(object):
         ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
             angle_cutoff,
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             load_bool,
             save_bool,
             )
@@ -834,7 +847,7 @@ class Structure_analyses(object):
     def get_avg_coord_nums(
         self,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -843,7 +856,7 @@ class Structure_analyses(object):
 
         indices = self.produce_neighbor_info(
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             returns=['indices'],
             load_bool=load_bool,
             save_bool=save_bool,
@@ -864,7 +877,7 @@ class Structure_analyses(object):
     def plot_avg_coord_nums(
         self,
         bond_cutoff,
-        bonding_rules=None,
+        bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -873,7 +886,7 @@ class Structure_analyses(object):
 
         num_bonds = self.get_avg_coord_nums(
             bond_cutoff,
-            bonding_rules,
+            bond_rules,
             load_bool,
             save_bool,
             )
@@ -894,7 +907,7 @@ class Structure_analyses(object):
                 )
         plt.legend()
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.title('cut={} $\AA$, bond={}-{}, t-intvl={}'.format(bond_cutoff, self.bonding_rules_str[0], self.bonding_rules_str[1], self.dt), fontsize='x-large')
+        plt.title('cut={} $\AA$, bond={}-{}, t-intvl={}'.format(bond_cutoff, self.bond_rules_str[0], self.bond_rules_str[1], self.dt), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.ylabel('Average coordination number', fontsize='x-large')
         plt.grid(alpha=0.5)
