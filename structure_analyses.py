@@ -148,6 +148,9 @@ def get_3body_chain_pieces(
             #                    --> shape of (2, 3)
             piece_direcs .append(directions_i[inds])
             piece_direcs[-1][0] *= -1.
+    piece_inds    = np.reshape(piece_inds,    [-1, 3])
+    piece_lengths = np.reshape(piece_lengths, [-1, 2])
+    piece_direcs  = np.reshape(piece_direcs,  [-1, 2, 3])
     if save_path is not None:
         call('mkdir -p {}'.format(save_path), shell=True)
         pckl.dump(piece_inds   , open('{}/piece_inds.pckl'      .format(save_path), 'wb'))
@@ -738,8 +741,8 @@ class Structure_analyses(object):
             #
             for ty in self.types_unique:
                 #                      --> shape of (number of pieces of a type-kind in an image, 2)
-                length_dict[ty].append(length_i_dict[ty])
-                # direc_dict[ty].append(direc_i_dict[ty])
+                length_dict[ty].append(np.reshape(length_i_dict[ty], [-1, 2]))
+                # direc_dict[ty].append(np.reshape(direc_i_dict[ty], [-1, 2, 3]))
         #      --> shape of (len_alist, (number of pieces of a type-kind in an image), 2)
         return length_dict #, direc_dict
         
@@ -774,37 +777,48 @@ class Structure_analyses(object):
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
-        fig, ax_list = plt.subplots(1,len(self.types_unique))
-        ax_list = list(ax_list[::-1])
+        fig, [ax_1d_list, ax_2d_list] = plt.subplots(2,len(self.types_unique))
+        ax_1d_list = list(ax_1d_list[::-1])
+        ax_2d_list = list(ax_2d_list[::-1])
         for ty in self.types_unique:
-            ax = ax_list.pop()
-            histo = ax.hist2d(
+            ax_1d = ax_1d_list.pop()
+            ax_2d = ax_2d_list.pop()
+            ax_1d.hist(
+                flat_length_dict[ty][:,0],
+                density=True,
+                bins=num_bins,
+                facecolor='k',
+                alpha=0.8,
+                )
+            histo = ax_2d.hist2d(
                 flat_length_dict[ty][:,0],
                 flat_length_dict[ty][:,1],
+                normed=True,
                 bins=num_bins,
                 cmap='RdBu_r',
-                density=True
                 )
             # y = x line
             bmin = np.min(histo[1])
             bmax = np.max(histo[1])
-            ax.plot([bmin, bmax], [bmin, bmax], c='k')
+            ax_2d.plot([bmin, bmax], [bmin, bmax], c='k')
             # Style
-            ax.set_title('{}-center'.format(ty), fontsize='x-large')
-            ax.set_xlabel('mean={}'.format(avgs[ty]), fontsize='x-large')
-            ax.set_aspect(1)
-            ax.tick_params(axis="both",direction="in", labelsize='x-large')
-            cb = plt.colorbar(histo[3], ax=ax, fraction=0.04, pad=0.03)
-            if not ax_list:
-                cb.set_label('Normalized Density', fontsize='x-large', labelpad=10)
-            cb.ax.tick_params(axis="both",direction="in", labelsize='x-large')
+            ax_2d.set_title('{}-center, {} pieces'.format(ty, len(flat_length_dict[ty])//2), fontsize='xx-large')
+            # ax_2d.set_xlabel('mean={:.4f}'.format(avgs[ty]), fontsize='xx-large')
+            ax_2d.set_aspect(1)
+            ax_1d.tick_params(axis="both",direction="in", labelsize='xx-large')
+            ax_2d.tick_params(axis="both",direction="in", labelsize='xx-large')
+            ax_1d.set_ylabel('Normalized Population', fontsize='xx-large')
+            cb = plt.colorbar(histo[3], ax=ax_2d, fraction=0.04, pad=0.03)
+            if not ax_2d_list:
+                cb.set_label('Normalized Density', fontsize='xx-large', labelpad=10)
+            cb.ax.tick_params(axis="both",direction="in", labelsize='xx-large')
         plt.suptitle('{}, slice={}, AC={}, BC={}, BR={}'.format(
             self.alist_file,
             self.alist_slice,
             angle_cutoff,
             bond_cutoff,
             bond_rules,
-            ), fontsize='x-large')
+            ), fontsize='xx-large')
         plt.subplots_adjust(left=0.10, bottom=0.10, right=0.90, top=0.90, wspace=0.30)
         plt.show()
 
