@@ -750,10 +750,11 @@ class Structure_analyses(object):
         self,
         angle_cutoff,
         bond_cutoff,
-        bond_rules=None,
-        num_bins=100,
-        load_bool=True,
-        save_bool=True,
+        bond_rules = None,
+        num_bins   = 100,
+        cmap       = 'jet',
+        load_bool  = True,
+        save_bool  = True,
         ):
         """
         Plot bond-length correlation.
@@ -795,7 +796,7 @@ class Structure_analyses(object):
                 flat_length_dict[ty][:,1],
                 normed=True,
                 bins=num_bins,
-                cmap='RdBu_r',
+                cmap=cmap,
                 )
             # y = x line
             bmin = np.min(histo[1])
