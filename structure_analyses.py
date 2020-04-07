@@ -148,9 +148,9 @@ def get_3body_chain_pieces(
             #                    --> shape of (2, 3)
             piece_direcs .append(directions_i[inds])
             piece_direcs[-1][0] *= -1.
-    piece_inds    = np.reshape(piece_inds,    [-1, 3])
-    piece_lengths = np.reshape(piece_lengths, [-1, 2])
-    piece_direcs  = np.reshape(piece_direcs,  [-1, 2, 3])
+    piece_inds    = np.reshape(piece_inds,    [-1, 3]).tolist()
+    piece_lengths = np.reshape(piece_lengths, [-1, 2]).tolist()
+    piece_direcs  = list(np.reshape(piece_direcs,  [-1, 2, 3]))
     if save_path is not None:
         call('mkdir -p {}'.format(save_path), shell=True)
         pckl.dump(piece_inds   , open('{}/piece_inds.pckl'      .format(save_path), 'wb'))
@@ -344,10 +344,13 @@ class Structure_analyses(object):
             bond_direcs_i  = []
             bond_lengths_i = []
             chain_vec_i    = []
-            while piece_inds:
-                ind_set_tmp      = list(piece_inds   .pop())
-                bond_direcs_tmp  = list(piece_direcs .pop())
-                bond_lengths_tmp = list(piece_lengths.pop())
+            while len(piece_inds) != 0:
+                ind_set_tmp      = list(piece_inds[-1])
+                del(piece_inds[-1])
+                bond_direcs_tmp  = list(piece_direcs[-1])
+                del(piece_direcs[-1])
+                bond_lengths_tmp = list(piece_lengths[-1])
+                del(piece_lengths[-1])
                 chain_vec_tmp    = np.sum(
                     bond_direcs_tmp * np.expand_dims(bond_lengths_tmp, axis=1),
                     axis=0,
@@ -569,7 +572,7 @@ class Structure_analyses(object):
         ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
         ax2.set_ylabel('Sum of chain lengths', fontsize='x-large')
         ax1.grid(alpha=0.5)
-        plt.subplots_adjust(left=0.10, right=0.80)
+        plt.subplots_adjust(left=0.13, right=0.80)
         # plt.legend()
         plt.show()
 
@@ -640,7 +643,7 @@ class Structure_analyses(object):
 
         ax1.bar(l, n/np.sum(n)*100., color='k', alpha=0.5)
 
-        xmax = np.max(list(length_histo.keys()))
+        xmax = np.max(l)
         plt.xlim(-1, xmax+1)
         xticks = range(0, xmax+1, 2)
         xticklabels = list(xticks)
@@ -963,6 +966,7 @@ class Structure_analyses(object):
         temps     = np.array(temps)
 
         # Inner average.
+        print('Getting inner average.')
         avg_positions = []
         avg_cells     = []
         avg_temps     = []
@@ -977,6 +981,7 @@ class Structure_analyses(object):
         return_intvl //= out_avg_dn
 
         # Outer average.
+        print('Getting outer average.')
         # avg_positions --> shape of (len_bin, len_atoms, 3)
         # avg_cells     --> shape of (len_bin, 3, 3)
         # avg_temps     --> shape of (len_bin)
