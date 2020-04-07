@@ -344,13 +344,10 @@ class Structure_analyses(object):
             bond_direcs_i  = []
             bond_lengths_i = []
             chain_vec_i    = []
-            while len(piece_inds) != 0:
-                ind_set_tmp      = list(piece_inds[-1])
-                del(piece_inds[-1])
-                bond_direcs_tmp  = list(piece_direcs[-1])
-                del(piece_direcs[-1])
-                bond_lengths_tmp = list(piece_lengths[-1])
-                del(piece_lengths[-1])
+            while piece_inds:
+                ind_set_tmp      = list(piece_inds   .pop())
+                bond_direcs_tmp  = list(piece_direcs .pop())
+                bond_lengths_tmp = list(piece_lengths.pop())
                 chain_vec_tmp    = np.sum(
                     bond_direcs_tmp * np.expand_dims(bond_lengths_tmp, axis=1),
                     axis=0,
