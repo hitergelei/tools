@@ -439,8 +439,10 @@ def random_atoms_gen(
 
     # Get num_fix_dict and num_shffl_spec_dict
     num_fix_dict = {}
-    num_shffl_spec_dict = num_spec_dict.copy()
+    from copy import deepcopy
+    num_shffl_spec_dict = deepcopy(num_spec_dict)
     if fix_ind_dict: 
+        fix_ind_dict = deepcopy(fix_ind_dict)
         if 'V' not in fix_ind_dict.keys():
             fix_ind_dict['V'] = []
             num_shffl_spec_dict['V'] = 0
@@ -528,8 +530,8 @@ def random_atoms_gen(
     ## Get random adjust radius
     supercell = make_supercell(backbone,[[2,0,0],[0,2,0],[0,0,2]])
     from ase.optimize.precon.neighbors import estimate_nearest_neighbour_distance as rNN
-    rdf_1st_peak = rNN(supercell)
-    # rdf_1st_peak = 0.
+    # rdf_1st_peak = rNN(supercell)
+    rdf_1st_peak = 0.
     ran_radi = rdf_1st_peak / 2 * random_degree
     if log:
         print("")
@@ -586,6 +588,7 @@ def random_atoms_gen(
             posi = new_atoms.get_positions()
             posi[-1] += (np.random.rand(3)-0.5) * 2 * ran_radi
             new_atoms.set_positions(posi, apply_constraint = False)
+            break
             # Get all distances.
             dist = new_atoms.get_all_distances(mic = True)
             # Get elapsed time of this loop.
