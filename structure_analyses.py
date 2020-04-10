@@ -156,7 +156,7 @@ def get_3body_chain_pieces(
         pckl.dump(piece_inds   , open('{}/piece_inds.pckl'      .format(save_path), 'wb'))
         pckl.dump(piece_lengths, open('{}/piece_lengths.pckl'   .format(save_path), 'wb'))
         pckl.dump(piece_direcs , open('{}/piece_direcs.pckl'.format(save_path), 'wb'))
-        print('Saved pckl files at {}'.format(save_path))
+        print('Saved 3body-piece-info pckl files at {}'.format(save_path))
     return piece_inds, piece_lengths, piece_direcs
 
 class Structure_analyses(object):
@@ -264,7 +264,7 @@ class Structure_analyses(object):
                     pckl.dump(indices_i,    open('{}/indices.pckl'   .format(path), 'wb'))
                     pckl.dump(lengths_i,    open('{}/lengths.pckl'   .format(path), 'wb'))
                     pckl.dump(directions_i, open('{}/directions.pckl'.format(path), 'wb'))
-                    print('Saved pckl files.'.format(path))
+                    print('Saved neighbor-info pckl files at {}.'.format(path))
             else:
                 print('Loaded pckl files from {}'.format(path))
             # Gather
@@ -448,7 +448,7 @@ class Structure_analyses(object):
                 pckl.dump(bond_direcs_i,  open('{}/bond_direcs.pckl' .format(path), 'wb'))
                 pckl.dump(bond_lengths_i, open('{}/bond_lengths.pckl'.format(path), 'wb'))
                 pckl.dump(chain_vec_i   , open('{}/chain_vec.pckl'   .format(path), 'wb'))
-                print('Saved pckl files.'.format(path))
+                print('Saved chain-info pckl files at {}.'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
         return ind_set, bond_direcs, bond_lengths, chain_vec
 
@@ -833,10 +833,15 @@ class Structure_analyses(object):
         save_bool=True,
         ):
         """
-        chain_length (int or None)
+        chain_length (int or 'inf' or None)
             - Chain length of that you wanna see.
+            - 'inf' means infinitely long chains.
+            - 0 (zero) also means infinitely long chains.
             - If None, show all.
         """
+
+        if chain_length == 'inf':
+            chain_length = 0
 
         ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
             angle_cutoff,
@@ -846,11 +851,21 @@ class Structure_analyses(object):
             save_bool,
             )
 
+        if chain_length is not None:
+            chain_lengths = self.get_chain_lengths(
+                angle_cutoff,
+                bond_cutoff,
+                bond_rules,
+                True,
+                load_bool,
+                save_bool,
+                )
+
         new_alist=[]
         for i in range(len(ind_set)):
             for j in range(len(ind_set[i])):
-                if chain_length:
-                    if len(ind_set[i][j])-1 == chain_length:
+                if chain_length is not None:
+                    if chain_lengths[i][j] == chain_length:
                         new_alist.append(self.alist[i][np.unique(ind_set[i][j])])
                     else:
                         pass
