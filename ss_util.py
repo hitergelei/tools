@@ -344,9 +344,11 @@ def random_atoms_gen(
     backbone,
     num_spec_dict = None,
     fix_ind_dict  = None,
+    pin_the_fixed = False,
     cutoff_radi   = None,
     cutoff_frac   = None,
-    random_degree = 0.0,
+    random_radi   = None,
+    random_frac   = None,
     strain        = None,
     strain_ratio  = [1.,1.,1.],
     vacuum        = None,
@@ -368,12 +370,16 @@ def random_atoms_gen(
         E.g.) {'Ge': 4, 'Te': 4, 'V': 2}
             Condition: the backbone structure must have 10 atoms, totally.
 
-    fix_ind_dict : dict or None
-        Dict of atomic indices in the backbone for each species whose positions will be fixed.
-        Note that every fixed atom will also have positional deviation, eventually.
+    fix_ind_dict : dict or list or None
+        Dict of atomic indices in the backbone for each species whose sites will not be shuffled.
+        It can be a list. The site will not be shuffled for the atoms with indices included in the list.
+        Note that every fixed atom will also have positional deviation, unless 'pin_the_fixed' set to be 'True'.
         Set to "None" if all atoms' positions must be shuffled.
         E.g.) {'Te': [0, 2, 4, 6]}
-            * I.e. Te atoms will be placed at the position of those indices in the backbone, and others will be shffled.
+            * I.e. Te atoms will be placed at the position of those indices in the backbone, and others will be permuted randomly.
+
+    pin_the_fixed : Boolean
+        If true, atoms included in the fix_ind_dict will not have deviations of positions.
 
     cutoff_radi : Float
         Cutoff radius for minimal distance between atoms.
@@ -386,9 +392,19 @@ def random_atoms_gen(
         If provided with cutoff_radi simultaneously, occurs error.
         Both cutoff_radi and cutoff_frac are not provided, set to be zero.
 
-    random_degree : Float
+    random_radi : float
+        Value of how much distance from backbone positions
+        will be used as radius (from backbone) of generating new candidates.
+        If provided with random_frac simultaneously, occurs error.
+        Both random_radi and random_frac are not provided, set to be zero.
+
+    random_frac : Float
         Value of how much fraction of half of RDF nearest neighbor distance of backbone
         will be used as radius (from backbone) of generating new candidates.
+        Note) With this option of other than 'None', RDF calculation will be carried out
+            , which is a time consuming process for big systems.
+        If provided with random_radi simultaneously, occurs error.
+        Both random_radi and random_frac are not provided, set to be zero.
 
     strain : List of three floats e.g. [0,0,5]
         Values specify how much you magnify the provided backbone cell.
@@ -441,23 +457,34 @@ def random_atoms_gen(
     num_fix_dict = {}
     from copy import deepcopy
     num_shffl_spec_dict = deepcopy(num_spec_dict)
-    if fix_ind_dict: 
+    if isinstance(fix_ind_dict, list) or isinstance(fix_ind_dict, np.ndarray):
+        fix_ind_arr = np.array(deepcopy(fix_ind_dict))
+        fixed_atoms = backbone.copy()[fix_ind_arr]
+        fixed_spec = np.array(fixed_atoms.get_chemical_symbols())
+        fix_ind_dict = {}
+        for spec in np.unique(fixed_spec):
+            fix_ind_dict[spec] = list(fix_ind_arr[fixed_spec==spec])
+    if isinstance(fix_ind_dict, dict): 
         fix_ind_dict = deepcopy(fix_ind_dict)
-        if 'V' not in fix_ind_dict.keys():
-            fix_ind_dict['V'] = []
-            num_shffl_spec_dict['V'] = 0
         for key, value in fix_ind_dict.items():
             num_fix_dict[key] = len(value)
             num_shffl_spec_dict[key] -= len(value)
+            fix_ind_dict[key] = np.array(value, dtype=np.int32).tolist()
             if key == 'V' and num_vacancy == 0:
                 raise ValueError('The fix_ind_dict can not have "V", if num_spec_dict do not have "V"')
-    else:
+        if 'V' not in fix_ind_dict.keys():
+            fix_ind_dict['V'] = []
+            num_shffl_spec_dict['V'] = 0
+    elif fix_ind_dict is None:
         fix_ind_dict = {}
         for key in num_spec_dict.keys():
             fix_ind_dict[key] = []
             num_fix_dict[key] = 0
         fix_ind_dict['V'] = []
         num_fix_dict['V'] = 0
+    else:
+        raise ValueError('Unknown type of fix_ind_dict.')
+    fix_ind_arr = np.concatenate(list(fix_ind_dict.values())).astype(np.int32)
 
     # Get shffl_spec_list.
     shffl_spec_list = count2list(num_shffl_spec_dict)
@@ -528,23 +555,27 @@ def random_atoms_gen(
         cutoff_r = 0.
 
     ## Get random adjust radius
-    supercell = make_supercell(backbone,[[2,0,0],[0,2,0],[0,0,2]])
-    from ase.optimize.precon.neighbors import estimate_nearest_neighbour_distance as rNN
-    rdf_1st_peak = rNN(supercell)
-    # rdf_1st_peak = 0.
-    ran_radi = rdf_1st_peak / 2 * random_degree
-    if log:
-        print("")
-        print("********* Please check carefully !!!! ***********".center(120))
-        print("RDF 1st peak / 2 == {:.2f}".format(rdf_1st_peak/2).center(120))
-        print("Positional deviation degree == {:.2f}".format(random_degree).center(120))
-        print("==> Random deviation radius == {:.2f}".format(ran_radi).center(120))
-        print("it is {:.2f} % of covalent-bond-length expectation value.".format(ran_radi / coval_expect * 100).center(120))
-        print("")
-        print("C.f. ) covalent-bond-length expectation value == {:.2f}".format(coval_expect).center(120))
-        print("C.f. ) cutoff radius == {:.2f}".format(cutoff_r).center(120))
-        print("C.f. ) cutoff radius / covalent bond expectation *2 == {:.2f} %".format(cutoff_r / coval_expect / 2 * 100).center(120))
-        print("")
+    if random_frac is not None and random_radi is None:
+        supercell = make_supercell(backbone,[[2,0,0],[0,2,0],[0,0,2]])
+        from ase.optimize.precon.neighbors import estimate_nearest_neighbour_distance as rNN
+        rdf_1st_peak = rNN(supercell)
+        ran_radi = rdf_1st_peak / 2 * random_frac
+        if log:
+            print("")
+            print("********* Please check carefully !!!! ***********".center(120))
+            print("RDF 1st peak / 2 == {:.2f}".format(rdf_1st_peak/2).center(120))
+            print("Positional deviation degree == {:.2f}".format(random_frac).center(120))
+            print("==> Random deviation radius == {:.2f}".format(ran_radi).center(120))
+            print("it is {:.2f} % of covalent-bond-length expectation value.".format(ran_radi / coval_expect * 100).center(120))
+            print("")
+            print("C.f. ) covalent-bond-length expectation value == {:.2f}".format(coval_expect).center(120))
+            print("C.f. ) cutoff radius == {:.2f}".format(cutoff_r).center(120))
+            print("C.f. ) cutoff radius / covalent bond expectation *2 == {:.2f} %".format(cutoff_r / coval_expect / 2 * 100).center(120))
+            print("")
+    elif random_radi is not None and random_frac is None:
+        ran_radi = float(random_radi)
+    else:
+        raise ValueError('Check random_radi or random_frac parameters.')
 
     ## Main
     if num_vacancy != 0:
@@ -571,42 +602,46 @@ def random_atoms_gen(
                 value[i] -= np.sum(vacancy_ind < value[i])
             fix_ind_dict[key] = value
 
-    new_atoms = backbone.copy()
-    natoms = len(backbone)
-    for i in range(natoms):
-        new_atoms.pop()
-    empty_atoms = new_atoms.copy()
-
     from time import time
-    while len(new_atoms) < natoms:
+    len_atoms = len(backbone)
+    old_posi  = backbone.get_positions()
+    cell      = backbone.get_cell()
+    cell_inv  = np.linalg.inv(cell)
+
+    new_posi = []
+    while len(new_posi) < len_atoms:
         # Start time of this loop.
         time_i = time()
         while True:
             # Attach one more atom.
-            new_atoms.append(backbone.copy()[len(new_atoms)])
+            new_posi.append(old_posi[len(new_posi)].copy())
             # Give positional deviation to the lastest atom.
-            posi = new_atoms.get_positions()
-            posi[-1] += (np.random.rand(3)-0.5) * 2 * ran_radi
-            new_atoms.set_positions(posi, apply_constraint = False)
-            # Get all distances.
-            dist = new_atoms.get_all_distances(mic = True)
+            if not pin_the_fixed or len(new_posi)-1 not in fix_ind_arr:
+                new_posi[-1] += (np.random.rand(3)-0.5) * 2 * ran_radi
+            # Get minimum distance from latest atom.
+            rel_new_posi = np.array(new_posi) @ cell_inv
+            if len(new_posi) != 1:
+                min_dist = np.min(np.linalg.norm(((rel_new_posi[:-1] - rel_new_posi[-1] + np.array([0.5]*3)) % 1.0 - np.array([0.5]*3)) @ cell, axis=1))
+            else:
+                min_dist = cutoff_r + 1.
             # Get elapsed time of this loop.
             time_f = time()
             time_d = time_f - time_i
             # If the latest atom is properly positioned, break this loop.
-            if np.amin(dist + np.eye(len(dist))*999) > cutoff_r:
+            if min_dist > cutoff_r:
                 if log:
-                    print("( {} th / {} ) new atom position found".format(len(new_atoms), natoms))
+                    if len(new_posi) % 100 == 0:
+                        print("( {} th / {} ) new atom position found".format(len(new_posi), len_atoms))
                 break
             # If the latest atom is too close to another atom, remove the latest one.
             elif time_d < max_trial_sec:
-                new_atoms.pop()
+                new_posi.pop()
             # If failed for more than "max_trial_sec" seconds, restart from scratch.
             else:
-                del(new_atoms)
-                new_atoms = empty_atoms.copy()
+                new_posi = []
                 break
-
+    new_atoms = backbone.copy()
+    new_atoms.set_positions(new_posi, apply_constraint = False)
     # Shuffle positions
     shuffle_ind = np.setdiff1d(range(len(new_atoms)), np.concatenate(list(fix_ind_dict.values())), True)
     new_positions = new_atoms.get_positions().copy()
@@ -616,8 +651,8 @@ def random_atoms_gen(
     # Correct chemical symbols
     new_species = np.array(['XX']*len(new_atoms))
     new_species[shuffle_ind] = shffl_spec_list
-    if list(np.concatenate(list(fix_ind_dict.values()))):
-        new_species[np.concatenate(list(fix_ind_dict.values()))] = count2list(num_fix_dict)
+    if len(fix_ind_arr):
+        new_species[fix_ind_arr] = count2list(num_fix_dict)
 
     ## Set the chemical symbols
     new_atoms.set_chemical_symbols(new_species)
