@@ -81,7 +81,9 @@ if __name__ == '__main__':
                     info.append(new_info)
                 break
             words = line.split()
-            if words[1] == 'Step':
+            if len(words) < 2:
+                break
+            elif words[1] == 'Step':
                 t.append(int(words[2]))
                 info.append(new_info)
                 new_info = []
