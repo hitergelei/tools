@@ -534,30 +534,30 @@ class Structure_analyses(object):
             time_arr,
             sum_chain / num_chain,
             label='Mean of lengths',
-            c='r',
-            )
-        # ax1.plot(
-            # time_arr,
-            # max_chain,
-            # label='Max. of lengths',
-            # c='k',
-            # )
-        ax2 = ax1.twinx()
-        # ax2.plot(
-            # time_arr,
-            # num_chain,
-            # label='Num. of chains',
-            # c='b',
-            # )
-        ax2.plot(
-            time_arr,
-            sum_chain,
-            label='Sum of lengths',
             c='k',
             )
-        ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='r')
+        # # ax1.plot(
+            # # time_arr,
+            # # max_chain,
+            # # label='Max. of lengths',
+            # # c='k',
+            # # )
+        # ax2 = ax1.twinx()
+        # # ax2.plot(
+            # # time_arr,
+            # # num_chain,
+            # # label='Num. of chains',
+            # # c='b',
+            # # )
+        # ax2.plot(
+            # time_arr,
+            # sum_chain,
+            # label='Sum of lengths',
+            # c='k',
+            # )
+        ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='k')
         ax1.tick_params(axis="x",direction="in", labelsize='x-large')
-        ax2.tick_params(axis="both",direction="in", labelsize='x-large')
+        # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.title('cut={} $\AA$ & {} deg, bond={}-{}, t-intvl={}'.format(
             bond_cutoff,
             angle_cutoff,
@@ -567,7 +567,7 @@ class Structure_analyses(object):
             ), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
-        ax2.set_ylabel('Sum of chain lengths', fontsize='x-large')
+        # ax2.set_ylabel('Sum of chain lengths', fontsize='x-large')
         ax1.grid(alpha=0.5)
         plt.subplots_adjust(left=0.13, right=0.80)
         # plt.legend()
@@ -661,12 +661,12 @@ class Structure_analyses(object):
         plt.title(title, fontsize='x-large')
 
         # Different scale on the right axis.
-        ax2 = ax1.twinx()
-        ax2.bar(l, n, color='k', alpha=0.5)
+        # ax2 = ax1.twinx()
+        # ax2.bar(l, n, color='k', alpha=0.5)
         ax1.tick_params(axis="both",direction="in", labelsize='x-large')
-        ax2.tick_params(axis="both",direction="in", labelsize='x-large')
+        # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
         ax1.set_ylabel('Population (%)', fontsize='x-large')
-        ax2.set_ylabel('Population', fontsize='x-large')
+        # ax2.set_ylabel('Population', fontsize='x-large')
         plt.subplots_adjust(bottom=0.14, left=0.10, right=0.88)
         ax1.grid(alpha=0.5)
         plt.show()
