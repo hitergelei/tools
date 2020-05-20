@@ -474,6 +474,7 @@ def random_atoms_gen(
                 raise ValueError('The fix_ind_dict can not have "V", if num_spec_dict do not have "V"')
         if 'V' not in fix_ind_dict.keys():
             fix_ind_dict['V'] = []
+            num_fix_dict['V'] = 0
             num_shffl_spec_dict['V'] = 0
     elif fix_ind_dict is None:
         fix_ind_dict = {}
@@ -484,7 +485,6 @@ def random_atoms_gen(
         num_fix_dict['V'] = 0
     else:
         raise ValueError('Unknown type of fix_ind_dict.')
-    fix_ind_arr = np.concatenate(list(fix_ind_dict.values())).astype(np.int32)
 
     # Get shffl_spec_list.
     shffl_spec_list = count2list(num_shffl_spec_dict)
@@ -601,6 +601,7 @@ def random_atoms_gen(
             for i in range(len(value)):
                 value[i] -= np.sum(vacancy_ind < value[i])
             fix_ind_dict[key] = value
+    fix_ind_arr = np.concatenate(list(fix_ind_dict.values())).astype(np.int32)
 
     from time import time
     len_atoms = len(backbone)
