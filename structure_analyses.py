@@ -448,7 +448,7 @@ class Structure_analyses(object):
                 pckl.dump(bond_direcs_i,  open('{}/bond_direcs.pckl' .format(path), 'wb'))
                 pckl.dump(bond_lengths_i, open('{}/bond_lengths.pckl'.format(path), 'wb'))
                 pckl.dump(chain_vec_i   , open('{}/chain_vec.pckl'   .format(path), 'wb'))
-                print('Saved chain-info pckl files at {}.'.format(path))
+                print('Saved chain-info pckl files at {}'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
         return ind_set, bond_direcs, bond_lengths, chain_vec
 
@@ -495,12 +495,18 @@ class Structure_analyses(object):
         bond_cutoff,
         bond_rules=None,
         inf_as_zero=False,
+        deriv_sigma=None,
         load_bool=True,
         save_bool=True,
         ):
         """
         inf_as_zero (bool)
             - If true, let the length of infinite chain as zero.
+        deriv_sigma (int)
+            - Standard deviation (sigma) of Gaussian smearing of derivative plot.
+              Unit is 'step' of final plot (dt / slice interval).
+            - Set to zero for no smearing but derivative plot.
+            - If 'None', don't plot the derivative plot.
         """
 
         lengths = self.get_chain_lengths(
@@ -522,7 +528,17 @@ class Structure_analyses(object):
             # max_chain.append(np.max(lengths[i]))
         num_chain = np.array(num_chain, dtype='int')
         sum_chain = np.array(sum_chain, dtype='int')
+        avg_chain = sum_chain / num_chain
         # max_chain = np.array(max_chain, dtype='int')
+
+        # Derivatives
+        if deriv_sigma is not None or not False:
+            avg_chain_l = (avg_chain[1:-1] + avg_chain[:-2])/2
+            avg_chain_r = (avg_chain[2:] + avg_chain[1:-1])/2
+            dCdt = (avg_chain_r - avg_chain_l) / self.dt
+            if deriv_sigma != 0:
+                from scipy.ndimage import gaussian_filter
+                dCdt = gaussian_filter(dCdt, sigma=deriv_sigma)
 
         # Plot
         time_arr = np.arange(len(lengths)) * self.dt
@@ -532,8 +548,8 @@ class Structure_analyses(object):
         fig, ax1 = plt.subplots()
         ax1.plot(
             time_arr,
-            sum_chain / num_chain,
-            label='Mean of lengths',
+            avg_chain,
+            # label='Mean of lengths',
             c='k',
             )
         # # ax1.plot(
@@ -542,7 +558,21 @@ class Structure_analyses(object):
             # # label='Max. of lengths',
             # # c='k',
             # # )
-        # ax2 = ax1.twinx()
+        ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='k')
+        ax1.tick_params(axis="x",direction="in", labelsize='x-large')
+        ax1.set_xlabel('Time (ps)', fontsize='x-large')
+        ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
+        if deriv_sigma is not None or not False:
+            ax2 = ax1.twinx()
+            ax2.plot(
+                time_arr[1:-1],
+                dCdt*1000,
+                label='$\Delta t$={}(ps)\nGaussian smearing $\sigma$={} (ps)'.format(self.dt, deriv_sigma *self.dt),
+                c='r',
+                )
+            ax2.tick_params(axis="y",direction="in", labelsize='x-large', colors='r', labelcolor='r')
+            ax2.set_ylabel('$\Delta C$/$\Delta t$ (ns$^{-1}$)', fontsize='x-large', c='r')
+            plt.legend(loc=(0.00, 1.02), fontsize='x-large')
         # # ax2.plot(
             # # time_arr,
             # # num_chain,
@@ -555,22 +585,16 @@ class Structure_analyses(object):
             # label='Sum of lengths',
             # c='k',
             # )
-        ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='k')
-        ax1.tick_params(axis="x",direction="in", labelsize='x-large')
-        # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.title('cut={} $\AA$ & {} deg, bond={}-{}, t-intvl={}'.format(
             bond_cutoff,
             angle_cutoff,
             self.bond_rules_str[0],
             self.bond_rules_str[1],
             self.dt,
-            ), fontsize='x-large')
+            ), fontsize='x-large', y=1.25)
         plt.xlabel('Time (ps)', fontsize='x-large')
-        ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
-        # ax2.set_ylabel('Sum of chain lengths', fontsize='x-large')
         ax1.grid(alpha=0.5)
-        plt.subplots_adjust(left=0.13, right=0.80)
-        # plt.legend()
+        plt.subplots_adjust(left=0.10, bottom=0.12, right=0.85, top=0.77)
         plt.show()
 
     def get_chain_length_histo(
