@@ -243,7 +243,9 @@ if __name__ == '__main__':
     ## Main loop
     ADOS_list = []
     for i in range(len(args.inp_file_list)):
-        npz_name = 'vel2dos-saved/{}_dt{}_img{}-{}-{}.npz'.format(args.inp_file_list[i], dt, slice_list[0], slice_list[1], slice_list[2])
+        f_name = args.inp_file_list[i].split('/')[-1]
+        f_path = args.inp_file_list[i][:-(len(f_name)+1)]
+        npz_name = './{}/vel2dos-saved/{}_dt{}_img{}-{}-{}.npz'.format(f_path, f_name, dt, slice_list[0], slice_list[1], slice_list[2])
         try:
             args.load_bool = True
             npz = np.load(npz_name)
@@ -269,7 +271,7 @@ if __name__ == '__main__':
             f, ADOS = velocity2phononPDOS(atomic_mass_arr, average_temp, v_arr, dt)
             if args.save_bool:
                 from subprocess import call
-                call('mkdir vel2dos-saved', shell=True)
+                call('mkdir -p ./{}/vel2dos-saved'.format(f_path), shell=True)
                 np.savez(npz_name, f=f, ADOS=ADOS)
         else:
             if i % 100 == 0:

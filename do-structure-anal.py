@@ -9,17 +9,18 @@ bonding_rules = [['Ge','Sb'], ['Te']]
 alist_file = 'lmp-result.traj'
 # alist_file = 'gst-cubic-md-last50.traj'
 # alist_file = 'test.traj'
-# alist_slice = ':'
+alist_slice = '::1'
 # alist_slice = '::100'
 # alist_slice = '5000:15000:10'
 # alist_slice = '120000:175000:100'
-alist_slice = '5000'
+# alist_slice = '5000'
 
 from structure_analyses import Structure_analyses
 sa = Structure_analyses(
     alist_file,
     alist_slice,
-    dt=0.01,
+    # dt=0.01,
+    dt=1.,
     # dt=100,
     )
 
@@ -30,14 +31,15 @@ sa = Structure_analyses(
     # # save_bool=False,
     # )
 
-# sa.plot_chain_length_stat(
-    # angle_cutoff,
-    # bond_cutoff,
-    # bonding_rules,
-    # # inf_as_zero=True,
-    # # load_bool=False,
-    # # save_bool=False,
-    # )
+sa.plot_chain_length_stat(
+    angle_cutoff,
+    bond_cutoff,
+    bonding_rules,
+    # inf_as_zero=True,
+    deriv_sigma=15,
+    # load_bool=False,
+    # save_bool=False,
+    )
 
 # sa.plot_chain_length_histo(
     # angle_cutoff,
@@ -61,11 +63,11 @@ sa = Structure_analyses(
     # # return_intvl=10,
     # )
 
-sa.plot_3body_pieces_stat(
-    angle_cutoff,
-    bond_cutoff,
-    bonding_rules,
-    num_bins=100,
-    # load_bool=False,
-    # save_bool=False,
-    )
+# sa.plot_3body_pieces_stat(
+    # angle_cutoff,
+    # bond_cutoff,
+    # bonding_rules,
+    # num_bins=100,
+    # # load_bool=False,
+    # # save_bool=False,
+    # )

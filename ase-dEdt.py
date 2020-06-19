@@ -40,15 +40,18 @@ if __name__ == '__main__':
     epot = []
     for i in range(len(alist)):
         epot.append(alist[i].get_potential_energy()/ len_atoms)
+    if gauss_sigma != 0:
+        from scipy.ndimage import gaussian_filter
+        epot = gaussian_filter(epot, sigma=gauss_sigma)
     epot_0 = epot[:-2]
     epot_1 = epot[1:-1]
     epot_2 = epot[2:]
     epot_l = np.mean([epot_0, epot_1], axis=0)
     epot_r = np.mean([epot_1, epot_2], axis=0)
     dEdt = (epot_r - epot_l) /dt
-    if gauss_sigma != 0:
-        from scipy.ndimage import gaussian_filter
-        dEdt = gaussian_filter(dEdt, sigma=gauss_sigma)
+    # if gauss_sigma != 0:
+        # from scipy.ndimage import gaussian_filter
+        # dEdt = gaussian_filter(dEdt, sigma=gauss_sigma)
     t = np.arange(len(alist)) *dt
 
     # > Plot

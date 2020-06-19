@@ -495,6 +495,7 @@ class Structure_analyses(object):
         bond_cutoff,
         bond_rules=None,
         inf_as_zero=False,
+        therm_corr=None,
         deriv_sigma=None,
         load_bool=True,
         save_bool=True,
@@ -502,6 +503,8 @@ class Structure_analyses(object):
         """
         inf_as_zero (bool)
             - If true, let the length of infinite chain as zero.
+        therm_corr (function)
+            - If a function is provided, 
         deriv_sigma (int)
             - Standard deviation (sigma) of Gaussian smearing of derivative plot.
               Unit is 'step' of final plot (dt / slice interval).
@@ -532,7 +535,7 @@ class Structure_analyses(object):
         # max_chain = np.array(max_chain, dtype='int')
 
         # Derivatives
-        if deriv_sigma is not None or not False:
+        if deriv_sigma is not None and not False:
             avg_chain_l = (avg_chain[1:-1] + avg_chain[:-2])/2
             avg_chain_r = (avg_chain[2:] + avg_chain[1:-1])/2
             dCdt = (avg_chain_r - avg_chain_l) / self.dt
@@ -562,7 +565,7 @@ class Structure_analyses(object):
         ax1.tick_params(axis="x",direction="in", labelsize='x-large')
         ax1.set_xlabel('Time (ps)', fontsize='x-large')
         ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
-        if deriv_sigma is not None or not False:
+        if deriv_sigma is not None and not False:
             ax2 = ax1.twinx()
             ax2.plot(
                 time_arr[1:-1],
