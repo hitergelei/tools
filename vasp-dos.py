@@ -16,6 +16,7 @@ def _parse_slice(s):
 def argparse():
     import argparse
     parser = argparse.ArgumentParser(description = """
+    Young-Jae Choi, POSTECH, Korea, Rep. of.
     This code will plot (total/atomic/chemical) DOS figure.
     """)
     # Positional arguments
@@ -24,6 +25,7 @@ def argparse():
     parser.add_argument('-d', '--doscar_path', type=str, default='DOSCAR', help='DOSCAR file path. Default: ./DOSCAR')
     parser.add_argument('-p', '--poscar_path', type=str, default='POSCAR', help='POSCAR file path. Default: ./POSCAR')
     parser.add_argument('-c', '--cdos_bool', action='store_true', help='If provided, Plot chemical-DOS. Even when not provided, will be "True" if cdos_sym is provided.')
+    parser.add_argument('-m', '--orbit_mom', action='store_true', help='If provided, DOS of different momentum are split.')
     parser.add_argument('-s', '--cdos_sym', type=str, nargs='+', default=None, help='Chemical symbols for chemical DOS plot. Multiple symbols are readable. Default: Plot all')
     parser.add_argument('-a', '--ados_bool', action='store_true', help='If provided, Plot atomic-DOS. Even when not provided, will be "True" if ados_ind is provided.')
     parser.add_argument('-n', '--ados_ind', type=int, nargs='+', default=None, help='Atomic indices for atomic DOS plot. Multiple integers are readable. Default: Plot all')
@@ -66,6 +68,7 @@ if __name__ == '__main__':
     Elim_low     = args.Elim_low
     DOSlim_up    = args.DOSlim_up
     DOSlim_low   = args.DOSlim_low
+    orbit_mom    = args.orbit_mom
 
 # Main
 if __name__ == '__main__':
@@ -80,16 +83,38 @@ if __name__ == '__main__':
             f.readline()
         # line 6
         words = f.readline().split()
-        nE    = int(words[2])
-        Ef    = float(words[3])
-        Emax  = float(words[0]) - Ef
-        Emin  = float(words[1]) - Ef
-        dE    = (Emax-Emin) / (nE-1)
-        E_arr = np.arange(Emin, Emax+1e-10, dE)
+        Ef   = float(words[2])
+        Emax = float(words[0]) - Ef
+        Emin = float(words[1]) - Ef
         if not Elim_up:
             Elim_up = Emax
         if not Elim_low:
             Elim_low = Emin
+
+        # Get nE
+        nE=0
+        while 1:
+            words = f.readline().split()
+            if len(words) == 3:
+                nE+=1
+            else:
+                break
+        dE = (Emax-Emin) / (nE-1)
+        E_arr = np.arange(Emin, Emax+1e-12, dE)
+
+        # Check if it is non-collinear calc.
+        words = f.readline().split()
+        if len(words) == 37:
+            collinear_bool = False
+        elif len(words) == 10:
+            collinear_bool = True
+        else:
+            raise NotImplementedError
+
+        # Return to line 6
+        f.seek(0)
+        for i in range(6):
+            f.readline()
 
         ## Total-DOS
         dos_arr = []
@@ -117,18 +142,23 @@ if __name__ == '__main__':
         else:
             # Plot total-DOS
             if flip_xy:
-                plt.fill_between(dos_arr, E_arr, color='k', alpha=0.3)
+                # plt.fill_between(dos_arr, E_arr, color='k', alpha=0.3)
+                plt.plot(dos_arr, E_arr, color='k')
             else:
-                plt.fill_betweenx(dos_arr, E_arr, color='k', alpha=0.3)
-            ## atomic-PDOS
+                # plt.fill_betweenx(dos_arr, E_arr, color='k', alpha=0.3)
+                plt.plot(E_arr, dos_arr, color='k')
+
+            # atomic-PDOS
             atomic_pdos_arr = []
             for i in range(natoms):
                 f.readline() # Skip first line
                 atomic_pdos_arr_i = []
                 for j in range(nE):
-                    atomic_pdos_arr_i.append(f.readline().split()[1:])
+                    atomic_pdos_arr_i.append(np.array(f.readline().split()[1:], dtype=float))
                 atomic_pdos_arr.append(atomic_pdos_arr_i)
             atomic_pdos_arr = np.array(atomic_pdos_arr, dtype=float)
+            if not collinear_bool:
+                atomic_pdos_arr = atomic_pdos_arr[:,:,range(0,36,4)]
             # Transpose (atom, E, orbit) to be (atom, orbit, E)
             atomic_pdos_arr = np.transpose(atomic_pdos_arr, (0,2,1))
             ## Plot atomic-PDOS
@@ -151,27 +181,39 @@ if __name__ == '__main__':
                         # p-orbital
                         if 'p' in pdos_orbit:
                             if flip_xy:
-                                plt.plot(atomic_pdos_arr[atom_ind, 1], E_arr, label='atom{}-py'.format(atom_ind))
-                                plt.plot(atomic_pdos_arr[atom_ind, 2], E_arr, label='atom{}-pz'.format(atom_ind))
-                                plt.plot(atomic_pdos_arr[atom_ind, 3], E_arr, label='atom{}-px'.format(atom_ind))
+                                if orbit_mom:
+                                    plt.plot(atomic_pdos_arr[atom_ind, 1], E_arr, label='atom{}-py'.format(atom_ind))
+                                    plt.plot(atomic_pdos_arr[atom_ind, 2], E_arr, label='atom{}-pz'.format(atom_ind))
+                                    plt.plot(atomic_pdos_arr[atom_ind, 3], E_arr, label='atom{}-px'.format(atom_ind))
+                                else:
+                                    plt.plot(np.sum(atomic_pdos_arr[atom_ind, 1:4], axis=0), E_arr, label='atom{}-p'.format(atom_ind))
                             else:
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 1], label='atom{}-py'.format(atom_ind))
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 2], label='atom{}-pz'.format(atom_ind))
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 3], label='atom{}-px'.format(atom_ind))
+                                if orbit_mom:
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 1], label='atom{}-py'.format(atom_ind))
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 2], label='atom{}-pz'.format(atom_ind))
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 3], label='atom{}-px'.format(atom_ind))
+                                else:
+                                    plt.plot(E_arr, np.sum(atomic_pdos_arr[atom_ind, 1:4], axis=0), label='atom{}-p'.format(atom_ind))
                         # d-orbital
                         if 'd' in pdos_orbit:
                             if flip_xy:
-                                plt.plot(atomic_pdos_arr[atom_ind, 4], E_arr, label='atom{}-dxy'.format(atom_ind))
-                                plt.plot(atomic_pdos_arr[atom_ind, 5], E_arr, label='atom{}-dyz'.format(atom_ind))
-                                plt.plot(atomic_pdos_arr[atom_ind, 6], E_arr, label='atom{}-d$z^2$'.format(atom_ind))
-                                plt.plot(atomic_pdos_arr[atom_ind, 7], E_arr, label='atom{}-dxz'.format(atom_ind))
-                                plt.plot(atomic_pdos_arr[atom_ind, 8], E_arr, label='atom{}-d$x^2$-$y^2$'.format(atom_ind))
+                                if orbit_mom:
+                                    plt.plot(atomic_pdos_arr[atom_ind, 4], E_arr, label='atom{}-dxy'.format(atom_ind))
+                                    plt.plot(atomic_pdos_arr[atom_ind, 5], E_arr, label='atom{}-dyz'.format(atom_ind))
+                                    plt.plot(atomic_pdos_arr[atom_ind, 6], E_arr, label='atom{}-d$z^2$'.format(atom_ind))
+                                    plt.plot(atomic_pdos_arr[atom_ind, 7], E_arr, label='atom{}-dxz'.format(atom_ind))
+                                    plt.plot(atomic_pdos_arr[atom_ind, 8], E_arr, label='atom{}-d$x^2$-$y^2$'.format(atom_ind))
+                                else:
+                                    plt.plot(np.sum(atomic_pdos_arr[atom_ind, 4:9], axis=0), E_arr, label='atom{}-d'.format(atom_ind))
                             else:
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 4], label='atom{}-dxy'.format(atom_ind))
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 5], label='atom{}-dyz'.format(atom_ind))
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 6], label='atom{}-d$z^2$'.format(atom_ind))
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 7], label='atom{}-dxz'.format(atom_ind))
-                                plt.plot(E_arr, atomic_pdos_arr[atom_ind, 8], label='atom{}-d$x^2$-$y^2$'.format(atom_ind))
+                                if orbit_mom:
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 4], label='atom{}-dxy'.format(atom_ind))
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 5], label='atom{}-dyz'.format(atom_ind))
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 6], label='atom{}-d$z^2$'.format(atom_ind))
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 7], label='atom{}-dxz'.format(atom_ind))
+                                    plt.plot(E_arr, atomic_pdos_arr[atom_ind, 8], label='atom{}-d$x^2$-$y^2$'.format(atom_ind))
+                                else:
+                                    plt.plot(E_arr, np.sum(atomic_pdos_arr[atom_ind, 4:9], axis=0), label='atom{}-d'.format(atom_ind))
             ## Plot chemical-PDOS
             elif cdos_bool:
                 # Get species sequence
@@ -207,34 +249,46 @@ if __name__ == '__main__':
                         # p-orbital
                         if 'p' in pdos_orbit:
                             if flip_xy:
-                                plt.plot(chem_pdos_arr[spec_i, 1], E_arr, label=unique_chem[spec_i]+'-py')
-                                plt.plot(chem_pdos_arr[spec_i, 2], E_arr, label=unique_chem[spec_i]+'-pz')
-                                plt.plot(chem_pdos_arr[spec_i, 3], E_arr, label=unique_chem[spec_i]+'-px')
+                                if orbit_mom:
+                                    plt.plot(chem_pdos_arr[spec_i, 1], E_arr, label=unique_chem[spec_i]+'-py')
+                                    plt.plot(chem_pdos_arr[spec_i, 2], E_arr, label=unique_chem[spec_i]+'-pz')
+                                    plt.plot(chem_pdos_arr[spec_i, 3], E_arr, label=unique_chem[spec_i]+'-px')
+                                else:
+                                    plt.plot(np.sum(chem_pdos_arr[spec_i, 1:4], axis=0), E_arr, label=unique_chem[spec_i]+'-p')
                             else:
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 1], label=unique_chem[spec_i]+'-py')
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 2], label=unique_chem[spec_i]+'-pz')
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 3], label=unique_chem[spec_i]+'-px')
+                                if orbit_mom:
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 1], label=unique_chem[spec_i]+'-py')
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 2], label=unique_chem[spec_i]+'-pz')
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 3], label=unique_chem[spec_i]+'-px')
+                                else:
+                                    plt.plot(E_arr, np.sum(chem_pdos_arr[spec_i, 1:4], axis=0), label=unique_chem[spec_i]+'-p')
                         # d-orbital
                         if 'd' in pdos_orbit:
                             if flip_xy:
-                                plt.plot(chem_pdos_arr[spec_i, 4], E_arr, label=unique_chem[spec_i]+'-dxy')
-                                plt.plot(chem_pdos_arr[spec_i, 5], E_arr, label=unique_chem[spec_i]+'-dyz')
-                                plt.plot(chem_pdos_arr[spec_i, 6], E_arr, label=unique_chem[spec_i]+'-d$z^2$')
-                                plt.plot(chem_pdos_arr[spec_i, 7], E_arr, label=unique_chem[spec_i]+'-dxz')
-                                plt.plot(chem_pdos_arr[spec_i, 8], E_arr, label=unique_chem[spec_i]+'-d$x^2$-$y^2$')
+                                if orbit_mom:
+                                    plt.plot(chem_pdos_arr[spec_i, 4], E_arr, label=unique_chem[spec_i]+'-dxy')
+                                    plt.plot(chem_pdos_arr[spec_i, 5], E_arr, label=unique_chem[spec_i]+'-dyz')
+                                    plt.plot(chem_pdos_arr[spec_i, 6], E_arr, label=unique_chem[spec_i]+'-d$z^2$')
+                                    plt.plot(chem_pdos_arr[spec_i, 7], E_arr, label=unique_chem[spec_i]+'-dxz')
+                                    plt.plot(chem_pdos_arr[spec_i, 8], E_arr, label=unique_chem[spec_i]+'-d$x^2$-$y^2$')
+                                else:
+                                    plt.plot(np.sum(chem_pdos_arr[spec_i, 4:9], axis=0), E_arr, label=unique_chem[spec_i]+'-d')
                             else:
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 4], label=unique_chem[spec_i]+'-dxy')
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 5], label=unique_chem[spec_i]+'-dyz')
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 6], label=unique_chem[spec_i]+'-d$z^2$')
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 7], label=unique_chem[spec_i]+'-dxz')
-                                plt.plot(E_arr, chem_pdos_arr[spec_i, 8], label=unique_chem[spec_i]+'-d$x^2$-$y^2$')
+                                if orbit_mom:
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 4], label=unique_chem[spec_i]+'-dxy')
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 5], label=unique_chem[spec_i]+'-dyz')
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 6], label=unique_chem[spec_i]+'-d$z^2$')
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 7], label=unique_chem[spec_i]+'-dxz')
+                                    plt.plot(E_arr, chem_pdos_arr[spec_i, 8], label=unique_chem[spec_i]+'-d$x^2$-$y^2$')
+                                else:
+                                    plt.plot(E_arr, np.sum(chem_pdos_arr[spec_i, 4:9], axis=0), label=unique_chem[spec_i]+'-d')
             if pdos_residue:
                 if flip_xy:
                     plt.plot(dos_arr - np.sum(np.sum(atomic_pdos_arr, axis=1), axis=0), E_arr, label='residue')
                 else:
                     plt.plot(E_arr, dos_arr - np.sum(np.sum(atomic_pdos_arr, axis=1), axis=0), label='residue')
             if legend_bool:
-                plt.legend()
+                plt.legend(loc=(1.05, 0.), fontsize='x-large')
     #
     if flip_xy:
         plt.xlim((DOSlim_low, DOSlim_up))
@@ -247,6 +301,7 @@ if __name__ == '__main__':
         plt.xlabel('Energy(eV)', fontsize='xx-large')
         plt.ylabel('DOS(arb. units)', fontsize='xx-large')
     plt.tick_params(axis="both",direction="in", labelsize='xx-large')
+    plt.subplots_adjust(left=0.20, bottom=0.15, right=0.50, top=0.95)
     plt.grid(alpha=0.2)
     plt.show()
 

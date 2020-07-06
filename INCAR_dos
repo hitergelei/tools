@@ -1,0 +1,51 @@
+ SYSTEM=gst_ran
+#
+   GGA     =        PE      ! 91:Perdew-Wang91 | PE:PBE | RP: revised PBE | PS:PBEsol | AM
+   #LHFCALC =      .TRUE.    ! PBE0
+   #METAGGA =       SCAN     !
+   #LUSE_VDW=     .TRUE.     ! rVV10 + SCAN
+   #BPARAM  =       15.7     ! rVV10 option
+   #LASPH   =      .TRUE.    ! 
+   #ADDGRID =      .TRUE.    !
+   PREC    =         a      ! determines the energy cutoff ENCUT, |L|M|N|A|H|
+   ISTART  =         1      ! job   : 0-new 1-file 2-samecut
+   ICHARG  =        11      ! charge: 0-wave 1-file 2-atom 10-const
+   ISPIN   =         1      ! | 1-non spin polarized | 2-spin polarized |
+   #MAGMOM  = 16*0
+   ENCUT   =        520.    ! cut-off energy for plane wave basis set in eV
+   NELM    =        200     ! maximum number of electronic SC (selconsistency)
+   #NELMDL  =        -6      ! number of non-selconsistency SC steps
+   EDIFF   =       1E-08    ! specifies the global break condition for the electronic
+   #LREAL   =       Auto     ! real space projection .FALSE. or Auto
+   IALGO   =        38      ! select algorithm (8=CG for small, 48=RMM for big systems)
+   #NBAND   =        16      ! Determines actual number of bands in the calculation
+   #NSW     =        500     ! maximum number of ionic steps
+   #IBRION  =         1      ! how to ions are updated and moved
+   #EDIFFG  =      -.5E-03   ! break conditions for the ionic relaxation loop
+   #EDIFFG  =       1E-07    ! break conditions for the ionic relaxation loop
+   #ISIF    =         7      ! controls whether the stress tensor is alculated
+   ISYM    =        -1      ! switch symmetry on (1,2,3) or off (-1,0)
+   #KSPACING =      0.07     ! Unit of inverse Angstrom. 0.14 for rlx, 0.07 for oneshot.
+   #KGAMMA   =    .FALSE.    ! Default: .TRUE.
+   IVDW    =        12
+   #KPAR    =         1      ! 
+   #POTIM   =       0.015    ! timestep in unit of angst
+   #NPAR    =          6     ! node number
+   NCORE   =        20      ! half of number of cpu per node
+ DOS related values:
+   ISMEAR  =        -5      ! for semiconductor or insulators ISMEAR=-5, SIGMA=0.05
+   SIGMA   =         0.01   ! for metal ISMEAR=1 or =2 SIGMA=0.2
+   EMIN    = -10
+   EMAX    =  15
+   NEDOS   = 20000
+   LORBIT  = 11
+   LORBMOM = .TRUE.
+ Write flags
+   LWAVE   =        .FALSE. ! These tags determine whether the orbitals (file WAVECAR),
+   LCHARG  =        .FALSE. ! the charge densities (files CHGCAR and CHG) are written
+   #LVTOT   =        .TRUE.  ! whether the total local potential is written to the LOCPOT file.
+ Non-colinear calculations and spin orbit coupling
+   LSORBIT =        .TRUE.  ! switch on SOC and automatically set LNONCOLLINEAR=.TRUE.
+   #SAXIS   =         0 0 1  ! quantisation axis for spin
+   GGA_COMPAT =     .FALSE. ! apply spherical cutoff on gradient field
+
