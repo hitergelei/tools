@@ -100,10 +100,16 @@ def read_txt_matrix(
 
 def nospace(string): return string.replace(' ', '_')
 def E_fromAlist(alist):
-    """ Return total energy array """
+    """ Return potential energy array """
     energies = []
     for atoms in alist:
         energies.append(atoms.get_potential_energy())
+    return np.array(energies)
+def Eperatom_fromAlist(alist):
+    """ Return potential energy per atom array """
+    energies = []
+    for atoms in alist:
+        energies.append(atoms.get_potential_energy()/len(atoms))
     return np.array(energies)
 def F_fromAlist(alist):
     """ Return force array array """

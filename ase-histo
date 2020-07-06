@@ -10,7 +10,7 @@ def argparse():
     """)
     # Positional arguments
     parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
-    parser.add_argument('target', type=str, help='Choose target property among e(:energy), f(:force), v(:velocity), p(:momentum), s(:stress), ak(:atomic kinetic energy).')
+    parser.add_argument('target', type=str, help='Choose target property among e(:energy), eperatom(:energy/atom) f(:force), v(:velocity), p(:momentum), s(:stress), ak(:atomic kinetic energy).')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-m', '--bin_number', type=int, default=200, help="Number of histogram's bin. default=200")
@@ -42,6 +42,10 @@ if __name__ == '__main__':
         vector_type = False
         from ss_util import E_fromAlist
         data = E_fromAlist(alist)
+    if args.target == 'eperatom':
+        vector_type = False
+        from ss_util import Eperatom_fromAlist
+        data = Eperatom_fromAlist(alist)
     elif args.target == 'f':
         vector_type = True
         from ss_util import F_fromAlist
