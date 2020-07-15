@@ -624,7 +624,9 @@ def random_atoms_gen(
             new_posi.append(old_posi[len(new_posi)].copy())
             # Give positional deviation to the lastest atom.
             if not pin_the_fixed or len(new_posi)-1 not in fix_ind_arr:
-                new_posi[-1] += (np.random.rand(3)-0.5) * 2 * ran_radi
+                direc_vec = np.random.rand(3)-0.5
+                direc_vec /= np.linalg.norm(direc_vec)
+                new_posi[-1] += direc_vec * ran_radi
             # Get minimum distance from latest atom.
             rel_new_posi = np.array(new_posi) @ cell_inv
             if len(new_posi) != 1:
