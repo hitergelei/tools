@@ -36,5 +36,5 @@ print(" <<< cell array >>>")
 print(cell)
 print("\n <<< cell volume = "+str(vol)+" >>>")
 print(" <<< # of atoms = "+str(num)+" >>>\n")
-print(" <<< volume/atom (Ang^3) = "+str(vpa)+" >>>\n")
+print(" <<< atoms/volume (Ang^-3) = "+str(1./vpa)+" >>>\n")
 
