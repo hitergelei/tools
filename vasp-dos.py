@@ -1,20 +1,9 @@
 #!/usr/bin/env python
 import numpy as np
 
-def _parse_slice(s):
-    # Slice format
-    if ':' in s:
-        a = [int(e) if e.strip() else None for e in s.split(":")]
-    # Int format
-    else:
-        if int(s) == -1:
-            a = [-1, None]
-        else:
-            a = [int(s), int(s)+1]
-    return slice(*a)
-
 def argparse():
     import argparse
+    from ss_util import parse_slice
     parser = argparse.ArgumentParser(description = """
     Young-Jae Choi, POSTECH, Korea, Rep. of.
     This code will plot (total/atomic/chemical) DOS figure.
