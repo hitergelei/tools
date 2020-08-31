@@ -79,9 +79,9 @@ def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir = get_subdir_name(i, disp)
         bu_and_mkdir(calc_dir, ndir)
-        call(['cp frozen_model.pb input.in '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['cp frozen_model.pb input-phonon.lmp '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
         call(['lmp-pos2lmp.awk POSCAR-'+str(i).zfill(3)+' > structure.in'], cwd = calc_dir+'/'+ndir, shell = True)
-        call(['mpiexec.hydra -np $NSLOTS lmp_mpi -in input.in > out'], cwd = calc_dir+'/'+ndir, shell = True)
+        call(['lmp_mpi -in input-phonon.lmp > out'], cwd = calc_dir+'/'+ndir, shell = True)
         atoms = read(calc_dir+'/'+ndir+'/out.dump', index=0, format='lammps-dump', order=True)
         if i == 0:
             F_0 = atoms.get_forces(apply_constraint=False)
