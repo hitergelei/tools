@@ -197,8 +197,8 @@ def argparse():
     This code will give you the phonon-(partial/total)DOS from MD trajectory.
     """)
     # Positional arguments
-    parser.add_argument('dt', type=float, help='Time interval between images selected in unit of picosec.')
     parser.add_argument('inp_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
+    parser.add_argument('dt', type=float, help='Time interval between images selected in unit of picosec.')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-p', '--partial_DOS', action='store_true', help='If activated, return partial DOS. (If not, total DOS as default)')
