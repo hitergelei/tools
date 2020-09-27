@@ -9,7 +9,7 @@ temp_fin = float(1100)
 
 #### Main
 from ase.io import read
-alist = read('lmp-result.traj', ':')
+alist = read('lmp-results.traj', ':')
 atoms = alist[0]
 cell = atoms.get_cell()
 center = np.sum(cell, axis=0) /2.

@@ -6,7 +6,7 @@ dt = float(1) # (ps)
 
 #### Main
 from ase.io import read
-alist = read('lmp-result.traj', '::100')
+alist = read('lmp-results.traj', '::100')
 atoms = alist[0]
 
 # Get volume and energy

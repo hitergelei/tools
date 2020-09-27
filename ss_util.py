@@ -7,6 +7,18 @@ from ase.build import make_supercell
 from numpy import ndarray
 import numpy as np
 
+def slice2str(s):
+    string = ''
+    if s.start is not None:
+        string += str(s.start)
+    string += ':'
+    if s.stop is not None:
+        string += str(s.stop)
+    string += ':'
+    if s.step is not None:
+        string += str(s.step)
+    return string
+
 def parse_slice(s):
     # Slice format
     if ':' in s:

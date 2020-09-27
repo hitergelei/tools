@@ -21,7 +21,7 @@ def argparse():
     # Positional arguments
     parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
     # Optional arguments
-    parser.add_argument('-n', '--image_slice', type=_parse_slice, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-f', '--file_format', type=str, default=None, help='Specify file format. default=(ase)automatic')
     return parser.parse_args()
 

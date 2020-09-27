@@ -45,6 +45,99 @@ def read_lmp_log(
 
     return info
 
+# def read_lmp_dump(
+    # dump_file='out.dump',
+    # ):
+
+    # # Load file
+    # f = open(dump_file)
+    # lines = f.readlines()
+
+    # # Info
+    # len_atoms = int(lines[3].split()[0])
+    # len_img = lines//(len_atoms+9)
+    # aid = []
+    # element = []
+    # for i in range(10,10+len_atoms,1):
+        # aid.append(int(lines[i][0]))
+        # element.append((lines[i][1]))
+    # # re-order
+    # order = np.argsort(aid)
+    # element = np.array(element)[order]
+    # tilt_items = lines[4].split()[3:]
+    # if len(tilt_items) == 6:
+        # tilt_bool = True
+    # elif len(tilt_items) == 3:
+        # tilt_bool = False
+    # else:
+        # raise NotImplementedError
+
+    # # Iteration loop
+    # from ase.atoms import Atoms
+    # for img_i in range(len_img):
+        # lo = []
+        # hi = []
+        # tilt = []
+        # id = []
+        # types = []
+        # positions = []
+        # element = [] ## ssrokyz
+        # pe = [] ## ssrokyz
+        # scaled_positions = []
+        # velocities = []
+        # forces = []
+        # quaternions = []
+        # # @ BOX
+        # # save labels behind "ITEM: BOX BOUNDS" in
+        # # triclinic case (>=lammps-7Jul09)
+        # for l in range(img_i+5,img_i+8,1):
+            # fields = lines[l].split()
+            # lo.append(float(fields[0]))
+            # hi.append(float(fields[1]))
+            # if (len(fields) >= 3):
+                # tilt.append(float(fields[2]))
+
+        # # determine cell tilt (triclinic case!)
+        # if (len(tilt) >= 3):
+            # # for >=lammps-7Jul09 use labels behind
+            # # "ITEM: BOX BOUNDS" to assign tilt (vector) elements ...
+            # if (len(tilt_items) >= 3):
+                # xy = tilt[tilt_items.index('xy')]
+                # xz = tilt[tilt_items.index('xz')]
+                # yz = tilt[tilt_items.index('yz')]
+            # # ... otherwise assume default order in 3rd column
+            # # (if the latter was present)
+            # else:
+                # xy = tilt[0]
+                # xz = tilt[1]
+                # yz = tilt[2]
+        # else:
+            # xy = xz = yz = 0
+        # xhilo = (hi[0] - lo[0]) - (xy**2)**0.5 - (xz**2)**0.5
+        # yhilo = (hi[1] - lo[1]) - (yz**2)**0.5
+        # zhilo = (hi[2] - lo[2])
+        # if xy < 0:
+            # if xz < 0:
+                # celldispx = lo[0] - xy - xz
+            # else:
+                # celldispx = lo[0] - xy
+        # else:
+            # celldispx = lo[0]
+        # celldispy = lo[1]
+        # celldispz = lo[2]
+
+        # cell = [[xhilo, 0, 0], [xy, yhilo, 0], [xz, yz, zhilo]]
+        # celldisp = [[celldispx, celldispy, celldispz]]
+                
+        # line = f.readline()
+
+        # alist.append(Atoms(
+            # symbols=element,
+            # positions=positions,
+            # celldisp=celldisp,
+            # cell=cell,
+            # ))
+
 def argparse():
     import argparse
     from ss_util import parse_slice
@@ -84,7 +177,7 @@ if __name__ == '__main__':
     load_log = args.load_log
 
     print('Reading dump file...'.center(120))
-    dump_inp = read(dump_file, image_slice, format='lammps-dump')
+    dump_inp = read(dump_file, image_slice, format='lammps-dump-text')
     if not isinstance(dump_inp, list):
         dump_inp = [dump_inp]
     print('Successively read dump file!'.center(120))
@@ -99,7 +192,7 @@ if __name__ == '__main__':
             print("    ==> {} != {}".format(len(list(info.values())[0]), len(dump_inp)))
             raise RuntimeError()
 
-    traj = Traj("lmp-result.traj", "w")
+    traj = Traj("lmp-results.traj", "w")
     for i in range(len(dump_inp)):
         if i % 1000 == 0:
             print("Writing "+str(i)+"th image")
@@ -118,7 +211,7 @@ if __name__ == '__main__':
                 info['Pxy'][i],
                 ], float) * 1e-4 * units.GPa
         else:
-            atoms._calc.results['energy'] = np.sum(atoms._calc.results['atomic_energies'])
+            atoms._calc.results['energy'] = np.sum(atoms._calc.results['energies'])
         traj.write(atoms)
     traj.close()
 
@@ -126,7 +219,7 @@ if __name__ == '__main__':
     print("      %%%%%%%%%%% This code will covert lammps results to traj file %%%%%%%%%")
     print("         useage ==> ./lmp2traj.py 'dump file' 'energy logfile'")
     print("              e.g.) ./lmp2traj.py out.dump log.lammps")
-    print("                The result file name will be lmp-result.traj")
+    print("                The result file name will be lmp-results.traj")
     print("  *****NOTE***** There is some issue when ase.io.lammpsrun import dump file. *****NOTE*****")
     print("       Make sure that you revised it. (velocity-> vel /1000/units.fs, symbol issue)")
     print("=======================================================================================\n\n")

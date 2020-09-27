@@ -6,7 +6,7 @@ import numpy as np
 angle_cutoff = 145.
 bond_cutoff = 3.7
 bonding_rules = [['Ge','Sb'], ['Te']]
-alist_file = 'lmp-result.traj'
+alist_file = 'lmp-results.traj'
 # alist_file = 'gst-cubic-md-last50.traj'
 # alist_file = 'test.traj'
 alist_slice = '::1'
