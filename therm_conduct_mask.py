@@ -98,6 +98,8 @@ def thermal_flux(
     velocities,
     atomic_energies,
     dt,
+    masker,
+    latt_params,
     ):
     """
 
@@ -108,6 +110,8 @@ def thermal_flux(
     - velocities (array): Atomic velocities in ASE unit. shape=(# of structures, len(atoms), space dimension(=3))
     - atomic_energies (array): Atomic energies(=kinetic+potential) in unit of "eV". shape=(# of structure, len(atoms))
     - dt (float): Time interval between two successive structures in unit of ASE.
+    - masker (array): ~. shape=(# of structures, len(atoms))
+    - latt_params (array): ~. shape=(3,3)
 
     OUTPUT
     - A thermal flux vector of shape=(# of structures-1, space dimension(=3))
@@ -121,11 +125,24 @@ def thermal_flux(
     # -> shape = (# of structures-1, 3)
     first = (first[1:] + first[:-1]) /2.
 
+    # @ Get center of 8 parts to define origin position.
+    origins = []
+    for i in range(2):
+        for j in range(2):
+            for k in range(2):
+                origins.append(latt_params[0]*(i+0.5)/2. + latt_params[1]*(j+0.5)/2. + latt_params[2]*(k+0.5)/2.)
+
     # @ second term
     # -> shape = (# of structures-1, len(atoms))
     dEdt = (atomic_energies[1:] - atomic_energies[:-1]) /dt
+    second = []
+    for i in range(len(dEdt)):
+        gather = []
+        for j in range(8):
+            gather.append(np.sum((positions[i+1][masker[i+1]==j]-origins[j]) * np.expand_dims(dEdt[i][masker[i+1]==j], axis=1), axis=0))
+        second.append(np.sum(gather, axis=0))
     # -> shape = (# of structures-1, 3)
-    second = np.sum(positions[1:] * np.expand_dims(dEdt, axis=2), axis=1)
+    second = np.array(second)
     
     # -> shape = (# of structures-1, 3)
     J = first + second
@@ -264,11 +281,6 @@ if __name__ == '__main__':
     # plt.show()
     # exit(0)
 
-
-    # # @ Devide box
-    # # Shape = (len(alist), len(atoms))
-    # masker = classify_atoms(posi, latt)
-        
     # # @ Cut ensembles
     # for i in range(num_avg_steps):
         # l = len(thermal_flux)-(num_avg_steps-i-1)*avg_intvl
@@ -277,14 +289,22 @@ if __name__ == '__main__':
     # @ Get HFACF
     len_t = len(posi)-(num_avg_steps-1)*avg_intvl
     hfacf = []
-    for i in range(num_avg_steps):
-        J = thermal_flux(
-            posi[i*avg_intvl:i*avg_intvl+len_t],
-            velo[i*avg_intvl:i*avg_intvl+len_t],
-            a_te[i*avg_intvl:i*avg_intvl+len_t],
-            dt,
-            )
-        hfacf.append(heat_flux_ACF(J))
+    for j in range(8):
+        for i in range(num_avg_steps):
+            # @ Devide box
+            # Shape = (len(alist), len(atoms))
+            mask = classify_atoms(posi[i*avg_intvl:i*avg_intvl+len_t], latt[i*avg_intvl:i*avg_intvl+len_t])
+
+            # @ Calc J
+            J = thermal_flux(
+                posi[i*avg_intvl:i*avg_intvl+len_t],
+                velo[i*avg_intvl:i*avg_intvl+len_t],
+                a_te[i*avg_intvl:i*avg_intvl+len_t],
+                dt,
+                mask,
+                latt[0],
+                )
+            hfacf.append(heat_flux_ACF(J))
     hfacf = np.mean(hfacf, axis=0)
     norm_hfacf = hfacf / hfacf[0]
     kappa = np.add.accumulate(hfacf) *dt /units.kB /np.mean(temp)**2 /np.mean(volu) *units._e *units.second *1e10
@@ -431,7 +451,7 @@ if __name__ == '__main__':
     ax1.tick_params(axis="x",direction="in", labelsize='x-large')
     ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
     ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
-    plt.title('NM) IS={}, NAS={}, AI={}, $\sigma$={}, dt={}, T={:.2f}'.format(img_slice, num_avg_steps, avg_intvl, gauss_sigma, args.dt, np.mean(temp)))
+    plt.title('M) IS={}, NAS={}, AI={}, $\sigma$={}, dt={}, T={:.2f}'.format(img_slice, num_avg_steps, avg_intvl, gauss_sigma, args.dt, np.mean(temp)))
     plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.90)
 
     plt.show()
