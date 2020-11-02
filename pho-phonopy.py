@@ -151,7 +151,7 @@ from subprocess import call
 #### Band plot
 if phonon_or_pdos == 'phonon':
     from kpoints_gen import get_grid_num
-    k_grids = get_grid_num(phonon.get_supercell().cell, precision=100.)
+    k_grids = get_grid_num(phonon.get_supercell().cell, precision=pdos_precision)
     phonon.run_mesh(
         [k_grids[0], k_grids[1], k_grids[2]],
         # is_mesh_symmetry=False,

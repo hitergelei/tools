@@ -346,7 +346,7 @@ def bs_plot(self, plt, ax, scatter_max_size, proj_facecolors, proj_edgecolors, p
         if reverse_seq:
             legend.reverse(); key_list.reverse()
         if legend_bool:
-            plt.legend(legend, key_list, scatterpoints = 1, fontsize='xx-large', loc='upper right')
+            plt.legend(legend, key_list, scatterpoints = 1, fontsize='x-large', loc='upper right')
     else:
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
@@ -438,11 +438,11 @@ def plot_band_and_dos(
             proj_eigvec[key] = np.array(proj_eigvec[key], dtype=np.complex128)
         set_projection(self, proj_eigvec)
     bs_plot(self._band_structure, plt, ax1, scatter_max_size, proj_facecolors, proj_edgecolors, proj_alpha, reverse_seq, legend_bool, labels, scatter_interval)
-    plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
+    plt.ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     # ax1.set_title('Phonon dispersion', fontsize=35)
     ax1.set_xlabel('')
 
-    plt.tick_params(axis="both",direction="in", labelsize=24)
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
     plt.subplots_adjust(left=0.20, bottom=0.08, right=0.80, top=0.95, wspace=0.10, hspace=0.20)
     plt.ylim(ylim_lower, ylim_upper)
@@ -594,21 +594,21 @@ def plot_pdos(
             # ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
 
     if flip_pdos_xy:
-        plt.xlabel('PDOS (arb. units)',fontsize=24)
-        plt.ylabel('Frequency ({})'.format(unit), fontsize=24)
+        plt.xlabel('PDOS (arb. units)',fontsize='x-large')
+        plt.ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         plt.subplots_adjust(left=0.30, bottom=0.15, right=0.75, top=0.97, wspace=0.2, hspace=0.2)
         plt.ylim(freqlim_low, freqlim_up)
         plt.xlim(doslim_low, doslim_up)
     else:
-        plt.xlabel('Frequency ({})'.format(unit), fontsize=24)
-        plt.ylabel('PDOS (arb. units)',fontsize=24)
+        plt.xlabel('Frequency ({})'.format(unit), fontsize='x-large')
+        plt.ylabel('PDOS (arb. units)',fontsize='x-large')
         plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
         plt.xlim(freqlim_low, freqlim_up)
         plt.ylim(doslim_low, doslim_up)
     from math import ceil, floor
     ax.set_yticks(range(int(ceil(freqlim_low)),int(floor(freqlim_up)+1),1))
-    ax.tick_params(axis="both",direction="in", labelsize=24)
-    plt.legend(fontsize='xx-large')
+    ax.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.legend(fontsize='x-large')
     if not legend_bool:
         plt.legend().remove()
     plt.grid(alpha=0.2)
