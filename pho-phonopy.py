@@ -4,8 +4,8 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-# calc = 'dpmd'
-calc = 'vasp'
+calc = 'dpmd'
+# calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
@@ -27,7 +27,7 @@ phonon_or_pdos     = 'phonon'
 # freqlim_up         = 6.0
 freqlim_up         = None
 # freqlim_low        = -0.5
-freqlim_up         = None
+freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = False
@@ -112,20 +112,20 @@ phonon = ssp.calc_phonon(
 
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points, bandpath
-points = ibz_points['hexagonal']
-G = points['Gamma']
-M = points['M']
-K = points['K']
-A = points['A']
-L = points['L']
-H = points['H']
-# points = ibz_points['fcc']
+# points = ibz_points['hexagonal']
 # G = points['Gamma']
-# X = points['X']
-# W = points['W']
+# M = points['M']
 # K = points['K']
-# U = points['U']
+# A = points['A']
 # L = points['L']
+# H = points['H']
+points = ibz_points['fcc']
+G = points['Gamma']
+X = points['X']
+W = points['W']
+K = points['K']
+U = points['U']
+L = points['L']
 
 # path = [[K, G], [G, M]]
 path = [[G, X], [X, U], [K, G], [G, L]]

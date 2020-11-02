@@ -14,7 +14,9 @@ def argparse():
     parser.add_argument('dt', type=float, help='Time step of J0Jt.dat file. Becareful about unit. (Real: fs, metal: ps)')
     # Optional arguments
     parser.add_argument('-u', '--lammps_unit', type=str, default='metal', help='Set unit of J0Jt.dat file between metal and real. [default: metal]')
-    parser.add_argument('-a', '--avg_intvl', type=int, default=1, help='Interval between HFACF average in unit of steps')
+    parser.add_argument('-a', '--avg_intvl', type=int, default=1, help='"tau" sample interval. [default: 1]')
+    parser.add_argument('-b', '--bin_intvl', type=int, default=1, help='"t" sample interval. [default: 1]')
+    parser.add_argument('-c', '--corr_len', type=float, default=None, help='Set max correlation time length in ps unit. i.e. x-axis length. [default: maximal]')
     parser.add_argument('-l', '--dont_load', dest='load_bool', action='store_false', help="If provided, don't load the data. [default: load]")
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help="If provided, don't save the data. [default: save]")
     parser.add_argument('-p', '--dont_plot', dest='plot_bool', action='store_false', help="If provided, don't plot the data. [default: plot]")
@@ -41,6 +43,8 @@ if __name__ == '__main__':
     dt = args.dt
     lammps_unit = args.lammps_unit
     avg_intvl = args.avg_intvl
+    bin_intvl = args.bin_intvl
+    corr_len = args.corr_len
     load_bool = args.load_bool
     save_bool = args.save_bool
     plot_bool = args.plot_bool
@@ -48,7 +52,7 @@ if __name__ == '__main__':
     # Load
     from os import stat
     mod_date = '{}-{}'.format(stat('out.dump')[8], stat('J0Jt.dat')[8])
-    fname = 'j0jt-plot/T{}_dt{}_avg-intvl{}_{}.npy'.format(temp, dt, avg_intvl, mod_date)
+    fname = 'j0jt-plot/T{}_dt{}_avg-intvl{}_bin-intvl{}_corr-len{}.npy'.format(temp, dt, avg_intvl, bin_intvl, corr_len)
     if load_bool:
         try:
             hfacf = np.load(fname)
@@ -58,6 +62,10 @@ if __name__ == '__main__':
             load_bool = False
             print('Failed to load "{}" file.'.format(fname))
         else:
+            if corr_len is None:
+                c_l = len_t
+            else:
+                c_l = int(corr_len/ dt)
             print('Successfully load "{}" file.'.format(fname))
 
     # Main
@@ -67,19 +75,24 @@ if __name__ == '__main__':
         len_t = int(lines[3].split()[1])
         len_tau = (len(lines)-3)//(len_t+1)
 
-        hfacf = np.zeros((len_t,3))
-        for tau in range(0,len_tau,avg_intvl):
-            data = np.loadtxt(lines[tau*(len_t+1)+4:tau*(len_t+1)+4+len_t])
-            hfacf += data[:,[3,4,5]]
-        hfacf = np.mean(hfacf, axis=1) /(len_tau //avg_intvl)
+        if corr_len is None:
+            c_l = len_t
+        else:
+            c_l = int(corr_len/ dt)
+
+        hfacf = np.zeros((c_l//bin_intvl,3))
+        for tau in range(c_l,len_tau,avg_intvl):
+            # print('Processing with tau={}'.format(tau))
+            hfacf += np.loadtxt(lines[tau*(len_t+1)+4:tau*(len_t+1)+4+c_l:bin_intvl], usecols=(3,4,5))
+        hfacf = np.mean(hfacf, axis=1) /((len_tau-c_l) //avg_intvl)
 
         # Save
         if save_bool:
             from subprocess import call
             call('mkdir j0jt-plot', shell=True)
             np.save(fname, hfacf)
-            np.save('j0jt-plot/len_t.npy'.format(temp, dt), len_t)
-            np.save('j0jt-plot/len_tau.npy'.format(temp, dt), len_tau)
+            np.save('j0jt-plot/len_t.npy', len_t)
+            np.save('j0jt-plot/len_tau.npy', len_tau)
 
     #
     scale_hfacf = hfacf / hfacf[0]
@@ -88,9 +101,9 @@ if __name__ == '__main__':
     atoms = read('out.dump', 0)
     vol = np.linalg.det(atoms.get_cell())
     if lammps_unit == 'metal':
-        scale =  1.60218e-19 *1e22 /8.61733034e-5 / temp**2 /vol *dt
+        scale =  1.60218e-19 *1e22 /8.61733034e-5 / temp**2 /vol *dt *bin_intvl
     elif lammps_unit == 'real':
-        scale = (4186/6.02214e23)**2 *1e25 /1.3806504e-23/ temp**2 /vol *dt
+        scale = (4186/6.02214e23)**2 *1e25 /1.3806504e-23/ temp**2 /vol *dt *bin_intvl
     #
     kappa = np.add.accumulate(hfacf) *scale
 
@@ -98,7 +111,7 @@ if __name__ == '__main__':
     # Plot
     if plot_bool:
         #
-        t = np.arange(len(kappa), dtype=float) *dt
+        t = np.arange(len(kappa), dtype=float) *dt *bin_intvl
         # set time axis unit to ps.
         if lammps_unit == 'real':
             t /= 1e3
@@ -116,7 +129,7 @@ if __name__ == '__main__':
         ax1.tick_params(axis="x",direction="in", labelsize='x-large')
         ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
         ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
-        plt.title('T={}K, len(t)={}, len(tau)={}, dt={:.3f}, avg_intvl={}'.format(temp, len_t, len_tau, dt, avg_intvl))
+        plt.title('T={}K, c_l={}, l_a={}, dt={:.3f}, ai={}, bi={}'.format(temp, c_l, len_tau-c_l, len_tau, dt, avg_intvl, bin_intvl))
         plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.90)
 
         plt.show()

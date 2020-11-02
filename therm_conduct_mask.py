@@ -194,12 +194,17 @@ def argparse():
     # Positional arguments
     parser.add_argument('traj_file', type=str, help='ASE readable atoms list file name.')
     parser.add_argument('dt', type=float, help='Time interval between steps selected in unit of picosec.')
+    parser.add_argument('corr_len', type=float, help='Set max correlation time length in ps unit. i.e. x-axis length.')
     # Optional arguments
-    parser.add_argument('-t', '--num_avg_steps', type=int, default=10, help='Number of steps for the time average in HFACF function. [Default: 10]')
-    parser.add_argument('-a', '--avg_intvl', type=int, default=1, help='Interval between HFACF average in unit of steps')
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='ASE readable slice. default=":" (e.g.) -n :1000:10')
+    # parser.add_argument('-t', '--num_avg_steps', type=int, default=10, help='Number of steps for the time average in HFACF function. [Default: 10]')
+    parser.add_argument('-a', '--avg_intvl', type=int, default=1, help='Interval between HFACF average in unit of steps')
     parser.add_argument('-g', '--gauss_sigma', type=int, default=100, help='Number of steps for sigma of the Gaussian-smearing plot. [Default: 100]')
     # parser.add_argument('-d', '--dont_devide', dest=devide_box, action='store_false', help='[Default: devide box into 8 pieces.]')
+    parser.add_argument('-l', '--dont_load', dest='load_bool', action='store_false', help="If provided, don't load the data. [default: load]")
+    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help="If provided, don't save the data. [default: save]")
+    parser.add_argument('-p', '--dont_plot', dest='plot_bool', action='store_false', help="If provided, don't plot the data. [default: plot]")
+
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -217,135 +222,104 @@ if __name__ == '__main__':
     print('=================================================================================================='.center(120))
     print('')
     ## Argparse
-    args = argparse()
+    args          = argparse()
     traj_file     = args.traj_file
     dt            = args.dt
-    num_avg_steps = args.num_avg_steps
+    corr_len      = args.corr_len
     img_slice     = args.image_slice
-    gauss_sigma   = args.gauss_sigma
+    # num_avg_steps = args.num_avg_steps
     avg_intvl     = args.avg_intvl
+    gauss_sigma   = args.gauss_sigma
     # devide_box    = args.devide_box
+    load_bool     = args.load_bool
+    save_bool     = args.save_bool
+    plot_bool     = args.plot_bool
 
     from ss_util import parse_slice
     real_slice = parse_slice(img_slice)
 
     from ase import units
     dt *= 1e3 *units.fs
-    from ase.io import read
-    alist = read(traj_file, img_slice)
-    posi = []
-    velo = []
-    a_pe = []
-    a_ke = []
-    temp = []
-    volu = []
-    latt = []
-    for atoms in alist:
-        posi.append(atoms.get_positions())
-        velo.append(atoms.get_velocities())
-        a_pe.append(atoms.get_potential_energies())
-        a_ke.append(np.linalg.norm(atoms.get_momenta(), axis=-1)**2 /2 /atoms.get_masses())
-        temp.append(atoms.get_temperature())
-        volu.append(atoms.get_volume())
-        latt.append(atoms.get_cell())
-    # -> shape = (len(alist), len(atoms), 3)
-    posi = np.array(posi)
-    velo = np.array(velo)
-    a_ke = np.array(a_ke)
-    a_pe = np.array(a_pe)
-    # -> shape = (len(alist), 3, 3)
-    latt = np.array(latt)
-    # -> shape = (len(alist), len(atoms))
-    a_te = a_pe + a_ke
 
-    # from matplotlib import pyplot as plt
-    # # for i in range(0,len(a_te[0]),1000):
-    # for i in range(1):
-        # plt.plot(a_te[:,i], c='k')
-        # plt.plot(np.array(a_pe)[:,i])
-        # print(np.std(np.array(a_pe)[:,i]))
-        # # plt.plot(np.array(a_ke)[:,i])
-    # # fig = plt.figure()
-    # # for i in range(0,len(a_te[0]),1000):
-        # # plt.plot(np.array(a_pe)[:,i])
+    fname = 'kappa-mask/{}_dt{}_c{}_n{}_a{}.npy'.format(traj_file, args.dt, corr_len, img_slice, avg_intvl)
+    if load_bool:
+        try:
+            hfacf = np.load(fname)
+            mean_temp = np.load('{}-temp.npy'.format(fname))
+            mean_volu = np.load('{}-volu.npy'.format(fname))
+        except:
+            load_bool = False
+            print('Failed to load "{}" file.'.format(fname))
+        else:
+            print('Successfully load "{}" file.'.format(fname))
 
-    # plt.figure()
-    # plt.plot(np.sum(a_te, 1), c='k')
-    # plt.plot(np.sum(a_pe, 1))
-    # print(np.std(np.sum(a_pe,1)))
-    # # plt.plot(a_te[0])
-    # # fig = plt.figure()
-    # # plt.plot(a_pe[0])
-    # # fig = plt.figure()
-    # # plt.plot(a_ke[0])
-    # plt.show()
-    # exit(0)
+    if not load_bool:
+        from ase.io import read
+        alist = read(traj_file, img_slice)
+        posi = []
+        velo = []
+        a_pe = []
+        a_ke = []
+        temp = []
+        volu = []
+        latt = []
+        for atoms in alist:
+            posi.append(atoms.get_positions())
+            velo.append(atoms.get_velocities())
+            a_pe.append(atoms.get_potential_energies())
+            a_ke.append(np.linalg.norm(atoms.get_momenta(), axis=-1)**2 /2 /atoms.get_masses())
+            temp.append(atoms.get_temperature())
+            volu.append(atoms.get_volume())
+            latt.append(atoms.get_cell())
+        # -> shape = (len(alist), len(atoms), 3)
+        posi = np.array(posi)
+        velo = np.array(velo)
+        a_ke = np.array(a_ke)
+        a_pe = np.array(a_pe)
+        # -> shape = (len(alist), 3, 3)
+        latt = np.array(latt)
+        # -> shape = (len(alist), len(atoms))
+        a_te = a_pe + a_ke
+        #
+        mean_temp = np.mean(temp)
+        mean_volu = np.mean(volu)
 
-    # # @ Cut ensembles
-    # for i in range(num_avg_steps):
-        # l = len(thermal_flux)-(num_avg_steps-i-1)*avg_intvl
-        # j_t_tau.append(thermal_flux[i*avg_intvl:l])
+        # @ Get HFACF
+        #
+        if corr_len is None:
+            len_t = len(posi)-avg_intvl
+        else:
+            len_t = int(corr_len /args.dt)
+        num_avg_steps = int((len(posi)-len_t) /avg_intvl +1)
+        #
+        hfacf = np.zeros((len_t-1, 3, 3))
+        for j in range(8):
+            for i in range(num_avg_steps):
+                # @ Devide box
+                # Shape = (len(alist), len(atoms))
+                mask = classify_atoms(posi[i*avg_intvl:i*avg_intvl+len_t], latt[i*avg_intvl:i*avg_intvl+len_t])
 
-    # @ Get HFACF
-    len_t = len(posi)-(num_avg_steps-1)*avg_intvl
-    hfacf = []
-    for j in range(8):
-        for i in range(num_avg_steps):
-            # @ Devide box
-            # Shape = (len(alist), len(atoms))
-            mask = classify_atoms(posi[i*avg_intvl:i*avg_intvl+len_t], latt[i*avg_intvl:i*avg_intvl+len_t])
+                # @ Calc J
+                J = thermal_flux(
+                    posi[i*avg_intvl:i*avg_intvl+len_t],
+                    velo[i*avg_intvl:i*avg_intvl+len_t],
+                    a_te[i*avg_intvl:i*avg_intvl+len_t],
+                    dt,
+                    mask,
+                    latt[0],
+                    )
+                hfacf += heat_flux_ACF(J)
+        hfacf /= num_avg_steps *8
+        #
+        if save_bool:
+            from subprocess import call
+            call('mkdir kappa-mask/', shell=True)
+            np.save(fname, hfacf)
+            np.save('{}-temp.npy'.format(fname), mean_temp)
+            np.save('{}-volu.npy'.format(fname), mean_volu)
 
-            # @ Calc J
-            J = thermal_flux(
-                posi[i*avg_intvl:i*avg_intvl+len_t],
-                velo[i*avg_intvl:i*avg_intvl+len_t],
-                a_te[i*avg_intvl:i*avg_intvl+len_t],
-                dt,
-                mask,
-                latt[0],
-                )
-            hfacf.append(heat_flux_ACF(J))
-    hfacf = np.mean(hfacf, axis=0)
     norm_hfacf = hfacf / hfacf[0]
-    kappa = np.add.accumulate(hfacf) *dt /units.kB /np.mean(temp)**2 /np.mean(volu) *units._e *units.second *1e10
-
-    # from matplotlib import pyplot as plt
-    # plt.plot(j[:,0])
-    # plt.figure()
-    # plt.plot(np.sum(a_te,1))
-    # plt.figure()
-    # plt.plot(np.sum(a_pe,1))
-    # plt.figure()
-    # plt.plot(np.sum(a_ke,1))
-    # plt.figure()
-    # plt.plot(np.sum(a_pe+a_ke,1))
-    # plt.figure()
-    # plt.plot(a_te[:,0])
-    # plt.figure()
-    # plt.plot(test[:,0])
-    # plt.figure()
-    # plt.plot(hfacf[:,0,0])
-    # plt.show()
-    # exit(0)
-
-    # # @ Thermal conductivity
-    # # Unit for kappa: Joul /(sec *meter *Kelvin)
-    # len_t = len(posi)-(num_avg_steps-1)*avg_intvl
-    # kappa = []
-    # for i in range(num_avg_steps):
-        # e_mom = energy_moment(posi[i*avg_intvl:i*avg_intvl+len_t], a_te[i*avg_intvl:i*avg_intvl+len_t])
-        # kappa.append(einstein_eq(e_mom, dt))
-    # kappa = np.mean(kappa, axis=0)
-    # hfacf = kappa[1:] - kappa[:-1]
-    # norm_hfacf = hfacf / hfacf[0]
-
-    # det_hfacf = []
-    # for i in range(len(hfacf)):
-        # det_hfacf.append(np.linalg.det(hfacf[i]))
-
-    # det_kappa = []
-    # for i in range(len(kappa)):
-        # det_kappa.append(np.linalg.det(kappa[i]))
+    kappa = np.add.accumulate(hfacf) *dt /units.kB /mean_temp**2 /mean_volu *units._e *units.second *1e10
 
     avg_norm_hfacf = []
     for i in range(len(hfacf)):
@@ -369,90 +343,67 @@ if __name__ == '__main__':
     gf_avg_norm_hfacf = gf(avg_norm_hfacf, gauss_sigma, 0)
     gf_avg_kappa = gf(avg_kappa, gauss_sigma, 0)
 
-    from matplotlib import pyplot as plt
-    if real_slice.start:
-        start = real_slice.start * args.dt + args.dt/2.
-    else:
-        start = args.dt/2.
-    t = np.arange(len(kappa), dtype=float) *args.dt +start
-    fig, ax1 = plt.subplots(3,3)
-    for i in range(3):
-        for j in range(3):
-            ax2 = ax1[i,j].twinx()
-            ax1[i,j].plot(t, norm_hfacf[:,i,j], alpha=0.5, c='b')
-            ax2.plot(t, kappa[:,i,j], alpha=0.5, c='r')
-            #
-            ax1[i,j].plot(t, gf_norm_hfacf[:,i,j], c='b')
-            # ymin = np.amin(gf_norm_hfacf[:,i,j])
-            # ymax = np.amax(gf_norm_hfacf[:,i,j])
-            ymin = np.amin(norm_hfacf[:,i,j])
-            ymax = np.amax(norm_hfacf[:,i,j])
-            ax1[i,j].set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
-            # 
-            ax2.plot(t, gf_kappa[:,i,j], c='r')
-            # ymin = np.amin(gf_kappa[:,i,j])
-            # ymax = np.amax(gf_kappa[:,i,j])
-            ymin = np.amin(kappa[:,i,j])
-            ymax = np.amax(kappa[:,i,j])
-            ax2.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
-            #
-            ax1[i,j].set_xlabel('Time (ps)', fontsize='x-large')
-            ax1[i,j].set_ylabel('Scaled HFACF (Arb. Unit)', fontsize='x-large', color='b')
-            ax2.set_ylabel('$\kappa_{}$$_{}$ (W/mK)'.format(i+1, j+1), fontsize='x-large', color='r')
-            ax1[i,j].tick_params(axis="x",direction="in", labelsize='x-large')
-            ax1[i,j].tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
-            ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
-            plt.title('NAS={}, IS={}, $\sigma$={}'.format(num_avg_steps, img_slice, gauss_sigma), fontsize='x-large')
-    plt.subplots_adjust(left=0.10, bottom=0.05, right=0.90, top=0.95, wspace=0.80, hspace=0.40)
+    if plot_bool:
+        from matplotlib import pyplot as plt
+        if real_slice.start:
+            start = real_slice.start * args.dt + args.dt/2.
+        else:
+            start = args.dt/2.
+        t = np.arange(len(kappa), dtype=float) *args.dt +start
+        fig, ax1 = plt.subplots(3,3)
+        for i in range(3):
+            for j in range(3):
+                ax2 = ax1[i,j].twinx()
+                ax1[i,j].plot(t, norm_hfacf[:,i,j], alpha=0.5, c='b')
+                ax2.plot(t, kappa[:,i,j], alpha=0.5, c='r')
+                #
+                ax1[i,j].plot(t, gf_norm_hfacf[:,i,j], c='b')
+                # ymin = np.amin(gf_norm_hfacf[:,i,j])
+                # ymax = np.amax(gf_norm_hfacf[:,i,j])
+                ymin = np.amin(norm_hfacf[:,i,j])
+                ymax = np.amax(norm_hfacf[:,i,j])
+                ax1[i,j].set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
+                # 
+                ax2.plot(t, gf_kappa[:,i,j], c='r')
+                # ymin = np.amin(gf_kappa[:,i,j])
+                # ymax = np.amax(gf_kappa[:,i,j])
+                ymin = np.amin(kappa[:,i,j])
+                ymax = np.amax(kappa[:,i,j])
+                ax2.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
+                #
+                ax1[i,j].set_xlabel('Time (ps)', fontsize='x-large')
+                ax1[i,j].set_ylabel('Scaled HFACF (Arb. Unit)', fontsize='x-large', color='b')
+                ax2.set_ylabel('$\kappa_{}$$_{}$ (W/mK)'.format(i+1, j+1), fontsize='x-large', color='r')
+                ax1[i,j].tick_params(axis="x",direction="in", labelsize='x-large')
+                ax1[i,j].tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
+                ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
+                plt.title('IS={}, $\sigma$={}'.format(img_slice, gauss_sigma), fontsize='x-large')
+        plt.subplots_adjust(left=0.10, bottom=0.05, right=0.90, top=0.95, wspace=0.80, hspace=0.40)
 
-    # # Determinants
-    # fig, ax1 = plt.subplots()
-    # ax2 = ax1.twinx()
-    # ax1.plot(t, det_hfacf[:], alpha=0.5, c='b')
-    # ax2.plot(t, det_kappa[:], alpha=0.5, c='r')
-    # #
-    # ax1.plot(t, gf_det_hfacf[:], c='b')
-    # ymin = np.amin(gf_det_hfacf[:])
-    # ymax = np.amax(gf_det_hfacf[:])
-    # ax1.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
-    # #
-    # ax2.plot(t, gf_det_kappa[:], c='r')
-    # ymin = np.amin(gf_det_kappa[:])
-    # ymax = np.amax(gf_det_kappa[:])
-    # ax2.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
-    # #
-    # ax1.set_xlabel('Time (ps)', fontsize='x-large')
-    # ax1.set_ylabel('Number density (atoms/$\AA^3$)', fontsize='x-large', color='b')
-    # ax2.set_ylabel('Energy per atom (eV)', fontsize='x-large', color='r')
-    # ax1.tick_params(axis="x",direction="in", labelsize='x-large')
-    # ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
-    # ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
-    # plt.title('$\kappa$, NAS={}, IS={}, $\sigma$={}'.format(num_avg_steps, img_slice, gauss_sigma), fontsize='x-large')
+        # Average
+        fig, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        ax1.plot(t, avg_norm_hfacf[:], alpha=0.5, c='b')
+        ax2.plot(t, avg_kappa[:], alpha=0.5, c='r')
+        #
+        ax1.plot(t, gf_avg_norm_hfacf[:], c='b')
+        ymin = np.amin(avg_norm_hfacf[:])
+        ymax = np.amax(avg_norm_hfacf[:])
+        ax1.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
+        #
+        ax2.plot(t, gf_avg_kappa[:], c='r')
+        ymin = np.amin(avg_kappa[:])
+        ymax = np.amax(avg_kappa[:])
+        ax2.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
+        #
+        ax1.set_xlabel('Time (ps)', fontsize='x-large')
+        ax1.set_ylabel('Scaled HFACF (Arb. Unit)', fontsize='x-large', color='b')
+        ax2.set_ylabel('$\kappa$ (W/mK)', fontsize='x-large', color='r')
+        ax1.tick_params(axis="x",direction="in", labelsize='x-large')
+        ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
+        ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
+        plt.title('M) IS={}, AI={}, $\sigma$={}, dt={}, T={:.2f}'.format(img_slice, avg_intvl, gauss_sigma, args.dt, mean_temp))
+        plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.90)
 
-    # Average
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
-    ax1.plot(t, avg_norm_hfacf[:], alpha=0.5, c='b')
-    ax2.plot(t, avg_kappa[:], alpha=0.5, c='r')
-    #
-    ax1.plot(t, gf_avg_norm_hfacf[:], c='b')
-    ymin = np.amin(avg_norm_hfacf[:])
-    ymax = np.amax(avg_norm_hfacf[:])
-    ax1.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
-    #
-    ax2.plot(t, gf_avg_kappa[:], c='r')
-    ymin = np.amin(avg_kappa[:])
-    ymax = np.amax(avg_kappa[:])
-    ax2.set_ylim(1.1*ymin-0.1*ymax, 1.1*ymax-0.1*ymin)
-    #
-    ax1.set_xlabel('Time (ps)', fontsize='x-large')
-    ax1.set_ylabel('Scaled HFACF (Arb. Unit)', fontsize='x-large', color='b')
-    ax2.set_ylabel('$\kappa$ (W/mK)', fontsize='x-large', color='r')
-    ax1.tick_params(axis="x",direction="in", labelsize='x-large')
-    ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='b')
-    ax2.tick_params(axis="y",direction="in", labelsize='x-large',colors='r',  labelcolor='r')
-    plt.title('M) IS={}, NAS={}, AI={}, $\sigma$={}, dt={}, T={:.2f}'.format(img_slice, num_avg_steps, avg_intvl, gauss_sigma, args.dt, np.mean(temp)))
-    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.90)
-
-    plt.show()
+        plt.show()
 
