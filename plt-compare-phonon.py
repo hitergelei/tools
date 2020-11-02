@@ -149,7 +149,7 @@ if __name__ == '__main__':
             # facecolors = 'r',
             facecolors = None,
             edgecolors = 'r',
-            label      = 'ML-Pot',
+            label      = 'MLP',
             zorder     = 10,
             )
         # ax.errorbar(
@@ -162,9 +162,9 @@ if __name__ == '__main__':
             # markeredgewidth   = 0,
             # # markerfacecolor = 'none',
             # markersize        = markersize,
-            # label             = 'ML-Pot(5%)',
+            # label             = 'MLP (5%)',
             # )
-        ax.legend(loc='upper right', fontsize='large')
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='large')
 
     ## Normalized Distance
     err_std = np.std(band_1_E - band_2_E)
@@ -175,11 +175,11 @@ if __name__ == '__main__':
     ax.grid(color='0.8')
     plt.xticks(list(sorted(tick_set)), tick_list)
     # plt.xticks(list(sorted(tick_set)), ('K', '$\Gamma$', 'M'), fontsize='xx-large')
-    plt.tick_params(axis="both",direction="in", labelsize='xx-large')
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Frequency RMSE = {:.3f} ({})'.format(err_std, unit), fontsize='large')
     plt.xlim(0., np.amax(band_1_x))
     plt.ylim(ylim_low, ylim_up)
-    plt.ylabel('Frequency({})'.format(unit), fontsize='xx-large')
-    plt.subplots_adjust(left=0.15, bottom=0.15, right=0.85, top=0.95, wspace=0.2, hspace=0.2)
+    plt.ylabel('Frequency({})'.format(unit), fontsize='x-large')
+    plt.subplots_adjust(left=0.10, bottom=0.15, right=0.80, top=0.95, wspace=0.2, hspace=0.2)
     plt.show()
 
