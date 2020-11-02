@@ -4,8 +4,8 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-calc = 'dpmd'
-# calc = 'vasp'
+# calc = 'dpmd'
+calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
@@ -13,26 +13,28 @@ calc = 'dpmd'
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
 ## Params
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_1_Kooi')
+atoms = vasp.read_vasp('Si-diamond-prim.vasp')
 N                  = 4
-NNN                = [[N,0,0],[0,N,0],[0,0,1]]
+NNN                = [[N,0,0],[0,N,0],[0,0,N]]
 delta              = 0.050
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
-# phonon_or_pdos     = 'phonon'
-phonon_or_pdos     = 'pdos'
-freqlim_up         = 6.0
-freqlim_low        = -0.5
+phonon_or_pdos     = 'phonon'
+# phonon_or_pdos     = 'pdos'
+# freqlim_up         = 6.0
+freqlim_up         = None
+# freqlim_low        = -0.5
+freqlim_up         = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = False
 plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
-# mode_projection    = None
-mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
+mode_projection    = None
+# mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
 scatter_max_size   = 200
 proj_alpha         = 0.5
 save_svg           = True
@@ -125,9 +127,8 @@ H = points['H']
 # U = points['U']
 # L = points['L']
 
-#point_names = ['$\Gamma$', 'X', 'K', '$\Gamma$', 'L']
-path = [[K, G], [G, M]]
-# path = [[G, X], [X, U], [K, G], [G, L]]
+# path = [[K, G], [G, M]]
+path = [[G, X], [X, U], [K, G], [G, L]]
 N_q = 100
 
 bands = ssp.make_band(path, N_q)
