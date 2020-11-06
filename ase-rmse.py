@@ -20,8 +20,13 @@ else:
 
 traj1_f = sys.argv[1]
 traj2_f = sys.argv[2]
-traj1 = Traj(traj1_f)
-traj2 = Traj(traj2_f)
+from ase.io import read
+traj1 = read(traj1_f, ':')
+if not isinstance(traj1, list):
+    traj1 = [traj1]
+traj2 = read(traj2_f, ':')
+if not isinstance(traj2, list):
+    traj2 = [traj2]
 
 if len(traj1) != len(traj2):
     print(" ***** ERROR ***** The # of images is different between two traj files.".center(100))

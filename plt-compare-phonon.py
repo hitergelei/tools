@@ -14,8 +14,8 @@ legend_bool = True
 scatter_size = 10
 ylim_low = None
 ylim_up = None
-# tick_list = ['L', '$\Gamma$', 'X', 'U|K', '$\Gamma$']
-tick_list = ['K', '$\Gamma$', 'X']
+tick_list = ['L', '$\Gamma$', 'X', 'U|K', '$\Gamma$']
+# tick_list = ['K', '$\Gamma$', 'X']
 
 def load_data(file):
     # Dump first three lines
