@@ -54,10 +54,12 @@ sp.call(["mkdir raw-"+trajfile+".d"], shell=True)
 box_raw = open("raw-"+trajfile+".d/box.raw", "w")
 n=0
 print("box.raw :: writing")
+vol = []
 for atoms in traj:
     n+=1
     # print("box.raw :: writing "+str(n)+" th frame.")
     cell_array = atoms.get_cell()
+    vol.append(np.linalg.det(cell_array))
     for i in range(3):
         for j in range(3):
             box_raw.write(str(cell_array[i][j])+" ")
@@ -141,9 +143,9 @@ else:
     n=0
     print("virial.raw :: writing")
     for atoms in traj:
+        stress_array = -1. *atoms.get_stress() *vol[n]  ## stress to virial
         n+=1
         # print("virial.raw :: writing "+str(n)+" th frame.")
-        stress_array = -1. *atoms.get_stress() / (units.Pascal *1e5)  ## Pascal to bar
         for i in [[0,5,4],[5,1,3],[4,3,2]]:
             for j in i:
                 V_raw.write(str(stress_array[j])+" ")
