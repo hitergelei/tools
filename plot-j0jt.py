@@ -99,6 +99,7 @@ if __name__ == '__main__':
         ax1.plot(t, scale_hfacf, c='b')
         ax2.plot(t, kappa, c='r')
         #
+        ax1.set_yscale('log')
         ax1.set_xlabel('Time (ps)', fontsize='x-large')
         ax1.set_ylabel('Scaled HFACF (Arb. Unit)', fontsize='x-large', color='b')
         ax2.set_ylabel('$\kappa$ (W/mK)', fontsize='x-large', color='r')
