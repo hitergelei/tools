@@ -38,7 +38,9 @@ if __name__ == '__main__':
     #### Load structure
     a_file = sys.argv[1]
     from ase.io import read, write
-    alist, format = read(a_file, index=':', return_format=True)
+    alist = read(a_file, index=':')
+    if not isinstance(alist, list):
+        alist = [alist]
     
     for i in range(len(alist)):
         atoms = alist[i]
@@ -46,5 +48,9 @@ if __name__ == '__main__':
         A_new = np.matmul(M, A)
         atoms.set_cell(A_new, scale_atoms=True)
 
-    write('magnified_'+a_file, alist, format=format)
+    if a_file[-5:] == '.traj':
+        o_file = 'magnified_'+a_file
+    else:
+        o_file = 'magnified_'+a_file+'.traj'
+    write(o_file, alist)
 

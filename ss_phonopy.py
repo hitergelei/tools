@@ -32,7 +32,7 @@ def get_subdir_name(order, disp, prec=1e-5):
             sign.append('0')
     return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
 
-def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc):
+def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with Vasp """
     forces = []
     ndir = ''
@@ -71,18 +71,24 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc):
         forces.append(result.get_forces())
     phonon.set_forces(np.array(forces))
 
-def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
-    """ Calculate Force Constant with DPMD """
+def calc_lmp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
+    """ Calculate Force Constant with LAMMPS """
+    #
+    cp_file_concat = ' '
+    if cp_files:
+        for f in cp_files:
+            cp_file_concat += '{} '.format(f)
+    #
     forces = []
     from ase.io import read, write
     for i in range(len(disp)):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir = get_subdir_name(i, disp)
         bu_and_mkdir(calc_dir, ndir)
-        call(['cp frozen_model.pb input-phonon.lmp '+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['cp {} input-phonon.in '.format(cp_file_concat)+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
         call(['lmp-pos2lmp.awk POSCAR-'+str(i).zfill(3)+' > structure.in'], cwd = calc_dir+'/'+ndir, shell = True)
-        call(['lmp_mpi -in input-phonon.lmp > out'], cwd = calc_dir+'/'+ndir, shell = True)
-        atoms = read(calc_dir+'/'+ndir+'/out.dump', index=0, format='lammps-dump', order=True)
+        call(['lmp_mpi -in input-phonon.in > out'], cwd = calc_dir+'/'+ndir, shell = True)
+        atoms = read(calc_dir+'/'+ndir+'/out.dump', index=0, format='lammps-dump-text', order=True)
         if i == 0:
             F_0 = atoms.get_forces(apply_constraint=False)
         else:
@@ -92,7 +98,7 @@ def calc_dpmd(phonon, disp, calc_dir, F_0_correction, ase_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_ase_calc(phonon, disp, calc_dir, F_0_correction, ase_calc):
+def calc_ase_calc(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with any ase implemented calculator """
     # numeric_F_dx=0.001
     # parallel=True
@@ -120,7 +126,7 @@ def calc_ase_calc(phonon, disp, calc_dir, F_0_correction, ase_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, ase_calc):
+def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with AMP with tensorflow """
     numeric_F_dx=0.001
     parallel=True
@@ -144,7 +150,7 @@ def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, ase_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc):
+def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
     numeric_F_dx=0.001
     parallel=True
@@ -177,9 +183,9 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc):
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None):
+def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None):
     """
-    calc -- Specify calculator. One of these. [vasp, dpmd, amp, amp_tf, amp_tf_bunch]
+    calc -- Specify calculator. One of these. [vasp, lmp, amp, amp_tf, amp_tf_bunch]
     phonon -- Phonopy phonon object.
     """
     import sys
@@ -222,8 +228,8 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     if do_calc:
         if calculator == 'vasp': 
             calc = calc_vasp
-        elif calculator == 'dpmd':
-            calc = calc_dpmd
+        elif calculator == 'lmp':
+            calc = calc_lmp
         elif calculator == 'ase_calc':
             calc = calc_ase_calc
         elif calculator == 'amp_tf':
@@ -233,7 +239,7 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         else:
             raise ValueError('Unknown calculator ({}) has been provided.'.format(calculator))
         print(">>>>>>> {} calculation will be carried out. <<<<<<<<".format(calculator).center(120))
-        calc(phonon, disp, calc_dir, F_0_correction, ase_calc)
+        calc(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files)
             
         if verbose:
             print('\n\n'+'forces'+'\n'+str(phonon.forces))
