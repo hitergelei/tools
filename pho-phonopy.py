@@ -4,13 +4,15 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-calc = 'dpmd'
+calc = 'lmp'
 # calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
+cp_files = ['Si.tersoff',]
+
 ## Params
 from phonopy.interface import vasp
 atoms = vasp.read_vasp('Si-diamond-prim.vasp')
@@ -108,6 +110,7 @@ phonon = ssp.calc_phonon(
     # F_0_correction=True,
     # verbose=True,
     # ase_calc=ase_calc,
+    cp_files=cp_files,
     )
 
 ######### Band structure ##########
