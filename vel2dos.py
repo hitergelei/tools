@@ -208,6 +208,7 @@ def argparse():
     parser.add_argument('-v', '--DOS_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
+    parser.add_argument('-t', '--dont_plot', dest='plot_bool', action='store_false', help='Do not plot, if provided. [default: Plot].')
     parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
     parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
     parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lcolor_list) == len(np.unique(chem)). For total DOS, len(lcolor_list) == 1  [default: automatic].')
@@ -236,6 +237,7 @@ if __name__ == '__main__':
     freqlim_up  = args.freqlim_up
     DOS_low     = args.DOS_low
     DOS_up      = args.DOS_up
+    plot_bool   = args.plot_bool
     from ss_util import str_slice_to_list
     slice_list = str_slice_to_list(args.image_slice)
     # inp_file_list
@@ -281,12 +283,6 @@ if __name__ == '__main__':
         # if np.shape(np.array(ADOS)) != (8, 3, 1750):
             # print(np.shape(np.array(ADOS)))
             # print(args.inp_file_list[i])
-    ## Averaging ADOS
-    ADOS = np.mean(ADOS_list, axis=0) * args.DOS_factor
-    ## Boson peak
-    if args.boson_peak:
-        ADOS /= f**2
-
     # ## write txt file
     # with open('tmp.txt', 'w') as txt:
         # sum = np.sum(np.sum(ADOS, axis=0), axis=0)
@@ -299,31 +295,37 @@ if __name__ == '__main__':
     # d_f = 1. / (dt * (len(f)-1)*2)
     # print(np.sum(ADOS) * d_f)
 
-    ## Plot
-    if pdos_bool:
-        atoms = read(args.inp_file_list[i], 0)
-        plot_partial_DOS(
-            f,
-            ADOS,
-            atoms.get_chemical_symbols(),
-            unit='THz',
-            freqlim_low=freqlim_low,
-            freqlim_up=freqlim_up,
-            DOS_low=DOS_low,
-            DOS_up=DOS_up,
-            flip_xy=True,
-            lcolor_list=args.lcolor_list,
-            legend_bool=args.legend_bool,
-            )
-    else:
-        plot_total_DOS(
-            f,
-            np.sum(np.sum(ADOS, axis=0), axis=0),
-            unit='THz',
-            freqlim_low=freqlim_low,
-            freqlim_up=freqlim_up,
-            DOS_low=DOS_low,
-            DOS_up=DOS_up,
-            flip_xy=True,
-            lcolor_list=args.lcolor_list,
-            )
+    if plot_bool:
+        ## Averaging ADOS
+        ADOS = np.mean(ADOS_list, axis=0) * args.DOS_factor
+        ## Boson peak
+        if args.boson_peak:
+            ADOS /= f**2
+        ## Plot
+        if pdos_bool:
+            atoms = read(args.inp_file_list[i], 0)
+            plot_partial_DOS(
+                f,
+                ADOS,
+                atoms.get_chemical_symbols(),
+                unit='THz',
+                freqlim_low=freqlim_low,
+                freqlim_up=freqlim_up,
+                DOS_low=DOS_low,
+                DOS_up=DOS_up,
+                flip_xy=True,
+                lcolor_list=args.lcolor_list,
+                legend_bool=args.legend_bool,
+                )
+        else:
+            plot_total_DOS(
+                f,
+                np.sum(np.sum(ADOS, axis=0), axis=0),
+                unit='THz',
+                freqlim_low=freqlim_low,
+                freqlim_up=freqlim_up,
+                DOS_low=DOS_low,
+                DOS_up=DOS_up,
+                flip_xy=True,
+                lcolor_list=args.lcolor_list,
+                )
