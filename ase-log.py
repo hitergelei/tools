@@ -12,6 +12,7 @@ def argparse():
     parser.add_argument('fname', type=str, help='ASE readable file.')
     # Optional arguments
     parser.add_argument('-t', '--dt', type=float, default=None, help='Time interval of provide file. (unit of ps) [default: steps unit]')
+    parser.add_argument('-n', '--slice', type=str, default=':', help='ASE readable slice. [default: ":"]')
 
     return parser.parse_args()
 
@@ -32,10 +33,11 @@ if __name__ == '__main__':
     args  = argparse()
     fname = args.fname
     dt    = args.dt
+    slc   = args.slice
 
     #
     from ase.io import read
-    alist = read(fname, ':')
+    alist = read(fname, slc)
     if not isinstance(alist, list):
         alist = [alist]
     anum = len(alist[0])

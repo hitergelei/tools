@@ -46,12 +46,13 @@ if __name__ == '__main__':
     print('     calc    : atoms._calc')
     print('     results : atoms._calc.results')
     print('     Traj    : ase.io.trajectory:Trajectiory == Traj')
-    print('    coord    : atoms.get_positions()')
+    print('     coord   : atoms.get_positions()')
     print('     frac    : atoms.get_scaled_positions()')
-    print('    forces   : atoms.get_forces()')
-    print('    energy   : atoms.get_potential_energy()')
-    print('    stress   : atoms.get_stress()')
+    print('     forces  : atoms.get_forces()')
+    print('     energy  : atoms.get_potential_energy()')
+    print('     stress  : atoms.get_stress()')
     print('     chem    : atoms.get_chemical_symbols()')
+    print('     view    : from ase.visualize import view')
     print('')
     print('============================================================================='.center(120))
     print('')
@@ -60,6 +61,7 @@ if __name__ == '__main__':
     ##
     from ase.io import read
     from ase.io.trajectory import Trajectory as Traj
+    from ase.visualize import view
 
     alist = read(
         args.inp_file,

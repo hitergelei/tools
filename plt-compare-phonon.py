@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # Global variables
 band_1_f = open('band-vasp.in', 'r')
-band_2_f = open('band-dpmd.in', 'r')
+band_2_f = open('band-lmp.in', 'r')
 unit = 'THz'
 scatter_num = 20
 # errorbar_frac = 0.00
