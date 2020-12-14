@@ -18,7 +18,7 @@ from phonopy.interface import vasp
 atoms = vasp.read_vasp('Si-diamond-prim.vasp')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
-delta              = 0.050
+delta              = 0.010
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
@@ -127,14 +127,11 @@ N_q = 100
 bands = ssp.make_band(path, N_q)
 gru_pho.set_band_structure(bands)
 gru_pho.get_band_structure()
+gru_pho.write_yaml_band_structure()
 
 ########## Plot ################
 
 # Only band plot
-plt = gru_pho.plot_band_structure()
-# ssp.plot_band(
-    # phonon,
-    # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'],
-    # ).show()
+plt = gru_pho.plot_band_structure(labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'])
 plt.show()
 
