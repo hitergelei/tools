@@ -183,7 +183,7 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None):
+def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None, subscript=None):
     """
     calc -- Specify calculator. One of these. [vasp, lmp, amp, amp_tf, amp_tf_bunch]
     phonon -- Phonopy phonon object.
@@ -201,6 +201,8 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         delta,
         phonon._is_symmetry,
         )
+    if subscript is not None:
+        job_name += '_s' + str(subscript)
     # Define names
     pckl_name = job_name+'.bin'
     calc_dir = './calcs/'+job_name

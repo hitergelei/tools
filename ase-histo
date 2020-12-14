@@ -42,7 +42,7 @@ if __name__ == '__main__':
         vector_type = False
         from ss_util import E_fromAlist
         data = E_fromAlist(alist)
-    if args.target == 'eperatom':
+    elif args.target == 'eperatom':
         vector_type = False
         from ss_util import Eperatom_fromAlist
         data = Eperatom_fromAlist(alist)

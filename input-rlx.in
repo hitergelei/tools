@@ -25,6 +25,7 @@ compute         2 all pressure thermo_temp
 fix             1 all box/relax iso 0.0 vmax 1e-4
 
 thermo_style    custom step etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press pxx pyy pzz pyz pxz pxy vol
+thermo_modify   format float %.15g
 thermo			1
 
 #dump			myDump all atom 100 atom.dump
