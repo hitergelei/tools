@@ -2,10 +2,10 @@
 import numpy as np
 
 # Params
-disp_min = -0.5
-disp_max = 0.5
+disp_min = -0.25
+disp_max = 0.25
 disp_nbins = 8
-direc = [1, 1, 1]
+direc = [1, 0, 0]
 
 # Main
 dx = (disp_max-disp_min) /disp_nbins

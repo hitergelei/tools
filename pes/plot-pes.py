@@ -3,10 +3,10 @@ import numpy as np
 
 ## MLP part
 # Params
-disp_min = -0.5
-disp_max = 0.5
+disp_min = -0.25
+disp_max = 0.25
 disp_nbins = 500
-direc = [1, 1, 1]
+direc = [1, 0, 0]
 
 # Main
 dx = (disp_max-disp_min) /disp_nbins
@@ -31,8 +31,8 @@ dedx = (e[1:] - e[:-1]) /dx
 
 ## DFT part
 # Params
-dft_disp_min = -0.5
-dft_disp_max = 0.5
+dft_disp_min = -0.25
+dft_disp_max = 0.25
 dft_disp_nbins = 8
 
 # Main
@@ -62,9 +62,8 @@ ax1.scatter(
     dft_disp,
     dft_e-np.min(dft_e),
     label='E(DFT)',
-    marker='x',
-    s=100,
-    facecolors='k',
+    s=50,
+    facecolors='none',
     edgecolors='k',
     )
 ax2.plot(disp, np.abs(f), label='F(MLP)', c='r')
@@ -72,12 +71,11 @@ ax2.scatter(
     dft_disp,
     np.abs(dft_f),
     label='F(DFT)',
-    marker='+',
-    s=100,
-    facecolors='r',
+    s=50,
+    facecolors='none',
     edgecolors='r',
     )
-ax2.plot(disp[:-1] +dx/2., np.abs(dedx), label='|dE/dx|', c='b', ls=':')
+# ax2.plot(disp[:-1] +dx/2., np.abs(dedx), label='|dE/dx|', c='b', ls=':')
 
 #
 ax1.set_xlabel('dx ($\AA$)', fontsize='x-large')
@@ -90,7 +88,7 @@ ax1.grid(alpha=0.4)
 ax1.legend(bbox_to_anchor=(0.2,1), loc='upper left', fontsize='large')
 ax2.legend(bbox_to_anchor=(0.6,1), loc='upper left', fontsize='large')
 plt.title('Potential Energy Surface (PES)', fontsize='x-large')
-plt.subplots_adjust(left=0.16, bottom=0.13, right=0.86, top=0.93)
+plt.subplots_adjust(left=0.14, bottom=0.13, right=0.86, top=0.93)
 plt.show()
 
 
