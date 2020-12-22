@@ -39,12 +39,14 @@ if __name__ == '__main__':
     from ase.io import read
     atoms = read(args.trajfile, -1)
 
-    d = np.sort(atoms.get_all_distances(mic=True)[0])
-    f = np.sort(np.linalg.norm(atoms.get_forces(), axis=-1))[::-1]
+    i = np.argsort(atoms.get_all_distances(mic=True)[0])
+    d = atoms.get_all_distances(mic=True)[0][i]
+    f = np.linalg.norm(atoms.get_forces(), axis=-1)[i]
 
     from matplotlib import pyplot as plt
-    plt.plot(d, f, c='r')
+    # plt.plot(d, f, c='r')
     plt.yscale('log')
+    plt.scatter(d, f, c='r')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.ylabel('Force, |$F_i$| (eV/$\AA$)', fontsize='x-large')
     plt.xlabel('Distance, $r_i-r_0$ ($\AA$)', fontsize='x-large')
