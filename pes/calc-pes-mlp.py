@@ -14,6 +14,8 @@ direc /= np.linalg.norm(direc)
 from ase.io import read, write
 atoms = read('supercell_2x2x2_si-conv.traj')
 
+from os import environ as env
+env['CUDA_VISIBLE_DEVICES'] = ''
 from subprocess import call
 call('rm -rf calc-mlp/; mkdir calc-mlp', shell=True)
 for i in range(len(disp)):
