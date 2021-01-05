@@ -120,6 +120,16 @@ def calc_forces(
                 call('mkdir -p {}'.format(fc2_path), shell=True)
             else:
                 print('*** NOTE) Loaded the previous fc2 calc results. Be aware! ***\n')
+        if not load_fc2_calc:
+            print('=== NOTE) Start fc2 calculations! ===\n')
+            from phonopy.interface.vasp import write_vasp
+            sc2_forces = []
+            for i in range(len(sc2)):
+                wdir = '{}/disp-{:05d}'.format(fc2_path, i+1)
+                call('mkdir -p {}'.format(wdir), shell=True)
+                write_vasp('{}/POSCAR'.format(wdir), sc2[i])
+                sc2_forces.append(_calc_forces(wdir, calc, cp_files))
+
         if load_fc3_calc:
             try:
                 sc3_forces = []
@@ -135,16 +145,6 @@ def calc_forces(
                 call('mkdir -p {}'.format(fc3_path), shell=True)
             else:
                 print('*** NOTE) Loaded the previous fc3 calc results. Be aware! ***\n')
-
-        if not load_fc2_calc:
-            print('=== NOTE) Start fc2 calculations! ===\n')
-            from phonopy.interface.vasp import write_vasp
-            sc2_forces = []
-            for i in range(len(sc2)):
-                wdir = '{}/disp-{:05d}'.format(fc2_path, i+1)
-                call('mkdir -p {}'.format(wdir), shell=True)
-                write_vasp('{}/POSCAR'.format(wdir), sc2[i])
-                sc2_forces.append(_calc_forces(wdir, calc, cp_files))
         if not load_fc3_calc:
             print('=== NOTE) Start fc3 calculations! ===\n')
             from phonopy.interface.vasp import write_vasp
