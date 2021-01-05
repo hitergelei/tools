@@ -70,13 +70,13 @@ def calc_forces(
         *np.diag(phono3py.supercell_matrix),
         )
     fc2_name = '{}_{}_sc2-{}-{}-{}'.format(
-        unitcell_f,
         calc,
+        unitcell_f,
         *np.diag(phono3py.phonon_supercell_matrix),
         )
     fc3_name = '{}_{}_sc3-{}-{}-{}'.format(
-        unitcell_f,
         calc,
+        unitcell_f,
         *np.diag(phono3py.supercell_matrix),
         )
 
