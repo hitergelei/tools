@@ -46,7 +46,7 @@ def run_KDE(x, y, nbins, x_max=None, y_max=None, density_ratio=0.1):
         _x_max = x_max
     y_min = 0
     if y_max is None:
-        _y_max = np.rint(y.max())
+        _y_max = np.rint(y.max() *1.2)
     else:
         _y_max = y_max
     values = np.vstack([x.ravel(), y.ravel()])
@@ -56,22 +56,22 @@ def run_KDE(x, y, nbins, x_max=None, y_max=None, density_ratio=0.1):
     positions = np.vstack([xi.ravel(), yi.ravel()])
     zi = np.reshape(kernel(positions).T, xi.shape)
 
-    if y_max is None:
-        zi_max = np.max(zi)
-        indices = []
-        for i, r_zi in enumerate((zi.T)[::-1]):
-            if indices:
-                indices.append(nbins - i - 1)
-            elif np.max(r_zi) > zi_max * density_ratio:
-                indices = [nbins - i - 1]
-        short_nbinds = len(indices)
+    # if y_max is None:
+        # zi_max = np.max(zi)
+        # indices = []
+        # for i, r_zi in enumerate((zi.T)[::-1]):
+            # if indices:
+                # indices.append(nbins - i - 1)
+            # elif np.max(r_zi) > zi_max * density_ratio:
+                # indices = [nbins - i - 1]
+        # short_nbinds = len(indices)
 
-        ynbins = nbins ** 2 // short_nbinds
-        xi, yi = np.mgrid[x_min:_x_max:nbins*1j, y_min:_y_max:ynbins*1j]
-        positions = np.vstack([xi.ravel(), yi.ravel()])
-        zi = np.reshape(kernel(positions).T, xi.shape)
-    else:
-        short_nbinds = nbins
+        # ynbins = nbins ** 2 // short_nbinds
+        # xi, yi = np.mgrid[x_min:_x_max:nbins*1j, y_min:_y_max:ynbins*1j]
+        # positions = np.vstack([xi.ravel(), yi.ravel()])
+        # zi = np.reshape(kernel(positions).T, xi.shape)
+    # else:
+    short_nbinds = nbins
 
     return xi, yi, zi, short_nbinds
 
@@ -107,8 +107,8 @@ def plot(plt, xi, yi, zi, x, y, short_nbinds, nbins,
             cb.set_label(label='Density (arb. unit)', size='x-large', rotation=270)
         if not no_points:
             plt.scatter(y_cut, x_cut, s=point_size,
-                        c='k', marker='.', linewidth=0)
-        plt.ylim(ymin=0, ymax=xi.max())
+                        c='w', marker='.', linewidth=0)
+        plt.ylim(ymin=np.min(y_cut)*0.8, ymax=xi.max())
         if y_max is None:
             plt.xlim(xmin=0, xmax=(np.max(y_cut) + epsilon))
         else:
@@ -126,12 +126,12 @@ def plot(plt, xi, yi, zi, x, y, short_nbinds, nbins,
             cb.set_label(label='Density (arb. unit)', size='x-large', rotation=270)
         if not no_points:
             plt.scatter(x_cut, y_cut, s=point_size,
-                        c='k', marker='.', linewidth=0)
+                        c='w', marker='.', linewidth=0)
         plt.xlim(xmin=0, xmax=xi.max())
         if y_max is None:
-            plt.ylim(ymin=0, ymax=(np.max(y_cut) + epsilon))
+            plt.ylim(ymin=np.min(y_cut)*0.8, ymax=np.max(y_cut)*1.2)
         else:
-            plt.ylim(ymin=0, ymax=(y_max + epsilon))
+            plt.ylim(ymin=np.min(y_cut)*0.8, ymax=y_max*1.2)
         if title:
             plt.title(title, fontsize='x-large')
         plt.xlabel('Phonon frequency (THz)', fontsize='x-large')
@@ -146,6 +146,7 @@ def plot(plt, xi, yi, zi, x, y, short_nbinds, nbins,
     if title:
         plt.title(title, fontsize='x-large')
 
+    plt.yscale('log')
     plt.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.90)
 
     return fig
