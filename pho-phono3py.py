@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 
 # Params
-NNN2       = [3, 3, 3]
+NNN2       = [4, 4, 4]
 NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
-unitcell_f = 'Si-diamond-prim.vasp'
+unitcell_f = 'gete-alpha-prim.vasp'
 # calc       = 'lmp'
 # cp_files   = ['frozen_model.pb', 'input-phonon.in']
 calc       = 'vasp'
 cp_files   = ['INCAR', 'POTCAR', 'WAVECAR', 'CHGCAR']
+run_mode   = 'only f'
 # run_mode   = 'ltc-rta'
-run_mode   = 'ltc-bte'
+# run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
 temp       = 300 # (K)
 save       = True
 load       = True
 
-for i in range(1,21):
+for i in range(1,16):
     q_mesh     = [i,i,i]
     from os import environ
     environ['CUDA_VISIBLE_DEVICES'] = ''
@@ -94,7 +95,9 @@ for i in range(1,21):
     pho.mesh_numbers = q_mesh
     pho.init_phph_interaction()
 
-    if run_mode == 'ltc-rta':
+    if run_mode == 'only f':
+        continue
+    elif run_mode == 'ltc-rta':
         pho.run_thermal_conductivity(
             is_LBTE=False,
             temperatures=(temp,),
