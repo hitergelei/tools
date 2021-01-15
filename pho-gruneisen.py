@@ -18,9 +18,9 @@ cp_files = ['frozen_model.pb',]
 ## Params
 from phonopy.interface import vasp
 # atoms = vasp.read_vasp('POSCAR_GeTe_conv')
-atoms = vasp.read_vasp('gete-alpha-hex-dpmd.vasp')
+atoms = vasp.read_vasp('gete-alpha-prim-dpmd.vasp')
 N                  = 4
-NNN                = [[N,0,0],[0,N,0],[0,0,1]]
+NNN                = [[N,0,0],[0,N,0],[0,0,N]]
 delta              = 0.010
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
@@ -109,13 +109,16 @@ gru_pho = PhonopyGruneisen(
 
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points, bandpath
-points = ibz_points['hexagonal']
-G = points['Gamma']
-M = points['M']
-K = points['K']
-A = points['A']
-L = points['L']
-H = points['H']
+# points = ibz_points['hexagonal']
+# G = points['Gamma']
+# M = points['M']
+# K = points['K']
+# A = points['A']
+# L = points['L']
+# H = points['H']
+# path = [[G, X], [X, U], [K, G], [G, L]]
+# labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+
 # points = ibz_points['fcc']
 # G = points['Gamma']
 # X = points['X']
@@ -123,9 +126,24 @@ H = points['H']
 # K = points['K']
 # U = points['U']
 # L = points['L']
+# path = [[K, G], [G, M]]
+# labels = ['K', '$\Gamma$', 'M',]
 
-path = [[K, G], [G, M]]
-# path = [[G, X], [X, U], [K, G], [G, L]]
+points = {
+    'Gamma': [0.,0.,0.],
+    'X':[1/2., 1/2., 0.],
+    'U':[0.6288624788, 0.6288624788, 0.2421052632],
+    'K':[0.7578947368, 0.3711375212, 0.3711375212],
+    'L':[1/2., 0., 0.],
+    }
+G = points['Gamma']
+X = points['X']
+U = points['U']
+K = points['K']
+L = points['L']
+path = [[G, X], [X, U], [K, G], [G, L]]
+labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+
 N_q = 100
 bands = ssp.make_band(path, N_q)
 gru_pho.set_band_structure(bands)
@@ -135,8 +153,7 @@ gru_pho.write_yaml_band_structure()
 ########## Plot ################
 
 # Only band plot
-# plt = gru_pho.plot_band_structure(labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'])
-plt = gru_pho.plot_band_structure(labels = ['K', '$\Gamma$', 'M',])
-plt.subplots_adjust(left=0.33, right=0.77)
+plt = gru_pho.plot_band_structure(labels = labels)
+plt.subplots_adjust(left=0.15, right=0.90)
 plt.show()
 
