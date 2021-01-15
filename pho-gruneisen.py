@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from os import environ
+environ['CUDA_VISIBLE_DEVICES']=''
 import numpy as np
 from ase import units as ase_units
 
@@ -15,9 +17,10 @@ cp_files = ['frozen_model.pb',]
 
 ## Params
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('Si-diamond-prim.vasp')
+# atoms = vasp.read_vasp('POSCAR_GeTe_conv')
+atoms = vasp.read_vasp('gete-alpha-hex-dpmd.vasp')
 N                  = 4
-NNN                = [[N,0,0],[0,N,0],[0,0,N]]
+NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.010
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
@@ -106,23 +109,23 @@ gru_pho = PhonopyGruneisen(
 
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points, bandpath
-# points = ibz_points['hexagonal']
-# G = points['Gamma']
-# M = points['M']
-# K = points['K']
-# A = points['A']
-# L = points['L']
-# H = points['H']
-points = ibz_points['fcc']
+points = ibz_points['hexagonal']
 G = points['Gamma']
-X = points['X']
-W = points['W']
+M = points['M']
 K = points['K']
-U = points['U']
+A = points['A']
 L = points['L']
+H = points['H']
+# points = ibz_points['fcc']
+# G = points['Gamma']
+# X = points['X']
+# W = points['W']
+# K = points['K']
+# U = points['U']
+# L = points['L']
 
-# path = [[K, G], [G, M]]
-path = [[G, X], [X, U], [K, G], [G, L]]
+path = [[K, G], [G, M]]
+# path = [[G, X], [X, U], [K, G], [G, L]]
 N_q = 100
 bands = ssp.make_band(path, N_q)
 gru_pho.set_band_structure(bands)
@@ -132,6 +135,8 @@ gru_pho.write_yaml_band_structure()
 ########## Plot ################
 
 # Only band plot
-plt = gru_pho.plot_band_structure(labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'])
+# plt = gru_pho.plot_band_structure(labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'])
+plt = gru_pho.plot_band_structure(labels = ['K', '$\Gamma$', 'M',])
+plt.subplots_adjust(left=0.33, right=0.77)
 plt.show()
 
