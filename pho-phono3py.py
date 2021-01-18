@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Params
+q_range    = range(1,16)
 NNN2       = [4, 4, 4]
 NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
@@ -8,16 +9,16 @@ unitcell_f = 'gete-alpha-prim.vasp'
 # calc       = 'lmp'
 # cp_files   = ['frozen_model.pb', 'input-phonon.in']
 calc       = 'vasp'
-cp_files   = ['INCAR', 'POTCAR', 'WAVECAR', 'CHGCAR']
-run_mode   = 'only f'
-# run_mode   = 'ltc-rta'
+cp_files   = ['INCAR', 'POTCAR',]
+# run_mode   = 'only f'
+run_mode   = 'ltc-rta'
 # run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
-temp       = 300 # (K)
+temp       = (300,500,700) # (K)
 save       = True
 load       = True
 
-for i in range(1,16):
+for i in q_range:
     q_mesh     = [i,i,i]
     from os import environ
     environ['CUDA_VISIBLE_DEVICES'] = ''
@@ -100,7 +101,7 @@ for i in range(1,16):
     elif run_mode == 'ltc-rta':
         pho.run_thermal_conductivity(
             is_LBTE=False,
-            temperatures=(temp,),
+            temperatures=temp,
             # is_isotope=False,
             # mass_variances=None,
             # grid_points=None,
@@ -137,7 +138,7 @@ for i in range(1,16):
     elif run_mode == 'ltc-bte':
         pho.run_thermal_conductivity(
             is_LBTE=True,
-            temperatures=(temp,),
+            temperatures=temp,
             # is_isotope=False,
             # mass_variances=None,
             # grid_points=None,
@@ -171,29 +172,29 @@ for i in range(1,16):
         with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
             print(f['kappa'][0])
 
-    elif run_mode == 'self-e':
-        grid_points = list(range(10))
-        pts, delta = pho.run_real_self_energy(
-            grid_points=grid_points,
-            temperatures=(temp,),
-            # run_on_bands=False,
-            # frequency_points=None,
-            # frequency_step=None,
-            # num_frequency_points=None,
-            # epsilons=None,
-            # write_txt=False,
-            # write_hdf5=False,
-            # output_filename=None,
-            )
-        pts, gamma = pho.run_imag_self_energy(
-            grid_points=grid_points,
-            temperatures=(temp,),
-            # frequency_points=None,
-            # frequency_step=None,
-            # num_frequency_points=None,
-            # scattering_event_class=None,
-            # write_txt=False,
-            # write_gamma_detail=False,
-            # keep_gamma_detail=False,
-            # output_filename=None,
-            )
+    # elif run_mode == 'self-e':
+        # grid_points = list(range(10))
+        # pts, delta = pho.run_real_self_energy(
+            # grid_points=grid_points,
+            # temperatures=temp,
+            # # run_on_bands=False,
+            # # frequency_points=None,
+            # # frequency_step=None,
+            # # num_frequency_points=None,
+            # # epsilons=None,
+            # # write_txt=False,
+            # # write_hdf5=False,
+            # # output_filename=None,
+            # )
+        # pts, gamma = pho.run_imag_self_energy(
+            # grid_points=grid_points,
+            # temperatures=temp,
+            # # frequency_points=None,
+            # # frequency_step=None,
+            # # num_frequency_points=None,
+            # # scattering_event_class=None,
+            # # write_txt=False,
+            # # write_gamma_detail=False,
+            # # keep_gamma_detail=False,
+            # # output_filename=None,
+            # )
