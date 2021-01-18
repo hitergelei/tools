@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 
 import numpy as np
+from copy import deepcopy
+
+def permute_sequence(
+    atoms,
+    order,
+    ):
+    new_atoms = atoms[order]
+    new_atoms._calc = deepcopy(atoms._calc)
+    new_atoms._calc.atoms = new_atoms.copy()
+    new_atoms._calc.results['forces'] = atoms._calc.results['forces'][order]
+    return new_atoms
 
 if __name__ == '__main__':
     import sys
@@ -28,15 +39,11 @@ if __name__ == '__main__':
     order = np.array(sys.argv[2:], dtype=np.int)
 
     ## Permute
-    from copy import deepcopy
     new_alist = []
     for i in range(len(alist)):
         if i % 1000 == 999:
             print(('==== Processing {}-th image ===='.format(i+1)).center(120))
-        new_atoms = alist[i][order]
-        new_atoms._calc = deepcopy(alist[i]._calc)
-        new_atoms._calc.atoms = new_atoms.copy()
-        new_atoms._calc.results['forces'] = alist[i]._calc.results['forces'][order]
+        new_atoms = permute_sequence(alist[i], order)
         new_alist.append(new_atoms)
     write('permuted_'+alist_file, new_alist)
     print()

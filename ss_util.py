@@ -4,7 +4,6 @@
 from ase import Atoms, Atom
 import random
 from ase.build import make_supercell
-from numpy import ndarray
 import numpy as np
 
 def slice2str(s):
@@ -342,6 +341,13 @@ def list2numlist(list_inp):
             i+=1
     return numlist
 
+def ind_dict(list_inp):
+    items = np.unique(list_inp)
+    ind_dict = {}
+    for item in items:
+        ind_dict[item] = np.where(np.array(list_inp) == item)[0]
+    return ind_dict
+
 def ordered_unique(in_list):
     tmp = set()
     return [x for x in in_list if not (x in tmp or tmp.add(x))]
@@ -488,6 +494,7 @@ def random_atoms_gen(
     num_fix_dict = {}
     from copy import deepcopy
     num_shffl_spec_dict = deepcopy(num_spec_dict)
+    from numpy import ndarray
     if isinstance(fix_ind_dict, list) or isinstance(fix_ind_dict, np.ndarray):
         fix_ind_arr = np.array(deepcopy(fix_ind_dict))
         fixed_atoms = backbone.copy()[fix_ind_arr]
