@@ -2,31 +2,35 @@
 import numpy as np
 
 methods = ['rta', 'bte']
-plot_range = range(1,16)
-xlim = None
-# xlim = (0,20)
-ylim = None
-# ylim = (0,130)
+q_range = range(1,21)
 
 data = {}
 for method in methods:
     data[method] = []
-    for i in plot_range:
+    for i in q_range:
+        temp = []
         q_mesh = (i,i,i)
         import h5py
         with h5py.File('{}/kappa-m{}{}{}.hdf5'.format(method, *q_mesh), 'r') as f:
-            data[method].append(np.mean(f['kappa'][0][0:3]))
+            data[method].append(np.array(f['kappa']))
+            temp = np.array(f['temperature'])
+    data[method] = np.array(data[method])
+
 
 from matplotlib import pyplot as plt
-i = list(plot_range)
-plt.plot(i, data['bte'], label='BTE', c='k')
-plt.plot(i, data['rta'], label='RTA', c='r')
-plt.tick_params(axis="both",direction="in", labelsize='x-large')
-plt.xlabel('q-mesh ($x^3$)', fontsize='x-large')
-plt.ylabel('LTC (W/mK)', fontsize='x-large')
-plt.legend(fontsize='large')
-plt.xlim(xlim)
-plt.ylim(ylim)
-plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
-plt.grid(alpha=0.5)
+for i in range(len(temp)):
+    #
+    q = list(q_range)
+    plt.figure()
+    plt.plot(q, np.mean(data['bte'][:,i,:3], axis=1), label='BTE', c='k')
+    plt.plot(q, np.mean(data['rta'][:,i,:3], axis=1), label='RTA', c='r')
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.xlabel('q-mesh ($x^3$)', fontsize='x-large')
+    plt.ylabel('LTC (W/mK)', fontsize='x-large')
+    plt.legend(fontsize='large')
+    plt.title('At {} K'.format(temp[i]), fontsize='x-large')
+    plt.xlim(np.min(q),np.max(q))
+    plt.ylim(0,130)
+    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
+    plt.grid(alpha=0.5)
 plt.show()
