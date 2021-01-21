@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from os import environ
+environ['CUDA_VISIBLE_DEVICES']=''
 import numpy as np
 from ase import units as ase_units
 

@@ -62,6 +62,11 @@ def calc_forces(
     load=True,
     ):
 
+    # Check if structure is lower triangular cell
+    for c in ((0,1), (0,2), (1,2)):
+        if phono3py.primitive.get_cell()[c[0],c[1]] != 0.:
+            raise ValueError('Please provide lower triangular cell.')
+
     #
     job_name = '3pho_{}_{}_sc2-{}-{}-{}_sc3-{}-{}-{}'.format(
         calc,

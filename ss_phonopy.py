@@ -188,6 +188,11 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     calc -- Specify calculator. One of these. [vasp, lmp, amp, amp_tf, amp_tf_bunch]
     phonon -- Phonopy phonon object.
     """
+    # Check if structure is lower triangular cell
+    for c in ((0,1), (0,2), (1,2)):
+        if phonon._primitive.get_cell()[c[0],c[1]] != 0.:
+            raise ValueError('Please provide lower triangular cell.')
+
     import sys
     import pickle as pckl
     if verbose:
