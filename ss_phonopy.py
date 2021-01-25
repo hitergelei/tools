@@ -628,3 +628,36 @@ def plot_pdos(
     if save_svg:
         plt.savefig('figure.svg', format='svg')
     plt.show()
+
+def plot_gruneisen_band(
+    GruPho,
+    epsilon=1e-4,
+    color_scheme=None,
+    labels=None,
+    g_max=None,
+    g_min=None,
+    f_max=None,
+    f_min=None,
+    ):
+    import matplotlib.pyplot as plt
+    fig, axarr = plt.subplots(2, 1)
+    for ax in axarr:
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+        GruPho._band_structure.plot(
+            axarr,
+            epsilon=epsilon,
+            color_scheme=color_scheme,
+            labels=labels,
+            )
+    if g_max:
+        axarr[0].set_ylim(ymax=g_max)
+    if g_min:
+        axarr[0].set_ylim(ymin=g_max)
+    if f_max:
+        axarr[1].set_ylim(ymax=f_max)
+    if f_min:
+        axarr[1].set_ylim(ymin=f_max)
+    return plt

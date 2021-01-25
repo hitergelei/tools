@@ -6,19 +6,20 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-calc = 'lmp'
-# calc = 'vasp'
+# calc = 'lmp'
+calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
-cp_files = ['frozen_model.pb',]
+# cp_files = ['frozen_model.pb',]
+cp_files = None
 
 ## Params
 from phonopy.interface import vasp
 # atoms = vasp.read_vasp('POSCAR_GeTe_conv')
-atoms = vasp.read_vasp('gete-alpha-prim-dpmd.vasp')
+atoms = vasp.read_vasp('gete-alpha-prim.vasp')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
 delta              = 0.010
@@ -28,14 +29,17 @@ primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
 objective          = 'phonon'
-# freqlim_up         = 6.0
-freqlim_up         = None
-# freqlim_low        = -0.5
-freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
 legend_bool        = False
 plot_bool          = True
+#
+# g_max = 2
+# g_min = -2.5
+g_max = None
+g_min = None
+f_max = None
+f_min = None
 
 #
 if symmetry is True:
@@ -108,7 +112,7 @@ gru_pho = PhonopyGruneisen(
     )
 
 ######### Band structure ##########
-# from ase.dft.kpoints import ibz_points
+from ase.dft.kpoints import ibz_points
 # points = ibz_points['hexagonal']
 # G = points['Gamma']
 # M = points['M']
@@ -153,7 +157,15 @@ gru_pho.write_yaml_band_structure()
 ########## Plot ################
 
 # Only band plot
-plt = gru_pho.plot_band_structure(labels = labels)
+from ss_phonopy import plot_gruneisen_band
+plt = plot_gruneisen_band(
+    gru_pho,
+    labels = labels,
+    g_max = g_max,
+    g_min = g_min,
+    f_max = f_max,
+    f_min = f_min,
+    )
 plt.subplots_adjust(left=0.15, right=0.90)
 plt.show()
 
