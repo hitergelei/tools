@@ -2,7 +2,7 @@
 import numpy as np
 
 # Params
-q_range    = range(1,21)
+q_range    = range( 1,13)
 NNN2       = [3, 3, 3]
 NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
@@ -12,10 +12,10 @@ cp_files   = ['frozen_model.pb', 'input-phonon.in']
 # calc       = 'vasp'
 # cp_files   = ['INCAR', 'POTCAR',]
 # run_mode   = 'onle f'
-# run_mode   = 'ltc-rta'
+run_mode   = 'ltc-rta'
 # run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
-run_mode   = 'gruneisen'
+# run_mode   = 'gruneisen'
 temp       = (300, 500, 700,) # (K)
 #
 sym_fc     = True
@@ -27,10 +27,14 @@ fc_calc    = None
 save       = True
 load       = True
 #
-# gru_max = 2
-# gru_min = -2.5
-gru_max = None
-gru_min = None
+g_max = 5.5
+g_min = -12.4
+# g_max = None
+# g_min = None
+f_max = 5.5
+f_min = -0.25
+# f_max = None
+# f_min = None
 
 for i in q_range:
     q_mesh     = [i,i,i]
@@ -72,30 +76,30 @@ for i in q_range:
     # path = [[K, G], [G, M]]
     # labels = ['K', '$\Gamma$', 'M',]
 
-    points = ibz_points['fcc']
-    G = points['Gamma']
-    X = points['X']
-    W = points['W']
-    K = points['K']
-    U = points['U']
-    L = points['L']
-    path = [[G, X], [X, U], [K, G], [G, L]]
-    labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
-
-    # points = {
-        # 'Gamma': [0.,0.,0.],
-        # 'X':[1/2., 1/2., 0.],
-        # 'U':[0.6301369863, 0.6301369863, 0.2397260274],
-        # 'K':[0.7602739726, 0.3698630137, 0.3698630137],
-        # 'L':[1/2., 1/2., 1/2.],
-        # }
+    # points = ibz_points['fcc']
     # G = points['Gamma']
     # X = points['X']
-    # U = points['U']
+    # W = points['W']
     # K = points['K']
+    # U = points['U']
     # L = points['L']
     # path = [[G, X], [X, U], [K, G], [G, L]]
     # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+
+    points = {
+        'Gamma': [0.,0.,0.],
+        'X':[1/2., 1/2., 0.],
+        'U':[0.6301369863, 0.6301369863, 0.2397260274],
+        'K':[0.7602739726, 0.3698630137, 0.3698630137],
+        'L':[1/2., 1/2., 1/2.],
+        }
+    G = points['Gamma']
+    X = points['X']
+    U = points['U']
+    K = points['K']
+    L = points['L']
+    path = [[G, X], [X, U], [K, G], [G, L]]
+    labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
     N_q = 100
     import ss_phonopy as ssp
@@ -261,9 +265,9 @@ for i in q_range:
         from ss_phono3py import plot_fc3_gruneisen_yaml
         plot_fc3_gruneisen_yaml(
             labels=labels,
-            g_max=gru_max,
-            g_min=gru_min,
-            # f_max=None,
-            # f_min=None,
+            g_max=g_max,
+            g_min=g_min,
+            f_max=f_max,
+            f_min=f_min,
             )
 
