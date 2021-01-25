@@ -1,22 +1,32 @@
 #!/usr/bin/env python
+import numpy as np
 
 # Params
-q_range    = range(1,16)
-NNN2       = [4, 4, 4]
+q_range    = range(1,21)
+NNN2       = [3, 3, 3]
 NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
-unitcell_f = 'gete-alpha-prim.vasp'
+unitcell_f = 'Si-diamond-prim.vasp'
 # calc       = 'lmp'
 # cp_files   = ['frozen_model.pb', 'input-phonon.in']
 calc       = 'vasp'
-cp_files   = ['INCAR', 'POTCAR',]
-# run_mode   = 'only f'
-run_mode   = 'ltc-rta'
+cp_files   = ['INCAR', 'POTCAR', 'WAVECAR', 'CHGCAR']
+# run_mode   = 'onle f'
+# run_mode   = 'ltc-rta'
 # run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
-temp       = (300,500,700) # (K)
+run_mode   = 'gruneisen'
+temp       = (300,) # (K)
+sym_fc     = True
+# sym_fc     = False
+fc_calc    = 'alm'
+# fc_calc    = None
 save       = True
 load       = True
+
+#
+gru_max = 2
+gru_min = -2.5
 
 for i in q_range:
     q_mesh     = [i,i,i]
@@ -40,36 +50,52 @@ for i in q_range:
         # frequency_factor_to_THz = VaspToTHz,
         # is_symmetry             = True,
         # is_mesh_symmetry        = True,
-        # symmetrize_fc3q         = False,
+        symmetrize_fc3q         = sym_fc,
         # symprec                 = 1e-5,
         # calculator              = None,
         # log_level               = 0,
         # lapack_zheev_uplo       = 'L',
         )
 
-    # # Band path
-    # from ase.dft.kpoints import ibz_points, bandpath
-    # # points = ibz_points['hexagonal']
-    # # G = points['Gamma']
-    # # M = points['M']
-    # # K = points['K']
-    # # A = points['A']
-    # # L = points['L']
-    # # H = points['H']
-    # points = ibz_points['fcc']
+    from ase.dft.kpoints import ibz_points
+    # points = ibz_points['hexagonal']
+    # G = points['Gamma']
+    # M = points['M']
+    # K = points['K']
+    # A = points['A']
+    # L = points['L']
+    # H = points['H']
+    # path = [[K, G], [G, M]]
+    # labels = ['K', '$\Gamma$', 'M',]
+
+    points = ibz_points['fcc']
+    G = points['Gamma']
+    X = points['X']
+    W = points['W']
+    K = points['K']
+    U = points['U']
+    L = points['L']
+    path = [[G, X], [X, U], [K, G], [G, L]]
+    labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+
+    # points = {
+        # 'Gamma': [0.,0.,0.],
+        # 'X':[1/2., 1/2., 0.],
+        # 'U':[0.6301369863, 0.6301369863, 0.2397260274],
+        # 'K':[0.7602739726, 0.3698630137, 0.3698630137],
+        # 'L':[1/2., 0., 0.],
+        # }
     # G = points['Gamma']
     # X = points['X']
-    # W = points['W']
-    # K = points['K']
     # U = points['U']
+    # K = points['K']
     # L = points['L']
-
-    # # path = [[K, G], [G, M]]
     # path = [[G, X], [X, U], [K, G], [G, L]]
-    # N_q = 100
+    # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
-    # from ss_phonopy import make_band
-    # band_path = make_band(path, N_q)
+    N_q = 100
+    import ss_phonopy as ssp
+    bands = ssp.make_band(path, N_q)
 
     # # Useless part
     # # print(pho.dataset.keys(), pho.phonon_dataset.keys())
@@ -91,13 +117,20 @@ for i in q_range:
         save,
         load,
         )
-    pho.produce_fc3()
-    pho.produce_fc2()
+    pho.produce_fc3(
+        symmetrize_fc3r=sym_fc,
+        fc_calculator=fc_calc,
+        )
+    pho.produce_fc2(
+        symmetrize_fc2=sym_fc,
+        fc_calculator=fc_calc,
+        )
     pho.mesh_numbers = q_mesh
     pho.init_phph_interaction()
 
     if run_mode == 'only f':
         continue
+
     elif run_mode == 'ltc-rta':
         pho.run_thermal_conductivity(
             is_LBTE=False,
@@ -172,29 +205,61 @@ for i in q_range:
         with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
             print(f['kappa'][0])
 
-    # elif run_mode == 'self-e':
-        # grid_points = list(range(10))
-        # pts, delta = pho.run_real_self_energy(
-            # grid_points=grid_points,
-            # temperatures=temp,
-            # # run_on_bands=False,
-            # # frequency_points=None,
-            # # frequency_step=None,
-            # # num_frequency_points=None,
-            # # epsilons=None,
-            # # write_txt=False,
-            # # write_hdf5=False,
-            # # output_filename=None,
-            # )
-        # pts, gamma = pho.run_imag_self_energy(
-            # grid_points=grid_points,
-            # temperatures=temp,
-            # # frequency_points=None,
-            # # frequency_step=None,
-            # # num_frequency_points=None,
-            # # scattering_event_class=None,
-            # # write_txt=False,
-            # # write_gamma_detail=False,
-            # # keep_gamma_detail=False,
-            # # output_filename=None,
-            # )
+    elif run_mode == 'self-e':
+        grid_points = list(range(10))
+        pts, delta = pho.run_real_self_energy(
+            grid_points=grid_points,
+            temperatures=temp,
+            # run_on_bands=False,
+            # frequency_points=None,
+            # frequency_step=None,
+            # num_frequency_points=None,
+            # epsilons=None,
+            # write_txt=False,
+            # write_hdf5=False,
+            # output_filename=None,
+            )
+        pts, gamma = pho.run_imag_self_energy(
+            grid_points=grid_points,
+            temperatures=temp,
+            # frequency_points=None,
+            # frequency_step=None,
+            # num_frequency_points=None,
+            # scattering_event_class=None,
+            # write_txt=False,
+            # write_gamma_detail=False,
+            # keep_gamma_detail=False,
+            # output_filename=None,
+            )
+
+    elif run_mode == 'gruneisen':
+        if NNN2 != NNN3:
+            raise ValueError('Supercell for fc2 and fc3 should be same.')
+        from phono3py.phonon3.gruneisen import run_gruneisen_parameters
+        from phonopy.units import VaspToTHz
+        run_gruneisen_parameters(
+            pho.fc2,
+            pho.fc3,
+            pho.supercell,
+            pho.primitive,
+            band_paths=np.array(bands),
+            mesh=None,
+            rotations=None,
+            qpoints=None,
+            # nac_params=None,
+            # nac_q_direction=None,
+            # ion_clamped=True,
+            factor=VaspToTHz,
+            # symprec=1e-5,
+            # output_filename=None,
+            # log_level=1,
+            )
+        from ss_phono3py import plot_fc3_gruneisen_yaml
+        plot_fc3_gruneisen_yaml(
+            labels=labels,
+            g_max=gru_max,
+            g_min=gru_min,
+            # f_max=None,
+            # f_min=None,
+            )
+

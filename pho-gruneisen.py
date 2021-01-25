@@ -108,7 +108,7 @@ gru_pho = PhonopyGruneisen(
     )
 
 ######### Band structure ##########
-from ase.dft.kpoints import ibz_points, bandpath
+# from ase.dft.kpoints import ibz_points
 # points = ibz_points['hexagonal']
 # G = points['Gamma']
 # M = points['M']
@@ -116,8 +116,8 @@ from ase.dft.kpoints import ibz_points, bandpath
 # A = points['A']
 # L = points['L']
 # H = points['H']
-# path = [[G, X], [X, U], [K, G], [G, L]]
-# labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+# path = [[K, G], [G, M]]
+# labels = ['K', '$\Gamma$', 'M',]
 
 # points = ibz_points['fcc']
 # G = points['Gamma']
@@ -126,8 +126,8 @@ from ase.dft.kpoints import ibz_points, bandpath
 # K = points['K']
 # U = points['U']
 # L = points['L']
-# path = [[K, G], [G, M]]
-# labels = ['K', '$\Gamma$', 'M',]
+# path = [[G, X], [X, U], [K, G], [G, L]]
+# labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
 points = {
     'Gamma': [0.,0.,0.],

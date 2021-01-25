@@ -116,7 +116,7 @@ phonon = ssp.calc_phonon(
     )
 
 ######### Band structure ##########
-from ase.dft.kpoints import ibz_points, bandpath
+from ase.dft.kpoints import ibz_points
 # points = ibz_points['hexagonal']
 # G = points['Gamma']
 # M = points['M']
@@ -124,6 +124,9 @@ from ase.dft.kpoints import ibz_points, bandpath
 # A = points['A']
 # L = points['L']
 # H = points['H']
+# path = [[K, G], [G, M]]
+# labels = ['K', '$\Gamma$', 'M',]
+
 points = ibz_points['fcc']
 G = points['Gamma']
 X = points['X']
@@ -131,11 +134,26 @@ W = points['W']
 K = points['K']
 U = points['U']
 L = points['L']
-
-# path = [[K, G], [G, M]]
 path = [[G, X], [X, U], [K, G], [G, L]]
-N_q = 100
+labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
+# points = {
+    # 'Gamma': [0.,0.,0.],
+    # 'X':[1/2., 1/2., 0.],
+    # 'U':[0.6301369863, 0.6301369863, 0.2397260274],
+    # 'K':[0.7602739726, 0.3698630137, 0.3698630137],
+    # 'L':[1/2., 0., 0.],
+    # }
+# G = points['Gamma']
+# X = points['X']
+# U = points['U']
+# K = points['K']
+# L = points['L']
+# path = [[G, X], [X, U], [K, G], [G, L]]
+# labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+
+#
+N_q = 100
 bands = ssp.make_band(path, N_q)
 
 phonon.set_band_structure(
@@ -172,8 +190,7 @@ if phonon_or_pdos == 'phonon':
     call(['phonopy-bandplot --gnuplot '+yaml_name+' > band-'+calc+'.in'], shell=True)
     ssp.plot_band_and_dos(
         phonon,
-        labels           = ['K', '$\Gamma$', 'M'],
-        # labels           = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L'],
+        labels           = labels,
         unit             = unit,
         proj_eigvec      = mode_projection,
         scatter_max_size = scatter_max_size,
@@ -187,7 +204,7 @@ if phonon_or_pdos == 'phonon':
         scatter_interval = scatter_interval,
         ).show()
     # Only band plot
-    #ssp.plot_band(phonon, labels = ['G', 'X', 'U|K', 'G', 'L']).show()
+    #ssp.plot_band(phonon, labels = labels).show()
 
 #### Partial DOS plot
 if phonon_or_pdos == 'pdos':

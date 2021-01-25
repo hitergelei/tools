@@ -64,7 +64,7 @@ def calc_forces(
 
     # Check if structure is lower triangular cell
     for c in ((0,1), (0,2), (1,2)):
-        if phono3py.primitive.get_cell()[c[0],c[1]] != 0.:
+        if phono3py.primitive.get_cell()[c[0],c[1]] != 0. and calc == 'lmp':
             raise ValueError('Please provide lower triangular cell.')
 
     #
@@ -175,4 +175,74 @@ def calc_forces(
             print('=== {}-forces.pckl file has been saved. ==='.format(job_name))
 
         return phono3py
+
+def plot_fc3_gruneisen_band(data, labels, g_max, g_min, f_max, f_min):
+    # Imported from Togo's Phono3py code.
+    import matplotlib.pyplot as plt
+
+    d = []
+    g = []
+    f = []
+    distance = 0.0
+
+    ticks = [0.0]
+    for path in data['path']:
+        for q in path['phonon']:
+            d.append(q['distance'] + distance)
+            g.append([band['gruneisen'] for band in q['band']])
+            f.append([band['frequency'] for band in q['band']])
+        distance += path['phonon'][-1]['distance']
+        ticks.append(distance)
+
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1.plot(d, g, '-')
+    ax2.plot(d, f, '-')
+    ax1.set_xticks(ticks)
+    ax2.set_xticks(ticks)
+    if labels:
+        ax1.set_xticklabels(labels)
+        ax2.set_xticklabels(labels)
+
+    if g_max is not None:
+        ax1.set_ylim(ymax=g_max)
+    if g_min is not None:
+        ax1.set_ylim(ymin=g_min)
+    if f_max is not None:
+        ax2.set_ylim(ymax=f_max)
+    if f_min is not None:
+        ax2.set_ylim(ymin=f_min)
+
+    ax1.set_xlim(ticks[0], ticks[-1])
+    ax2.set_xlim(ticks[0], ticks[-1])
+    ax1.tick_params(axis="both",direction="in", labelsize='x-large')
+    ax2.tick_params(axis="both",direction="in", labelsize='x-large')
+    ax1.grid(alpha=0.5)
+    ax2.grid(alpha=0.5)
+
+    return plt
+
+def plot_fc3_gruneisen_yaml(
+    labels=None,
+    g_max=None,
+    g_min=None,
+    f_max=None,
+    f_min=None,
+    ):
+    import yaml
+    try:
+        from yaml import CLoader as Loader
+    except ImportError:
+        from yaml import Loader
+    with open('gruneisen.yaml') as f:
+        data = yaml.load(f.read(), Loader=Loader)
+    plt = plot_fc3_gruneisen_band(
+        data,
+        labels,
+        g_max,
+        g_min,
+        f_max,
+        f_min,
+        )
+    plt.show()
+    return plt
 
