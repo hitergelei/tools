@@ -655,9 +655,9 @@ def plot_gruneisen_band(
     if g_max:
         axarr[0].set_ylim(ymax=g_max)
     if g_min:
-        axarr[0].set_ylim(ymin=g_max)
+        axarr[0].set_ylim(ymin=g_min)
     if f_max:
         axarr[1].set_ylim(ymax=f_max)
     if f_min:
-        axarr[1].set_ylim(ymin=f_max)
+        axarr[1].set_ylim(ymin=f_min)
     return plt

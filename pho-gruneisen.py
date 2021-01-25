@@ -6,20 +6,20 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-# calc = 'lmp'
-calc = 'vasp'
+calc = 'lmp'
+# calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
-# cp_files = ['frozen_model.pb',]
-cp_files = None
+cp_files = ['frozen_model.pb',]
+# cp_files = None
 
 ## Params
 from phonopy.interface import vasp
 # atoms = vasp.read_vasp('POSCAR_GeTe_conv')
-atoms = vasp.read_vasp('gete-alpha-prim.vasp')
+atoms = vasp.read_vasp('gete-alpha-prim-dpmd.vasp')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
 delta              = 0.010
@@ -34,12 +34,14 @@ unit               = 'THz'
 legend_bool        = False
 plot_bool          = True
 #
-# g_max = 2
-# g_min = -2.5
-g_max = None
-g_min = None
-f_max = None
-f_min = None
+g_max = 5.5
+g_min = -12.4
+# g_max = None
+# g_min = None
+f_max = 5.5
+f_min = -0.25
+# f_max = None
+# f_min = None
 
 #
 if symmetry is True:
