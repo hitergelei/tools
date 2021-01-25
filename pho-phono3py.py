@@ -6,27 +6,31 @@ q_range    = range(1,21)
 NNN2       = [3, 3, 3]
 NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
-unitcell_f = 'Si-diamond-prim.vasp'
-# calc       = 'lmp'
-# cp_files   = ['frozen_model.pb', 'input-phonon.in']
-calc       = 'vasp'
-cp_files   = ['INCAR', 'POTCAR', 'WAVECAR', 'CHGCAR']
+unitcell_f = 'gete-alpha-prim-dpmd.vasp'
+calc       = 'lmp'
+cp_files   = ['frozen_model.pb', 'input-phonon.in']
+# calc       = 'vasp'
+# cp_files   = ['INCAR', 'POTCAR',]
 # run_mode   = 'onle f'
 # run_mode   = 'ltc-rta'
 # run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
 run_mode   = 'gruneisen'
-temp       = (300,) # (K)
+temp       = (300, 500, 700,) # (K)
+#
 sym_fc     = True
 # sym_fc     = False
-fc_calc    = 'alm'
-# fc_calc    = None
+#
+# fc_calc    = 'alm'
+fc_calc    = None
+#
 save       = True
 load       = True
-
 #
-gru_max = 2
-gru_min = -2.5
+# gru_max = 2
+# gru_min = -2.5
+gru_max = None
+gru_min = None
 
 for i in q_range:
     q_mesh     = [i,i,i]
@@ -83,7 +87,7 @@ for i in q_range:
         # 'X':[1/2., 1/2., 0.],
         # 'U':[0.6301369863, 0.6301369863, 0.2397260274],
         # 'K':[0.7602739726, 0.3698630137, 0.3698630137],
-        # 'L':[1/2., 0., 0.],
+        # 'L':[1/2., 1/2., 1/2.],
         # }
     # G = points['Gamma']
     # X = points['X']
