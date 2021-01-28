@@ -134,6 +134,7 @@ def calc_forces(
                 call('mkdir -p {}'.format(wdir), shell=True)
                 write_vasp('{}/POSCAR'.format(wdir), sc2[i])
                 sc2_forces.append(_calc_forces(wdir, calc, cp_files))
+                print(' == Progress: {}/{}'.format(i+1, len(sc2)))
 
         if load_fc3_calc:
             try:
@@ -159,6 +160,7 @@ def calc_forces(
                 call('mkdir -p {}'.format(wdir), shell=True)
                 write_vasp('{}/POSCAR'.format(wdir), sc3[i])
                 sc3_forces.append(_calc_forces(wdir, calc, cp_files))
+                print(' == Progress: {}/{}'.format(i+1, len(sc3)))
 
         #
         phono3py.phonon_forces = np.array(sc2_forces)
