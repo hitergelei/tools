@@ -174,7 +174,10 @@ for i in q_range:
             )
         import h5py
         with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            print(f['kappa'][0])
+            kappa = f['kappa']
+        for j in range(len(temp)):
+            print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
+            print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
 
     elif run_mode == 'ltc-bte':
         pho.run_thermal_conductivity(
@@ -211,7 +214,10 @@ for i in q_range:
             )
         import h5py
         with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            print(f['kappa'][0])
+            kappa = f['kappa']
+        for j in range(len(temp)):
+            print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
+            print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
 
     elif run_mode == 'self-e':
         grid_points = list(range(10))
