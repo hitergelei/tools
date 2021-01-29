@@ -2,8 +2,8 @@
 import numpy as np
 
 # Params
-q_range    = range( 1,13)
-NNN2       = [3, 3, 3]
+q_range    = range( 1,16)
+NNN2       = [4, 4, 4]
 NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
 unitcell_f = 'gete-alpha-prim-dpmd.vasp'
@@ -12,8 +12,8 @@ cp_files   = ['frozen_model.pb', 'input-phonon.in']
 # calc       = 'vasp'
 # cp_files   = ['INCAR', 'POTCAR',]
 # run_mode   = 'onle f'
-run_mode   = 'ltc-rta'
-# run_mode   = 'ltc-bte'
+# run_mode   = 'ltc-rta'
+run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
 # run_mode   = 'gruneisen'
 temp       = (300, 500, 700,) # (K)
@@ -174,7 +174,7 @@ for i in q_range:
             )
         import h5py
         with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            kappa = f['kappa']
+            kappa = np.array(f['kappa'])
         for j in range(len(temp)):
             print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
             print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
@@ -214,7 +214,7 @@ for i in q_range:
             )
         import h5py
         with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            kappa = f['kappa']
+            kappa = np.array(f['kappa'])
         for j in range(len(temp)):
             print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
             print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
