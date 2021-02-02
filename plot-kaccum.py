@@ -76,19 +76,18 @@ if __name__ == '__main__':
         else:
             plt.plot(
                 f[j], np.mean(ka[j], axis=1),
-                label='$\kappa(f)$',
+                label='$\kappa(f)$ (W/mK)',
                 c='k',
                 ls='--',
                 )
             plt.plot(
                 f[j], np.mean(dka_df[j], axis=1),
-                label='$d\kappa(f)$/$df$',
+                label='$d\kappa(f)$/$df$ (fsW/mK)',
                 c='k',
                 )
 
         #
         plt.xlabel('Frequency (THz)', fontsize='x-large')
-        plt.ylabel('Thermal conductivity (W/mK)', fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         # plt.subplots_adjust(left=0.19, bottom=0.15, right=0.96, top=0.92)
         plt.legend(fontsize='large')
