@@ -13,14 +13,17 @@ calc = 'lmp'
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
-cp_files = ['Si.tersoff',]
+# cp_files = ['Si.tersoff',]
+cp_files = ['frozen_model.pb',]
 
 ## Params
+from os import environ
+environ['CUDA_VISIBLE_DEVICES'] = ''
 from phonopy.interface import vasp
 atoms = vasp.read_vasp('Si-diamond-prim.vasp')
-N                  = 4
+N                  = 13
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
-delta              = 0.050
+delta              = 0.030
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
