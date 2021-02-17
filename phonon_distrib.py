@@ -83,7 +83,7 @@ def get_phonon_distrib_alist(
             # rng=np.random.rand,
             seed=i,
             quantum=True,
-            # plus_minus=True,
+            plus_minus=True,
             # return_eigensolution=False,
             # failfast=True,
             )
