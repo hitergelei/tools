@@ -16,7 +16,8 @@ def get_phonon_distrib_alist(
     T,
     seed_range,
     calc,
-    cp_files=None
+    cp_files=None,
+    plus_minus=True,
     ):
     """
     prim_cell (str)
@@ -31,6 +32,8 @@ def get_phonon_distrib_alist(
         Calculator for force calculation.
     cp_files (list of str)
         List of input files for force calculation.
+    plus_minus (bool)
+        Option handed to ASE function.
     """
 
     # Main
@@ -83,7 +86,7 @@ def get_phonon_distrib_alist(
             # rng=np.random.rand,
             seed=i,
             quantum=True,
-            plus_minus=True,
+            plus_minus=plus_minus,
             # return_eigensolution=False,
             # failfast=True,
             )
