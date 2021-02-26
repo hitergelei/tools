@@ -10,6 +10,29 @@ seed_range = range(0,30,1)
 calc       = 'lmp'
 cp_files   = ('frozen_model.pb',)
 
+def get_eigen_set(
+    force_constants,
+    masses,
+    ):
+    """
+    force_constants (array): Force constants of supercell in phonopy convention.
+    masses (list): Mass list in ASE convension (atomic unit)
+    """
+    masses = np.array(masses)
+    fc = np.reshape(
+        np.transpose(
+            force_constants,
+            axes=(0,2,1,3),
+            ),
+        (3*len(masses), 3*len(masses)),
+        )
+    # Build dynamical matrix
+    rminv = (masses ** -0.5).repeat(3)
+    dynamical_matrix = fc * rminv[:, None] * rminv[None, :]
+    # Solve eigenvalue problem to compute phonon spectrum and eigenvectors
+    eigen_set = np.linalg.eigh(dynamical_matrix)
+    return eigen_set
+
 def get_phonon_distrib_alist(
     prim_cell,
     NNN,
@@ -18,6 +41,7 @@ def get_phonon_distrib_alist(
     calc,
     cp_files=None,
     plus_minus=True,
+    delta=0.03,
     ):
     """
     prim_cell (str)
@@ -34,6 +58,8 @@ def get_phonon_distrib_alist(
         List of input files for force calculation.
     plus_minus (bool)
         Option handed to ASE function.
+    delta (float)
+        Displacement in Angstrom for finite displacement method.
     """
 
     # Main
@@ -45,7 +71,7 @@ def get_phonon_distrib_alist(
         NNN,
         )
     phonon.generate_displacements(
-        0.03,
+        delta,
         )
     pho_super = phonon.get_supercell()
     pho_disp  = phonon.get_supercells_with_displacements()
@@ -61,18 +87,19 @@ def get_phonon_distrib_alist(
         cp_files=cp_files,
         )
     masses = pho_super.masses
-    fc = np.reshape(
-        np.transpose(
+    job_name = 'eig_x{}{}{}_d{:5.3f}_sym{}'.format(NNN[0][0], NNN[1][1], NNN[2][2], delta, phonon._is_symmetry)
+    try:
+        e_s = np.load('{}.npz'.format(job_name))
+    except:
+        print('Failed to load {}.npz file. Start to solve eigen problem.'.format(job_name))
+        eigen_set = get_eigen_set(
             phonon.get_force_constants(),
-            axes=(0,2,1,3),
-            ),
-        (3*len(masses), 3*len(masses)),
-        )
-    # Build dynamical matrix
-    rminv = (masses ** -0.5).repeat(3)
-    dynamical_matrix = fc * rminv[:, None] * rminv[None, :]
-    # Solve eigenvalue problem to compute phonon spectrum and eigenvectors
-    eigen_set = np.linalg.eigh(dynamical_matrix)
+            masses,
+            )
+        np.savez('{}.npz'.format(job_name), w2=eigen_set[0], D=eigen_set[1])
+    else:
+        print('Successfully loaded {}.npz file!'.format(job_name))
+        eigen_set = (e_s['w2'], e_s['D'])
 
     from ase.md.velocitydistribution import phonon_harmonics
     from ase import Atoms, units
