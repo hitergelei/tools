@@ -127,7 +127,7 @@ else:
         F_raw.write("\n")
     F_raw.close()
 
-################# virial.raw #################
+################ virial.raw #################
 try:
     traj[0].get_stress()
 except PropertyNotImplementedError:
@@ -151,6 +151,33 @@ else:
                 V_raw.write(str(stress_array[j])+" ")
             V_raw.write("    ")
         V_raw.write("\n")
+
+# # Calculated version of virial (test)
+# print("#####################################################################".center(120))
+# print("(Caution) Calculated version of virial is used. Be aware!!!".center(120))
+# print("#####################################################################".center(120))
+
+# V_raw = open("raw-"+trajfile+".d/virial.raw", "w")
+# n=0
+# print("virial.raw :: writing")
+# for atoms in traj:
+    # r = atoms.get_positions()
+    # f = atoms.get_forces()
+    # virial_array = np.sum(
+        # np.matmul(
+            # np.expand_dims(r, 2),
+            # np.expand_dims(f, 1),
+            # ),
+        # axis=0,
+        # )
+    # n+=1
+    # # print("virial.raw :: writing "+str(n)+" th frame.")
+    # for i in range(3):
+        # for j in range(3):
+            # V_raw.write(str(virial_array[i,j])+" ")
+        # V_raw.write("    ")
+    # V_raw.write("\n")
+
 
 ################# coord.raw #################
 coord_raw = open("raw-"+trajfile+".d/coord.raw", "w")
