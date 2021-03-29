@@ -7,6 +7,12 @@ def get_gpu_avail(
     # Get output
     out = str(check_output('nvidia-smi')).split('\\n')
 
+    # Get CUDA version
+    if float(out[2].split()[8]) >= 11:
+        new_CUDA = True
+    else:
+        new_CUDA = False
+
     # Find first line
     line_num = []
     for i in range(len(out)):
@@ -20,7 +26,10 @@ def get_gpu_avail(
         if len(words) == 0:
             break
         gpu_total.add(words[1])
-        line_num[0] += 3
+        if new_CUDA:
+            line_num[0] += 4
+        else:
+            line_num[0] += 3
 
     #Get indices of GPUs in use.
     gpu_in_use = set()
@@ -39,4 +48,4 @@ def get_gpu_avail(
 gpu_avail = get_gpu_avail()
 if len(gpu_avail) == 0:
     raise RuntimeError('No GPU device available.')
-print(get_gpu_avail()[0])
+print(gpu_avail[0])
