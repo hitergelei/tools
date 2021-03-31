@@ -16,32 +16,65 @@ def read_lmp_log(
         lines[i] = lines[i].split()
 
     # Find start line
+    start_lines = []
     for i in range(len(lines)):
         if len(lines[i]) > 0:
             if lines[i][0] == 'Step':
-                label_line = i
-                start_line = i+1
+                start_lines.append(i+1)
+    print("Found start lines: {}".format(start_lines))
 
     # Find last line
-    end_line = len(lines)-1 # In case, it cannot find the end line.
-    for i in range(start_line, len(lines), 1):
-        try:
-            float(lines[i][0])
-        except ValueError:
-            end_line = i-1
-            break
-        except:
-            raise RuntimeError
-        else:
-            pass
+    end_lines = []
+    for j in range(len(start_lines)):
+        end_line = len(lines)-1 # In case, it cannot find the end line.
+        for i in range(start_lines[j], len(lines), 1):
+            try:
+                float(lines[i][0])
+            except (IndexError, ValueError):
+                end_line = i-1
+                break
+            except:
+                raise RuntimeError
+            else:
+                pass
+        end_lines.append(end_line)
+
+    print("Found end line: {}".format(end_lines))
 
     # Convert as array
-    arr = np.array(lines[start_line:end_line+1], float).T
+    arr = []
+    for i in range(len(start_lines)):
+        arr.append(np.array(lines[start_lines[i]:end_lines[i]+1], float))
+
+    # Image slicing
+    num_img = []
+    for i in range(len(arr)):
+        num_img.append(len(arr[i]))
+
+    img_bool = np.array([False] *np.sum(num_img))
+    from ss_util import parse_slice
+    img_bool[parse_slice(image_slice)] = True
+
+    # Partitioning img_bool
+    s = 0
+    i_b = []
+    for i in range(len(num_img)):
+        i_b.append(img_bool[s:s+num_img[i]])
+        s += num_img[i]
+    img_bool = i_b
+
+    # Screening arr
+    a = []
+    for i in range(len(num_img)):
+        a.append(arr[i][img_bool[i]].T)
+    arr = a
 
     # Make dict object
-    info = dict()
-    for i in range(len(lines[label_line])):
-        info[lines[label_line][i]] = arr[i]
+    info = []
+    for j in range(len(start_lines)):
+        info.append(dict())
+        for i in range(len(lines[start_lines[j]])):
+            info[j][lines[start_lines[j]-1][i]] = arr[j][i]
 
     return info
 
@@ -186,34 +219,49 @@ if __name__ == '__main__':
         print('Read log.lammps file.')
         print('((WARNING)) Even when there is atomic-energy info, potential energy will be read from the thermo log file.')
 
-        if len(list(info.values())[0]) != len(dump_inp):
+        num_img = []
+        for i in range(len(info)):
+            num_img.append(len(info[i][list(info[i].keys())[0]]))
+        if np.sum(num_img) != len(dump_inp):
             print(" ***** ERROR ***** The # of images in log file and dump file do not match.")
             print("   i.e.) len(log) != len(dump_inp)")
             print("    ==> {} != {}".format(len(list(info.values())[0]), len(dump_inp)))
             raise RuntimeError()
+    else:
+        num_img=[len(dump_inp)]
 
-    traj = Traj("lmp-results.traj", "w")
-    for i in range(len(dump_inp)):
-        if i % 1000 == 0:
-            print("Writing "+str(i)+"th image")
-        atoms = dump_inp[i]
-        atoms._pbc = np.array([True, True, True])
-        atoms._calc.atoms._pbc = np.array([True, True, True])
-        if load_log:
-            atoms._calc.results['energy'] = info['PotEng'][i]
-            # Unit for ASE
-            atoms._calc.results['stress'] = -np.array([
-                info['Pxx'][i],
-                info['Pyy'][i],
-                info['Pzz'][i],
-                info['Pyz'][i],
-                info['Pxz'][i],
-                info['Pxy'][i],
-                ], float) * 1e-4 * units.GPa
-        else:
-            atoms._calc.results['energy'] = np.sum(atoms._calc.results['energies'])
-        traj.write(atoms)
-    traj.close()
+    # Partitioning dump_inp
+    s = 0
+    d_i = []
+    for i in range(len(num_img)):
+        d_i.append(dump_inp[s:s+num_img[i]])
+        s += num_img[i]
+    dump_inp = d_i
+
+    for d in range(len(num_img)):
+        traj = Traj("lmp-results-{}-{}.traj".format(image_slice, d), "w")
+        for i in range(len(dump_inp[d])):
+            if i % 1000 == 0:
+                print("Writing "+str(i)+"th image")
+            atoms = dump_inp[d][i]
+            atoms._pbc = np.array([True, True, True])
+            atoms._calc.atoms._pbc = np.array([True, True, True])
+            if load_log:
+                atoms._calc.results['energy'] = info[d]['PotEng'][i]
+                # Unit for ASE
+                if 'Pxx' in info[d].keys():
+                    atoms._calc.results['stress'] = -np.array([
+                        info[d]['Pxx'][i],
+                        info[d]['Pyy'][i],
+                        info[d]['Pzz'][i],
+                        info[d]['Pyz'][i],
+                        info[d]['Pxz'][i],
+                        info[d]['Pxy'][i],
+                        ], float) * 1e-4 * units.GPa
+            else:
+                atoms._calc.results['energy'] = np.sum(atoms._calc.results['energies'])
+            traj.write(atoms)
+        traj.close()
 
     print("\n\n=======================================================================================")
     print("      %%%%%%%%%%% This code will covert lammps results to traj file %%%%%%%%%")
