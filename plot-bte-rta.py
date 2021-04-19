@@ -2,7 +2,7 @@
 import numpy as np
 
 insts = ['kappa', 'kappa_RTA']
-q_range = range(1,13)
+q_range = range(1,15)
 
 data = {}
 for inst in insts:
@@ -11,7 +11,7 @@ for inst in insts:
         temp = []
         q_mesh = (i,i,i)
         import h5py
-        with h5py.File('bte/kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
+        with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
             data[inst].append(np.array(f[inst]))
             temp = np.array(f['temperature'])
     data[inst] = np.array(data[inst])
