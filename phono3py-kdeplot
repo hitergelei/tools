@@ -49,7 +49,7 @@ def run_KDE(x, y, nbins, x_max=None, y_max=None, density_ratio=0.1):
         _y_max = np.rint(y.max() *1.2)
     else:
         _y_max = y_max *1.2
-    mask = (y_min <= y) * (y <= _y_max)
+    mask = (y_min <= y) * (y <= _y_max) * (x < _x_max)
     x = x[mask]
     y = y[mask]
     values = np.vstack([x.ravel(), y.ravel()])

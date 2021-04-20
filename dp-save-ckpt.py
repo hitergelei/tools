@@ -42,7 +42,7 @@ if __name__ == '__main__':
     while True:
         if isfile(l_file):
             try:
-                tmp = int(str(check_output('tail -n 1 {}'.format(l_file), shell=True)).split()[1])
+                tmp = int(str(check_output('tail -n 1 {}'.format(l_file), shell=True))[2:].split()[0])
             except:
                 sleep(t_intvl)
             else:
@@ -55,9 +55,9 @@ if __name__ == '__main__':
     call('mkdir bu', shell=True)
     last_save = 0
     while True:
-        words = str(check_output('tail -n 1 {}'.format(l_file), shell=True)).split()
+        words = str(check_output('tail -n 1 {}'.format(l_file), shell=True))[2:].split()
         if len(words) > 2:
-            step = int(words[1])
+            step = int(words[0])
             if step % s_intvl == 0 and last_save != step:
                 call('rm -rf bu/{}; mkdir bu/{}'.format(step, step), shell=True)
                 sleep(1)
