@@ -46,7 +46,7 @@ if __name__ == '__main__':
             except:
                 sleep(t_intvl)
             else:
-                print(' >> dp-save-ckpt.py: Start saving checkpoint files.'.format(l_file))
+                call("echo ' >>_dp-save-ckpt.py:_Start_saving_checkpoint_files.' >> {}".format(l_file), shell=True)
                 break
         else:
             sleep(t_intvl)
@@ -55,16 +55,16 @@ if __name__ == '__main__':
     call('mkdir bu', shell=True)
     last_save = 0
     while True:
-        step = int(str(check_output('tail -n 1 {}'.format(l_file), shell=True)).split()[1])
-        if step % s_intvl == 0 and last_save != step:
-            call('rm -rf bu/{}; mkdir bu/{}'.format(step, step), shell=True)
-            sleep(1)
-            call('cp * bu/{}/'.format(step), shell=True)
-            print(' >> dp-save-ckpt.py: Step {} saved!'.format(step))
-            last_save = step
-        else:
-            pass
+        words = str(check_output('tail -n 1 {}'.format(l_file), shell=True)).split()
+        if len(words) > 2:
+            step = int(words[1])
+            if step % s_intvl == 0 and last_save != step:
+                call('rm -rf bu/{}; mkdir bu/{}'.format(step, step), shell=True)
+                sleep(1)
+                call('cp * bu/{}/'.format(step), shell=True)
+                call("echo ' >>_dp-save-ckpt.py:_Step_{}_saved!' >> {}".format(step, l_file), shell=True)
+                last_save = step
         sleep(t_intvl)
-    print(' >> dp-save-ckpt.py: terminated.')
+    call("echo ' >>_dp-save-ckpt.py:_terminated.' >> {}".format(l_file), shell=True)
 
         

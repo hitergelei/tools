@@ -17,7 +17,7 @@ if __name__ == '__main__':
     print("")
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$".center(100))
     print("")
-    if len(sys.argv) is 2 or len(sys.argv) is 3:
+    if len(sys.argv) == 2 or len(sys.argv) == 3:
         print(("The Number of arguments(= %d) is correct." %(len(sys.argv)-1)).center(100))
         print("\n")
     else:
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     alist = read(
         read_file,
         index  = ':',
-        format = None if len(sys.argv) is 2 else sys.argv[2],
+        format = None if len(sys.argv) == 2 else sys.argv[2],
         )
     from random import shuffle
     shuffle(alist)
