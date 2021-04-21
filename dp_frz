@@ -1,0 +1,25 @@
+#!/usr/bin/env python 
+
+# Read
+with open('checkpoint', 'r') as f:
+    lines = f.readlines()   
+
+for i in range(len(lines)):
+    lines[i] = lines[i].split('/')
+
+from os import getcwd, environ
+pwd = getcwd()
+new_lines = []
+for i in range(len(lines)):
+    new_lines.append('{}{}/{}'.format(lines[i][0], pwd, lines[i][-1]))
+
+with open('checkpoint', 'w') as f:
+    for i in range(len(new_lines)):
+        f.write(new_lines[i])
+
+from sys import argv
+opts = ' '.join(argv[1:])
+
+from subprocess import call
+environ['CUDA_VISIBLE_DEVICES']=''
+call('dp freeze {}'.format(opts), shell=True)
