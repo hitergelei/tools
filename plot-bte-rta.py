@@ -2,7 +2,7 @@
 import numpy as np
 
 insts = ['kappa', 'kappa_RTA']
-q_range = range(1,15)
+q_range = range(1,16)
 
 data = {}
 for inst in insts:

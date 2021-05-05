@@ -19,7 +19,9 @@ cp_files = ['frozen_model.pb',]
 ## Params
 from phonopy.interface import vasp
 # atoms = vasp.read_vasp('POSCAR_GeTe_conv')
-atoms = vasp.read_vasp('gete-alpha-prim-dpmd.vasp')
+atoms = vasp.read_vasp('Si-diamond-prim.vasp')
+# n_snapshots        = 100 # Enable --> alamode FC fit function
+n_snapshots        = None
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
 delta              = 0.010
@@ -34,14 +36,20 @@ unit               = 'THz'
 legend_bool        = False
 plot_bool          = True
 #
-g_max = 5.5
-g_min = -12.4
+g_max = 2.0
+g_min = -3.0
 # g_max = None
 # g_min = None
-f_max = 5.5
+f_max = 15.5
 f_min = -0.25
 # f_max = None
 # f_min = None
+
+#
+if n_snapshots:
+    fc_calc = 'alm'
+else:
+    fc_calc = None
 
 #
 if symmetry is True:
@@ -83,6 +91,7 @@ for i in range(3):
     phonons[i].generate_displacements(
         distance = delta,
         is_plusminus = is_plusminus,
+        number_of_snapshots = n_snapshots,
         )
 
     pho_disp = phonons[i].get_supercells_with_displacements()
@@ -104,7 +113,8 @@ for i in range(3):
         # verbose=True,
         # ase_calc=ase_calc,
         cp_files=cp_files,
-        subscript=i
+        subscript=i,
+        fc_calc=fc_calc,
         )
 
 gru_pho = PhonopyGruneisen(
@@ -162,11 +172,11 @@ gru_pho.write_yaml_band_structure()
 from ss_phonopy import plot_gruneisen_band
 plt = plot_gruneisen_band(
     gru_pho,
-    labels = labels,
     g_max = g_max,
     g_min = g_min,
     f_max = f_max,
     f_min = f_min,
+    labels = labels,
     )
 plt.subplots_adjust(left=0.15, right=0.90)
 plt.show()

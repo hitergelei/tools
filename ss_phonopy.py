@@ -21,16 +21,17 @@ def bu_and_mkdir(calc_dir, ndir):
     call(['mkdir -p '+calc_dir+'/'+ndir], shell=True)
 
 def get_subdir_name(order, disp, prec=1e-5): 
-    sign = []
-    for i in range(3):
-        num = disp[order][i+1]
-        if num > prec:
-            sign.append('+')
-        elif num < -1 * prec:
-            sign.append('-')
-        else:
-            sign.append('0')
-    return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
+    # sign = []
+    # for i in range(3):
+        # num = disp[order][i+1]
+        # if num > prec:
+            # sign.append('+')
+        # elif num < -1 * prec:
+            # sign.append('-')
+        # else:
+            # sign.append('0')
+    # return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
+    return "pos"+str(order).zfill(3)
 
 def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with Vasp """
@@ -183,22 +184,27 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     phonon.set_forces(np.array(forces))
 
-def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None, subscript=None):
+def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None, subscript=None, fc_calc=None):
     """
     calc -- Specify calculator. One of these. [vasp, lmp, amp, amp_tf, amp_tf_bunch]
     phonon -- Phonopy phonon object.
     """
     # Check if structure is lower triangular cell
-    for c in ((0,1), (0,2), (1,2)):
-        if phonon._primitive.get_cell()[c[0],c[1]] != 0. and calculator == 'lmp':
-            raise ValueError('Please provide lower triangular cell.')
+    # for c in ((0,1), (0,2), (1,2)):
+        # if phonon._primitive.get_cell()[c[0],c[1]] != 0. and calculator == 'lmp':
+            # raise ValueError('Please provide lower triangular cell.')
 
     import sys
     import pickle as pckl
     if verbose:
         np.set_printoptions(threshold=sys.maxsize)
-    delta    = np.linalg.norm(phonon.get_displacements()[0][1:4])
-    disp     = [[0,0,0,0]] + phonon.get_displacements()
+    if fc_calc == 'alm':
+        disp     = phonon.get_displacements()
+        delta    = np.linalg.norm(disp[0][0])
+        disp     = np.concatenate([[np.zeros(disp.shape[1:])], disp], axis=0)
+    else:
+        delta    = np.linalg.norm(phonon.get_displacements()[0][1:4])
+        disp     = [[0,0,0,0]] + phonon.get_displacements()
     job_name = 'x{}{}{}_d{:5.3f}_sym{}'.format(
         phonon.get_supercell_matrix()[0][0],
         phonon.get_supercell_matrix()[1][1],
@@ -251,7 +257,7 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         if verbose:
             print('\n\n'+'forces'+'\n'+str(phonon.forces))
         # Produce fc
-        phonon.produce_force_constants()
+        phonon.produce_force_constants(fc_calculator=fc_calc)
         if acoustic_sum_rule:
             phonon.symmetrize_force_constants()
 
