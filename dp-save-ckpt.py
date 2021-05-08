@@ -12,7 +12,7 @@ def argparse():
     parser.add_argument('save_step_intvl', type=int, help='Interval of steps needed to be saved (int type).')
     # Optional arguments
     parser.add_argument('-f', '--lcurve_file', type=str, default='lcurve.out', help='lcurve.out file name.')
-    parser.add_argument('-t', '--time_intvl', type=float, default='10.', help='Time interval between step checks.')
+    parser.add_argument('-t', '--time_intvl', type=float, default='5.', help='Time interval between step checks.')
     return parser.parse_args()
 
 if __name__ == '__main__':
