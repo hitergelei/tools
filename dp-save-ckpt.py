@@ -53,18 +53,18 @@ if __name__ == '__main__':
 
     # Main
     call('mkdir bu', shell=True)
-    last_save = 0
+    last_save = None
     while True:
         words = str(check_output('tail -n 1 {}'.format(l_file), shell=True))[2:].split()
-        if len(words) > 2:
+        if len(words) > 2 and words[0].isnumeric():
             step = int(words[0])
-            if step % s_intvl == 0 and last_save != step:
-                call('rm -rf bu/{}; mkdir bu/{}'.format(step, step), shell=True)
+            if last_save is None:
+                last_save = (step // s_intvl) * s_intvl
+            elif last_save + s_intvl <= step:
+                call('rm -rf bu/{}; mkdir bu/{}'.format(last_save + s_intvl, last_save + s_intvl), shell=True)
                 sleep(1)
-                call('cp * bu/{}/'.format(step), shell=True)
-                call("echo ' >>_dp-save-ckpt.py:_Step_{}_saved!' >> {}".format(step, l_file), shell=True)
-                last_save = step
+                call('cp * bu/{}/'.format(last_save + s_intvl), shell=True)
+                call("echo ' >>_dp-save-ckpt.py:_Step_{}_saved!' >> {}".format(last_save + s_intvl, l_file), shell=True)
+                last_save += s_intvl
         sleep(t_intvl)
     call("echo ' >>_dp-save-ckpt.py:_terminated.' >> {}".format(l_file), shell=True)
-
-        
