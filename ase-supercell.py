@@ -128,7 +128,6 @@ if __name__ == '__main__':
         for c in unique_chem:
             chem_order.append(chem_inds[c])
         chem_order = np.concatenate(chem_order)
-        print(chem_order)
         #
         for i in range(len(supercells)):
             supercells[i] = permute_sequence(supercells[i], chem_order)

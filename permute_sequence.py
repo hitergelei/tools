@@ -8,9 +8,10 @@ def permute_sequence(
     order,
     ):
     new_atoms = atoms[order]
-    new_atoms._calc = deepcopy(atoms._calc)
-    new_atoms._calc.atoms = new_atoms.copy()
-    new_atoms._calc.results['forces'] = atoms._calc.results['forces'][order]
+    if atoms._calc is not None:
+        new_atoms._calc = deepcopy(atoms._calc)
+        new_atoms._calc.atoms = new_atoms.copy()
+        new_atoms._calc.results['forces'] = atoms._calc.results['forces'][order]
     return new_atoms
 
 if __name__ == '__main__':
@@ -34,6 +35,8 @@ if __name__ == '__main__':
     alist_file = sys.argv[1]
     from ase.io import read, write
     alist = read(alist_file, ':')
+    if not isinstance(alist, list):
+        alist = [alist]
     if len(sys.argv)-2 != len(alist[0]):
         raise ValueError('The number of arguments is wrong')
     order = np.array(sys.argv[2:], dtype=np.int)
