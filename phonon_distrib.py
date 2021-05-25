@@ -41,7 +41,7 @@ def get_phonon_distrib_alist(
     calc,
     cp_files=None,
     plus_minus=True,
-    delta=0.03,
+    delta=0.01,
     ):
     """
     prim_cell (str)
