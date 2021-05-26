@@ -13,7 +13,7 @@ def argparse():
     parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
     # # Optional arguments
     parser.add_argument('-s', '--sigma', type=int, default=None, help='Phonon band index to plot. [Default: Plot all]')
-    parser.add_argument('-m', '--mesh', type=int, default=40, help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, 1) supported now. Takes integer input.')
+    parser.add_argument('-m', '--mesh', type=int, default=20, help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, 1) supported now. Takes integer input.')
     parser.add_argument('-t', '--plot_3d', action='store_true', help='If provided, plot 3d texture of PAM.')
 
     return parser.parse_args()
@@ -34,27 +34,13 @@ if __name__ == '__main__':
 
     ## Argparse
     args = argparse()
-    fname_phonon = args.phonopy_pckl
+
+    # # MAIN
     m = args.mesh
-
-    # Params
-    # fname_kappa = 'kappa-m151515.hdf5'
     mesh = (m, m, 1)
-
-    # MAIN
-    # # q = 
-    # # Load qpoints
-    # import h5py
-    # f = h5py.File(fname_kappa, 'r')
-    # # irre_q = np.array(f['qpoint'])
-    # gamma  = np.array(f['gamma'])
-    # vg     = np.array(f['group_velocity'])
-    # T      = np.array(f['temperature'])
-    # wei    = np.array(f['weight'])
-
     # Load phonon
     import pickle as pckl
-    phonon = pckl.load(open(fname_phonon, 'rb'))
+    phonon = pckl.load(open(args.phonopy_pckl, 'rb'))
     phonon.run_mesh(
         mesh,
         is_time_reversal=False,
@@ -73,8 +59,10 @@ if __name__ == '__main__':
     for i in range(len(q)):
         f, e = phonon.get_frequencies_with_eigenvectors(q[i])
         freq.append(f)
-        eps.append(e)
+        eps.append(e.T)
+    # freq.shape == (len(q), # bands)
     freq = np.array(freq)
+    # eps.shape == (len(q), # bands, # bands)
     eps = np.array(eps)
 
     # Calc
@@ -103,9 +91,22 @@ if __name__ == '__main__':
             ax.quiver(
                 q_cart[:, 0], q_cart[:, 1],
                 mode_l[:, s, 0], mode_l[:, s, 1],
+                # units='xy',
+                # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
+                # edgecolors='k',
                 # scale=10.0,
+                # minshaft=0,
+                # minlength=0,
+                headwidth=5,
+                # headlength=1,
+                pivot='mid',
                 )
             ax.set_aspect('equal')
-        ax.set_title('$\sigma$={}'.format(s), fontsize='x-large')
+        ax.set_title('$\sigma$={}'.format(s+1), fontsize='x-large')
+        ax.set_xticks([0])
+        ax.set_yticks([0])
+        ax.set_xlabel(r'$k_x$', fontsize='x-large')
+        ax.set_ylabel(r'$k_y$', fontsize='x-large')
+        ax.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.show()
 

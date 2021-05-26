@@ -29,6 +29,8 @@ delta              = 0.030
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
+nac                = True
+# nac                = False
 phonon_or_pdos     = 'phonon'
 # phonon_or_pdos     = 'pdos'
 # freqlim_up         = 6.0
@@ -75,6 +77,15 @@ elif symmetry is False:
 else:
     raise ValueError('symmetry parameter "{}" is unknown.'.format(symmetry))
 
+if nac:
+    from phonopy.interface.vasp import get_born_vasprunxml
+    born_chg, eps, _ = get_born_vasprunxml()
+    from phonopy.interface.calculator import get_default_physical_units
+    nac_factor = get_default_physical_units('vasp')['nac_factor']
+    nac_params = {'born': born_chg, 'dielectric':eps, 'factor':nac_factor}
+else:
+    nac_params = None
+
 #
 from phonopy import Phonopy, units as phonopy_units
 if unit == 'THz':
@@ -89,6 +100,7 @@ phonon = Phonopy(
     NNN,
     # primitive_matrix = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]],
     primitive_matrix = primitive_matrix,
+    nac_params       = nac_params,
     factor           = factor,
     is_symmetry      = is_symmetry,
     )
@@ -120,6 +132,7 @@ phonon = ssp.calc_phonon(
 
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points
+# points = ibz_points['hexagonal2']
 # points = ibz_points['hexagonal']
 # G = points['Gamma']
 # M = points['M']
@@ -127,8 +140,8 @@ from ase.dft.kpoints import ibz_points
 # A = points['A']
 # L = points['L']
 # H = points['H']
-# path = [[K, G], [G, M]]
-# labels = ['K', '$\Gamma$', 'M',]
+# path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
+# labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
 
 points = ibz_points['fcc']
 G = points['Gamma']
