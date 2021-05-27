@@ -70,7 +70,7 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
                 # forces.extend(force_now)
         # if i != 0:
         forces.append(result.get_forces())
-    phonon.set_forces(np.array(forces))
+    return np.array(forces)
 
 def calc_lmp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with LAMMPS """
@@ -97,7 +97,7 @@ def calc_lmp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
                 atoms._calc.results['forces'] -= F_0
             forces.append(atoms.get_forces(apply_constraint=False).tolist())
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
-    phonon.set_forces(np.array(forces))
+    return np.array(forces)
 
 def calc_ase_calc(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with any ase implemented calculator """
@@ -125,7 +125,7 @@ def calc_ase_calc(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
         if i!=0:
             forces.append(atoms.get_forces(apply_constraint=False).tolist()) # alternative
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
-    phonon.set_forces(np.array(forces))
+    return np.array(forces)
 
 def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with AMP with tensorflow """
@@ -149,7 +149,7 @@ def calc_amp_tf(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
             forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
         atoms._calc.results['forces'] = forces[-1]
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
-    phonon.set_forces(np.array(forces))
+    return np.array(forces)
 
 def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with AMP with tensorflow (fast version) """
@@ -182,7 +182,7 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files
             forces.append(calc.calculate_numerical_forces(atoms, d = numeric_F_dx, parallel = parallel))
         atoms._calc.results['forces'] = forces[-1]
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
-    phonon.set_forces(np.array(forces))
+    return np.array(forces)
 
 def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None, subscript=None, fc_calc=None):
     """
@@ -195,7 +195,6 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
             # raise ValueError('Please provide lower triangular cell.')
 
     import sys
-    import pickle as pckl
     if verbose:
         np.set_printoptions(threshold=sys.maxsize)
     if fc_calc == 'alm':
@@ -215,8 +214,9 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     if subscript is not None:
         job_name += '_s' + str(subscript)
     # Define names
-    pckl_name = job_name+'.bin'
-    calc_dir = './calcs/'+job_name
+    npy_name = '{}-forces.npy'.format(job_name)
+    pckl_name = '{}.bin'.format(job_name)
+    calc_dir = './calcs/{}'.format(job_name)
     # Environment preset
     call(['rm -rf '+calc_dir+'/poscars'], shell=True)
     call(['mkdir -p '+calc_dir+'/poscars'], shell=True)
@@ -226,16 +226,16 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     # Load saved pickle file
     print('')
     try:
-        phonon = pckl.load(open(pckl_name, 'rb'))
-        if phonon.get_force_constants() is None:
-            raise ValueError(' Error:: Phonon object in pickle file is not containing force constants info')
+        forces = np.load(npy_name)
+        if forces is None:
+            raise ValueError(' Error:: npy file is not containing forces info')
     except:
-        print('<<  CAUTION  >>  Fail to load pickle file.                <<  CAUTION  >>'.center(120))
+        print('<<  CAUTION  >>  Fail to load npy file.                <<  CAUTION  >>'.center(120))
         print(('<<  CAUTION  >>'+':: Expected file name ::'.center(43)+'<<  CAUTION  >>').center(120))
-        print(('<<  CAUTION  >>'+pckl_name.center(43)+'<<  CAUTION  >>').center(120))
+        print(('<<  CAUTION  >>'+npy_name.center(43)+'<<  CAUTION  >>').center(120))
         do_calc = True
     else:
-        print('>>>>>>> Pickle file "{}" has been loaded. <<<<<<<<'.format(pckl_name).center(120))
+        print('>>>>>>> Pickle file "{}" has been loaded. <<<<<<<<'.format(npy_name).center(120))
         do_calc = False
     print('')
     if do_calc:
@@ -252,21 +252,23 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         else:
             raise ValueError('Unknown calculator ({}) has been provided.'.format(calculator))
         print(">>>>>>> {} calculation will be carried out. <<<<<<<<".format(calculator).center(120))
-        calc(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files)
-            
+        forces = calc(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files)
+        np.save(npy_name, forces)    
         if verbose:
-            print('\n\n'+'forces'+'\n'+str(phonon.forces))
-        # Produce fc
-        phonon.produce_force_constants(fc_calculator=fc_calc)
-        if acoustic_sum_rule:
-            phonon.symmetrize_force_constants()
+            print('\n\n'+'forces'+'\n'+str(forces))
+    phonon.set_forces(forces)
+    # Produce fc
+    phonon.produce_force_constants(fc_calculator=fc_calc)
+    if acoustic_sum_rule:
+        phonon.symmetrize_force_constants()
 
-        if verbose:
-            print('\n\ndisplacement_dataset =>\n\n')
-            print(phonon.get_displacement_dataset())
-            print('\n\nforce_constants =>\n\n')
-            print(phonon.get_force_constants())
-        pckl.dump(phonon, open(pckl_name, 'wb'), protocol=2)
+    if verbose:
+        print('\n\ndisplacement_dataset =>\n\n')
+        print(phonon.get_displacement_dataset())
+        print('\n\nforce_constants =>\n\n')
+        print(phonon.get_force_constants())
+    import pickle as pckl
+    pckl.dump(phonon, open(pckl_name, 'wb'), protocol=2)
     return phonon
 
 def make_band(path, N_q):

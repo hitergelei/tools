@@ -5,37 +5,39 @@ environ['CUDA_VISIBLE_DEVICES']=''
 import numpy as np
 from ase import units as ase_units
 
-    ## Global params
-calc = 'lmp'
-# calc = 'vasp'
+## Global params
+# calc = 'lmp'
+calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
+cp_files = None
 # cp_files = ['Si.tersoff',]
-cp_files = ['frozen_model.pb',]
+# cp_files = ['frozen_model.pb',]
 
 ## Params
 from os import environ
 environ['CUDA_VISIBLE_DEVICES'] = ''
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('Si-diamond-prim.vasp')
-N                  = 13
+atoms = vasp.read_vasp('gete-alpha-prim.vasp')
+N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
-delta              = 0.030
+delta              = 0.010
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
+# symmetry           = False
 nac                = True
 # nac                = False
 phonon_or_pdos     = 'phonon'
 # phonon_or_pdos     = 'pdos'
-# freqlim_up         = 6.0
+# freqlim_up         = 24.17989
 freqlim_up         = None
-# freqlim_low        = -0.5
+# freqlim_low        = 0
 freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
@@ -79,10 +81,18 @@ else:
 
 if nac:
     from phonopy.interface.vasp import get_born_vasprunxml
-    born_chg, eps, _ = get_born_vasprunxml()
+    born_chg, eps, _ = get_born_vasprunxml(
+        # symmetrize_tensors=True,
+        )
+    print(born_chg, eps)
     from phonopy.interface.calculator import get_default_physical_units
     nac_factor = get_default_physical_units('vasp')['nac_factor']
-    nac_params = {'born': born_chg, 'dielectric':eps, 'factor':nac_factor}
+    nac_params = {
+        'born': born_chg,
+        'dielectric':eps,
+        'factor':nac_factor,
+        # 'method':'wang',
+        }
 else:
     nac_params = None
 
@@ -129,29 +139,31 @@ phonon = ssp.calc_phonon(
     # ase_calc=ase_calc,
     cp_files=cp_files,
     )
+if nac:
+    phonon.dynamical_matrix.show_nac_message()
 
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points
 # points = ibz_points['hexagonal2']
-# points = ibz_points['hexagonal']
-# G = points['Gamma']
-# M = points['M']
-# K = points['K']
-# A = points['A']
-# L = points['L']
-# H = points['H']
-# path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
-# labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
-
-points = ibz_points['fcc']
+points = ibz_points['hexagonal']
 G = points['Gamma']
-X = points['X']
-W = points['W']
+M = points['M']
 K = points['K']
-U = points['U']
+A = points['A']
 L = points['L']
-path = [[G, X], [X, U], [K, G], [G, L]]
-labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
+H = points['H']
+path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
+labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
+
+# points = ibz_points['fcc']
+# G = points['Gamma']
+# X = points['X']
+# W = points['W']
+# K = points['K']
+# U = points['U']
+# L = points['L']
+# path = [[G, X], [X, U], [K, G], [G, L]]
+# labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
 # points = {
     # 'Gamma': [0.,0.,0.],
