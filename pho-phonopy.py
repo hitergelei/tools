@@ -82,7 +82,8 @@ else:
 if nac:
     from phonopy.interface.vasp import get_born_vasprunxml
     born_chg, eps, _ = get_born_vasprunxml(
-        # symmetrize_tensors=True,
+        is_symmetry=False,
+        symmetrize_tensors=True,
         )
     print(born_chg, eps)
     from phonopy.interface.calculator import get_default_physical_units
