@@ -31,7 +31,7 @@ def get_subdir_name(order, disp, prec=1e-5):
         # else:
             # sign.append('0')
     # return "pos"+str(order).zfill(3) +"_atom"+str(disp[order][0]).zfill(3) +"_direc"+sign[0]+sign[1]+sign[2]
-    return "pos"+str(order).zfill(3)
+    return 'disp-{:03d}'.format(order)
 
 def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
     """ Calculate Force Constant with Vasp """
@@ -204,18 +204,17 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     else:
         delta    = np.linalg.norm(phonon.get_displacements()[0][1:4])
         disp     = [[0,0,0,0]] + phonon.get_displacements()
-    job_name = 'x{}{}{}_d{:5.3f}_sym{}'.format(
-        phonon.get_supercell_matrix()[0][0],
-        phonon.get_supercell_matrix()[1][1],
-        phonon.get_supercell_matrix()[2][2],
+    job_name = '{}-x{}{}{}_d{:5.3f}_sym{}'.format(
+        calculator,
+        *np.diag(phonon.get_supercell_matrix()),
         delta,
         phonon._is_symmetry,
         )
     if subscript is not None:
         job_name += '_s' + str(subscript)
     # Define names
-    npy_name = '{}-forces.npy'.format(job_name)
-    pckl_name = '{}.bin'.format(job_name)
+    npy_name = '{}-fc2-forces.npy'.format(job_name)
+    pckl_name = '{}-fc2.bin'.format(job_name)
     calc_dir = './calcs/{}'.format(job_name)
     # Environment preset
     call(['rm -rf '+calc_dir+'/poscars'], shell=True)

@@ -16,16 +16,15 @@ cp_files   = ['frozen_model.pb', 'input-phonon.in']
 run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
 # run_mode   = 'gruneisen'
-temp       = (300, 500, 700,) # (K)
+temp       = (10, 50, 100, 200, 300, 500, 700,) # (K)
 #
 sym_fc     = True
 # sym_fc     = False
+nac        = True
+# nac        = False
 #
 # fc_calc    = 'alm'
 fc_calc    = None
-#
-save       = True
-load       = True
 #
 g_max = 5.5
 g_min = -12.4
@@ -35,6 +34,23 @@ f_max = 5.5
 f_min = -0.25
 # f_max = None
 # f_min = None
+
+if nac:
+    from phonopy.interface.vasp import get_born_vasprunxml
+    born_chg, eps, _ = get_born_vasprunxml(
+        is_symmetry=False,
+        symmetrize_tensors=True,
+        )
+    from phonopy.interface.calculator import get_default_physical_units
+    nac_factor = get_default_physical_units('vasp')['nac_factor']
+    nac_params = {
+        'born': born_chg,
+        'dielectric':eps,
+        'factor':nac_factor,
+        # 'method':'wang',
+        }
+else:
+    nac_params = None
 
 for i in q_range:
     q_mesh     = [i,i,i]
@@ -64,6 +80,9 @@ for i in q_range:
         # log_level               = 0,
         # lapack_zheev_uplo       = 'L',
         )
+
+    if nac:
+        pho.set_nac_params(nac_params)
 
     from ase.dft.kpoints import ibz_points
     # points = ibz_points['hexagonal']
@@ -122,8 +141,6 @@ for i in q_range:
         calc,
         unitcell_f,
         cp_files,
-        save,
-        load,
         )
     pho.produce_fc3(
         symmetrize_fc3r=sym_fc,
@@ -260,7 +277,7 @@ for i in q_range:
             mesh=None,
             rotations=None,
             qpoints=None,
-            # nac_params=None,
+            nac_params=nac_params,
             # nac_q_direction=None,
             # ion_clamped=True,
             factor=VaspToTHz,

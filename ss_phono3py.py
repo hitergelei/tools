@@ -58,8 +58,6 @@ def calc_forces(
     calc,
     unitcell_f='Unknown',
     cp_files=None,
-    save=True,
-    load=True,
     ):
 
     # Check if structure is lower triangular cell
@@ -68,115 +66,122 @@ def calc_forces(
             raise ValueError('Please provide lower triangular cell.')
 
     #
-    job_name = '3pho_{}_{}_sc2-{}-{}-{}_sc3-{}-{}-{}'.format(
+    phono3py.generate_displacements()
+    fc2_snd = phono3py.get_phonon_supercells_with_displacements()
+    fc3_snd = phono3py.get_supercells_with_displacements()
+
+    #
+    # job_name = '3pho_{}_{}_fc2-{}-{}-{}_fc3-{}-{}-{}'.format(
+        # calc,
+        # unitcell_f,
+        # *np.diag(phono3py.phonon_supercell_matrix),
+        # *np.diag(phono3py.supercell_matrix),
+        # )
+    fc2_job_name = '{}-x{}{}{}_d0.010_sym{}-fc2'.format(
         calc,
-        unitcell_f,
-        *np.diag(phono3py.phonon_supercell_matrix),
-        *np.diag(phono3py.supercell_matrix),
+        *np.diag(phono3py.get_phonon_supercell_matrix()),
+        phono3py._is_symmetry,
         )
-    fc2_name = '{}_{}_sc2-{}-{}-{}'.format(
+    fc3_job_name = '{}-x{}{}{}_d0.030_sym{}-fc3'.format(
         calc,
-        unitcell_f,
-        *np.diag(phono3py.phonon_supercell_matrix),
+        *np.diag(phono3py.get_supercell_matrix()),
+        phono3py._is_symmetry,
         )
-    fc3_name = '{}_{}_sc3-{}-{}-{}'.format(
-        calc,
-        unitcell_f,
-        *np.diag(phono3py.supercell_matrix),
-        )
+    fc2_npy_name = '{}-forces.npy'.format(fc2_job_name)
+    fc3_npy_name = '{}-forces.npy'.format(fc3_job_name)
 
-    if load:
-        try:
-            phono3py = pckl.load(open('saved-pckls/{}-forces.pckl'.format(job_name), 'rb'))
-        except:
-            load=False
-            load_fc2_calc=True
-            load_fc3_calc=True
-            print('\n\n\n*** NOTE) Failed to load saved-pckls/{}-forces.pckl file. ***\n\n\n'.format(job_name))
-        else:
-            print('\n\n\n=== NOTE) Loaded: saved-pckls/{}-forces.pckl ===\n\n\n'.format(job_name))
-            return phono3py
+    calc_dir = 'calcs'
+    fc2_path = '{}/{}'.format(calc_dir, fc2_job_name)
+    fc2_bu_path = '{}/bu-{}'.format(calc_dir, fc2_job_name)
+    fc3_path = '{}/{}'.format(calc_dir, fc3_job_name)
+    fc3_bu_path = '{}/bu-{}'.format(calc_dir, fc3_job_name)
 
-    if not load:
-        calc_dir = 'calcs'
-        fc2_path = '{}/{}'.format(calc_dir, fc2_name)
-        fc2_bu_path = '{}/bu-{}'.format(calc_dir, fc2_name)
-        fc3_path = '{}/{}'.format(calc_dir, fc3_name)
-        fc3_bu_path = '{}/bu-{}'.format(calc_dir, fc3_name)
+    #
+    # if load_fc2_calc:
+        # try:
+            # fc2_forces = []
+            # for i in range(len(fc2_snd)):
+                # wdir = '{}/pos{:03d}'.format(fc2_path, i+1)
+                # fc2_forces.append(_read_atoms(wdir, calc).get_forces())
+        # except:
+            # print('*** NOTE) Failed to load previous fc2 calc results. ***\n')
+            # load_fc2_calc=False
+            # #
+            # call('rm -rf {}'.format(fc2_bu_path), shell=True)
+            # call('mv {} {}'.format(fc2_path, fc2_bu_path), shell=True)
+            # call('mkdir -p {}'.format(fc2_path), shell=True)
+        # else:
+            # print('*** NOTE) Loaded the existing fc2 calc results. Be aware! ***\n')
 
-        #
-        phono3py.generate_displacements()
-        sc2 = phono3py.get_phonon_supercells_with_displacements()
-        sc3 = phono3py.get_supercells_with_displacements()
 
-        #
-        if load_fc2_calc:
-            try:
-                sc2_forces = []
-                for i in range(len(sc2)):
-                    wdir = '{}/disp-{:05d}'.format(fc2_path, i+1)
-                    sc2_forces.append(_read_atoms(wdir, calc).get_forces())
-            except:
-                print('*** NOTE) Failed to load previous fc2 calc results. ***\n')
-                load_fc2_calc=False
-                #
-                call('rm -rf {}'.format(fc2_bu_path), shell=True)
-                call('mv {} {}'.format(fc2_path, fc2_bu_path), shell=True)
-                call('mkdir -p {}'.format(fc2_path), shell=True)
-            else:
-                print('*** NOTE) Loaded the previous fc2 calc results. Be aware! ***\n')
-        if not load_fc2_calc:
-            print('=== NOTE) Start fc2 calculations! ===\n')
-            from phonopy.interface.vasp import write_vasp
-            sc2_forces = []
-            for i in range(len(sc2)):
-                wdir = '{}/disp-{:05d}'.format(fc2_path, i+1)
-                call('mkdir -p {}'.format(wdir), shell=True)
-                write_vasp('{}/POSCAR'.format(wdir), sc2[i])
-                sc2_forces.append(_calc_forces(wdir, calc, cp_files))
-                print(' == Progress: {}/{}'.format(i+1, len(sc2)))
+    try:
+        fc2_forces = np.load(fc2_npy_name)
+    except:
+        calc_fc2 = True
+        print('\n*** NOTE) Failed to load {} file. ***\n'.format(fc2_npy_name))
+    else:
+        calc_fc2 = False
+        print('\n=== NOTE) Loaded: {} ===\n'.format(fc2_npy_name))
 
-        if load_fc3_calc:
-            try:
-                sc3_forces = []
-                for i in range(len(sc3)):
-                    wdir = '{}/disp-{:05d}'.format(fc3_path, i+1)
-                    sc3_forces.append(_read_atoms(wdir, calc).get_forces())
-            except:
-                print('*** NOTE) Failed to load previous fc3 calc results. ***\n')
-                load_fc3_calc=False
-                #
-                call('rm -rf {}'.format(fc3_bu_path), shell=True)
-                call('mv {} {}'.format(fc3_path, fc3_bu_path), shell=True)
-                call('mkdir -p {}'.format(fc3_path), shell=True)
-            else:
-                print('*** NOTE) Loaded the previous fc3 calc results. Be aware! ***\n')
-        if not load_fc3_calc:
-            print('=== NOTE) Start fc3 calculations! ===\n')
-            from phonopy.interface.vasp import write_vasp
-            sc3_forces = []
-            for i in range(len(sc3)):
-                wdir = '{}/disp-{:05d}'.format(fc3_path, i+1)
-                call('mkdir -p {}'.format(wdir), shell=True)
-                write_vasp('{}/POSCAR'.format(wdir), sc3[i])
-                sc3_forces.append(_calc_forces(wdir, calc, cp_files))
-                print(' == Progress: {}/{}'.format(i+1, len(sc3)))
+    if calc_fc2:
+        print('=== NOTE) Starting fc2 calculations! ===\n')
+        call('rm -rf {}'.format(fc2_bu_path), shell=True)
+        call('mv {} {}'.format(fc2_path, fc2_bu_path), shell=True)
+        from phonopy.interface.vasp import write_vasp
+        fc2_forces = []
+        for i in range(len(fc2_snd)):
+            wdir = '{}/disp-{:03d}'.format(fc2_path, i+1)
+            call('mkdir -p {}'.format(wdir), shell=True)
+            write_vasp('{}/POSCAR'.format(wdir), fc2_snd[i])
+            fc2_forces.append(_calc_forces(wdir, calc, cp_files))
+            print(' == Progress: {}/{}'.format(i+1, len(fc2_snd)))
+        np.save(fc2_npy_name, fc2_forces)
 
-        #
-        phono3py.phonon_forces = np.array(sc2_forces)
-        phono3py.forces = np.array(sc3_forces)
 
-        #
-        if save:
-            call('mkdir saved-pckls', shell=True)
-            pckl.dump(
-                phono3py,
-                open('saved-pckls/{}-forces.pckl'.format(job_name), 'wb'),
-                protocol=3,
-                )
-            print('=== {}-forces.pckl file has been saved. ==='.format(job_name))
+    # if load_fc3_calc:
+        # try:
+            # fc3_forces = []
+            # for i in range(len(fc3_snd)):
+                # wdir = '{}/disp-{:05d}'.format(fc3_path, i+1)
+                # fc3_forces.append(_read_atoms(wdir, calc).get_forces())
+        # except:
+            # print('*** NOTE) Failed to load previous fc3 calc results. ***\n')
+            # load_fc3_calc=False
+            # #
+            # call('rm -rf {}'.format(fc3_bu_path), shell=True)
+            # call('mv {} {}'.format(fc3_path, fc3_bu_path), shell=True)
+            # call('mkdir -p {}'.format(fc3_path), shell=True)
+        # else:
+            # print('*** NOTE) Loaded the existing fc3 calc results. Be aware! ***\n')
 
-        return phono3py
+    try:
+        fc3_forces = np.load(fc3_npy_name)
+    except:
+        calc_fc3 = True
+        print('\n*** NOTE) Failed to load {} file. ***\n'.format(fc3_npy_name))
+    else:
+        calc_fc3 = False
+        print('\n=== NOTE) Loaded: {} ===\n'.format(fc3_npy_name))
+            
+    if calc_fc3:
+        print('=== NOTE) Starting fc3 calculations! ===\n')
+        call('rm -rf {}'.format(fc3_bu_path), shell=True)
+        call('mv {} {}'.format(fc3_path, fc3_bu_path), shell=True)
+        from phonopy.interface.vasp import write_vasp
+        fc3_forces = []
+        for i in range(len(fc3_snd)):
+            wdir = '{}/disp-{:05d}'.format(fc3_path, i+1)
+            call('mkdir -p {}'.format(wdir), shell=True)
+            write_vasp('{}/POSCAR'.format(wdir), fc3_snd[i])
+            fc3_forces.append(_calc_forces(wdir, calc, cp_files))
+            print(' == Progress: {}/{}'.format(i+1, len(fc3_snd)))
+        np.save(fc3_npy_name, fc3_forces)
+
+    #
+    phono3py.phonon_forces = np.array(fc2_forces)
+    phono3py.forces = np.array(fc3_forces)
+
+    return phono3py
 
 def plot_fc3_gruneisen_band(data, labels, g_max, g_min, f_max, f_min):
     # Imported from Togo's Phono3py code.

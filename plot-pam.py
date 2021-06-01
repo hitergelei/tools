@@ -15,6 +15,7 @@ def argparse():
     parser.add_argument('-s', '--sigma', type=int, default=None, help='Phonon band index to plot. [Default: Plot all]')
     parser.add_argument('-m', '--mesh', type=int, default=20, help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, 1) supported now. Takes integer input.')
     parser.add_argument('-q', '--qpoint_npy', type=str, default=False, help='Provide q-points manually. --mesh tag is ignored if this tag is activated.')
+    parser.add_argument('-x', '--set_x', type=float, nargs=3, default=None, help='Set x-axis of 2D-plot. Insert b1, b2, and b3 for 2pi/a*(b1, b2, b3) vector.')
     parser.add_argument('-t', '--plot_3d', action='store_true', help='If provided, plot 3d texture of PAM.')
 
     return parser.parse_args()
@@ -75,8 +76,6 @@ if __name__ == '__main__':
 
     #
     if not args.plot_3d:
-        # Set center to be origin
-        q_cart -= np.mean(q_cart, axis=0)
         #
         perp = np.zeros(3)
         for i in range(len(q_cart)):
@@ -88,14 +87,22 @@ if __name__ == '__main__':
                     perp += cro
         # Find new xyz-axes
         z = perp /np.linalg.norm(perp)
-        x = q_cart[np.argmax(np.linalg.norm(q_cart, axis=1))]
+        if args.set_x:
+            x = np.expand_dims(args.set_x, axis=0)
+            x = np.matmul(x, recip_latt)[0]
+        else:
+            x = q_cart[np.argmax(np.linalg.norm(q_cart, axis=1))]
+        x /= np.linalg.norm(x)
         y = np.cross(z, x)
-        y /= np.linalg.norm(y)
-        x = np.cross(y, z)
         # Rotation matrix
         R = np.linalg.inv([x,y,z]).T
         q_cart_2d = np.matmul(q_cart, R.T)
         mode_l_2d = np.matmul(mode_l, R.T)
+
+        from matplotlib import pyplot as plt
+        fig, ax = plt.subplots()
+        ax.scatter(q_cart_2d[:, 0], q_cart_2d[:, 1])
+        ax.set_aspect('equal')
 
     # Plot PAM
     from matplotlib import pyplot as plt
@@ -122,7 +129,7 @@ if __name__ == '__main__':
                 # units='xy',
                 # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
                 # edgecolors='k',
-                # scale=10.0,
+                # scale=args.scale,
                 # minshaft=0,
                 # minlength=0,
                 headwidth=5,

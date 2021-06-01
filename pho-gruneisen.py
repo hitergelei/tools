@@ -30,6 +30,8 @@ delta              = 0.010
 primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 symmetry           = True
 # symmetry           = '+-'
+nac                = True
+# nac                = False
 objective          = 'phonon'
 unit               = 'THz'
 # unit               = 'meV'
@@ -64,6 +66,24 @@ elif symmetry is False:
 else:
     raise ValueError('symmetry parameter "{}" is unknown.'.format(symmetry))
 
+if nac:
+    from phonopy.interface.vasp import get_born_vasprunxml
+    born_chg, eps, _ = get_born_vasprunxml(
+        is_symmetry=False,
+        symmetrize_tensors=True,
+        )
+    print(born_chg, eps)
+    from phonopy.interface.calculator import get_default_physical_units
+    nac_factor = get_default_physical_units('vasp')['nac_factor']
+    nac_params = {
+        'born': born_chg,
+        'dielectric':eps,
+        'factor':nac_factor,
+        # 'method':'wang',
+        }
+else:
+    nac_params = None
+
 #
 from phonopy import Phonopy, PhonopyGruneisen, units as phonopy_units
 if unit == 'THz':
@@ -85,6 +105,7 @@ for i in range(3):
         NNN,
         # primitive_matrix = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]],
         primitive_matrix = primitive_matrix,
+        nac_params       = nac_params,
         factor           = factor,
         is_symmetry      = is_symmetry,
         ))
@@ -116,6 +137,8 @@ for i in range(3):
         subscript=i,
         fc_calc=fc_calc,
         )
+    if nac:
+        phonons[i].dynamical_matrix.show_nac_message()
 
 gru_pho = PhonopyGruneisen(
     phonons[1],
