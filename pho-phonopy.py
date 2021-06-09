@@ -100,9 +100,9 @@ else:
 #
 from phonopy import Phonopy, units as phonopy_units
 if unit == 'THz':
-    factor = phonopy_units.VaspToTHz,
+    factor = phonopy_units.VaspToTHz
 elif unit == 'meV':
-    factor = phonopy_units.VaspToEv * 1000,
+    factor = phonopy_units.VaspToEv * 1000
 else:
     raise ValueError('Unit parameter, "{}" is unknown'.format(unit))
 phonon = Phonopy(

@@ -15,6 +15,7 @@ def argparse():
     """)
     # Positional arguments
     parser.add_argument('unitcell', type=str, help='ASE readable unitcell file.')
+    parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
     parser.add_argument('phono3py_pckl', type=str, help='Phono3py class object saved in pickle format.')
     # # Optional arguments
     parser.add_argument('-t', '--tau', type=float, help='Phonon lifetime for constant lifetime approximation. In fs unit.')
@@ -163,24 +164,39 @@ if __name__ == '__main__':
     args = argparse()
 
     import pickle as pckl
-    tc = pckl.load(open(args.phono3py_pckl, 'rb'))._thermal_conductivity
+    tc = pckl.load(open(args.phono3py_pckl, 'rb')).thermal_conductivity
+    po = pckl.load(open(args.phonopy_pckl, 'rb'))
+    # mesh.shape = (3)
     mesh = tc._mesh
+    # q_map.shape = (len(q))
+    q_map = tc._grid_mapping_table
+    # ir_q.shape = (len(ir_q), 3)
+    ir_q = tc.get_qpoints()
     # q.shape = (len(q), 3)
-    q = np.array(tc._qpoints)
-    # gamma.shape = (len(T), len(q), len(sigma))
+    q = tc._grid_address[:len(q_map)] /mesh
+    # T.shape = (len(T))
+    T = tc.get_temperatures()
+
     if args.tau:
         tau = args.tau
     else:
-        gamma = np.array(tc._gamma)[0]
+        # ir_gamma.shape = (len(T), len(ir_q), len(sigma))
+        ir_gamma = np.array(tc.get_gamma()[0])
+        #
+        gamma = np.zeros((len(T), len(q), ir_gamma.shape[2]))
+        gamma[:,tc.get_grid_points()] = ir_gamma
+        gamma = gamma[:, q_map]
+        # tau.shape = (len(T), len(q), len(sigma))
         tau = 1. / np.where(gamma > 0, gamma, np.inf) / (2 * 2 * np.pi)
-    # v_g.shape = (len(q), len(sigma), 3)
-    v_g = np.array(tc._gv)
-    # T.shape = (len(T))
-    T = np.array(tc._temperatures)
-    # w.shape = (len(k), len(sigma))
-    w = np.array(tc._frequencies)
-    # eps.shape = (len(k), len(sigma), len(sigma))
-    eps = np.transpose(tc._eigenvectors, [0,2,1])
+
+    # v_g = np.array(v_g)
+    po.run_qpoints(q, with_eigenvectors=True, with_group_velocities=True)
+    # w.shape == (len(q), len(sigma))
+    w = po.qpoints.frequencies
+    # eps.shape == (len(q), len(sigma), len(sigma))
+    eps = np.transpose(po.qpoints.eigenvectors, [0,2,1])
+    # v_g.shape == (len(q), len(sigma), 3)
+    v_g = po.qpoints.group_velocities
 
     from ase.io import read
     V_uc = read(args.unitcell).get_volume()
@@ -189,11 +205,15 @@ if __name__ == '__main__':
     # alpha shape=(len(T), 3, 3)
     alpha = response(eps, w, T, V, tau, v_g)
     
+    # save
+    # ( eV ps / A^2 K ) to ( J s / m^2 K )
     scale = units._e * 1e-12 * 1e20 
+    alpha *= scale
     for i in range(len(T)):
         print('T={}(K)'.format(T[i]))
-        print('alpha=')
-        print(np.real(alpha[i]) *scale)
+        print('alpha ( J s / m^2 K ) =')
+        print(np.real(alpha[i]))
+        np.save('alpha-qx{}{}{}-{}K.npy'.format(*mesh, T[i]), alpha[i])
 
     # Only check purpose.
     if args.plot_pam:
