@@ -2,6 +2,10 @@
 
 import numpy as np
 
+from ase import units
+hbar = 0.6582119569 # (eV*fs)
+k_B = units.kB # (eV/K)
+
 def argparse():
     import argparse
     from ss_util import parse_slice
@@ -10,9 +14,11 @@ def argparse():
     Plot mode phonon angular momentum.
     """)
     # Positional arguments
-    parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
+    parser.add_argument('unitcell', type=str, help='ASE readable unitcell file.')
+    parser.add_argument('phono3py_pckl', type=str, help='Phono3py class object saved in pickle format.')
     # # Optional arguments
-    parser.add_argument('-m', '--mesh', type=int, default=20, help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, mesh) supported now. Takes integer input.')
+    parser.add_argument('-t', '--tau', type=float, help='Phonon lifetime for constant lifetime approximation. In fs unit.')
+    # # Optional arguments
 
     return parser.parse_args()
 
@@ -25,13 +31,12 @@ def mode_PAM(
        where M_ijk = I_(n*n) \kronecker_product (-i)*\levi_civita_(ijk)
 
     INPUT
-    eps(np.array): Displacement polarization vector of size (len(k)) x (len(\sigma)) x (3n) where n is number of atoms in a unit cell.
+    eps(np.array): Displacement polarization vector of size (len(k), len(\sigma), 3n) where n is number of atoms in a unit cell.
 
     RETURN
-    mode_l(np.array): mode resolved PAM of size (len(k)) x (len(\sigma)) x 3
+    mode_l(np.array): mode resolved PAM of size (len(k), len(\sigma), 3)
     """
     
-    hbar = 0.6582119569 # (eV*fs)
     n = eps.shape[-1] //3
     Mx = np.array([
         [  0,  0,  0],
@@ -62,23 +67,81 @@ def mode_PAM(
             l = np.tensordot(l, eps[i,j], [1, 0])
             mode_l[i].append(l)
 
-    # model_l.shape == (len(q), len(sigma), 3)
+    # mode_l.shape == (len(q), len(sigma), 3)
     return hbar *np.array(mode_l)
 
-# def dfdT(w, T):
-    # """
-    # Calculate temperature derivative of B-E distribution.
+def f_deriv(w, T):
+    """
+    Calculate temperature derivative of B-E distribution.
 
-     # \round f_0     \hbar * w_\simga (k)
-    # ------------ = ---------------------- * -----------------------
-      # \round T           k_B * T^2           [exp(\hbar * 
+     \round f_0     \beta * \hbar * w         exp(\beta * \hbar * w)
+    ------------ = ------------------- * --------------------------------
+      \round T              T             [exp(\beta * \hbar * w) - 1]^2
 
-    # w: Harmonic phonon frequency (=\omega_\sigma (k))
+    w (=\omega_\sigma (k)) : Harmonic phonon frequency 
+    \beta = (k_B * T)^-1
 
-    # """
+    RETURN
+    dfdT : shape=(len(T), len(k), len(\sigma))
+    """
 
-def calc_PAM():
-    dlfksj
+    # beta.shape = (len(T))
+    beta = 1. /k_B /T
+    # bhw.shape = (len(T), len(k), len(sigma))
+    bhw = np.expand_dims(beta, axis=[1,2]) *hbar *np.expand_dims(w, axis=0) *1e-3
+    # return shape = (len(T), len(k), len(sigma))
+    return bhw /np.expand_dims(T, axis=[1,2]) *np.exp(bhw) /(np.exp(bhw) -1.)**2
+
+def response(eps, w, T, V, tau, v_g):
+    """
+    Calculate response tensor, \alpha.
+                   1    len(k)*3*len(atoms)
+    \alpha_ij = - --- * (       sum       ) tau * l_i * (v_g)_j * dfdT
+                   V        \k,  \sigma
+
+    l: mode-PAM
+
+    INPUT
+    eps : Displacement polarization vector of size (len(k), len(\sigma), 3n) where n is number of atoms in a unit cell.
+    w : Harmonic phonon frequencies in Thz, shape=(len(k), len(\sigma)).
+    T : Temperature in kelvin, shape=(len(T))
+    tau : Lifetime of each phonon mode. shape=(len(T), len(k), len(\sigma))
+        or Constant lifetime approximation. (type float)
+    v_g : Group velocity vector of each phonon mode. shape=(len(k), len(\sigma), 3)
+
+    RETURN
+    alpha : Response tensor. shape=(3,3)
+    """
+
+    # l.shape == (len(k), len(sigma), 3)
+    l = mode_PAM(eps)
+    # dfdT.shape == (len(T), len(k), len(sigma))
+    dfdT = f_deriv(w, T)
+    # alpha.shape == (len(k), len(sigma), 3, 3)
+    alpha = np.matmul(np.expand_dims(l, axis=3), np.expand_dims(v_g, axis=2))
+    alpha /= -V
+    # alpha.shape == (1, len(k), len(sigma), 3, 3)
+    alpha = np.expand_dims(alpha, axis=0)
+    if isinstance(tau, float):
+        alpha *= tau
+    else:
+        alpha = alpha * np.expand_dims(tau, axis=[3,4])
+    alpha *= np.expand_dims(dfdT, axis=[3,4])
+    # return shape = (len(T), 3, 3)
+    return np.sum(np.sum(alpha ,axis=1), axis=1)
+
+def get_w_n_eps(phonopy_obj, q):
+    freq = []
+    eps = []
+    for i in range(len(q)):
+        f, e = phonopy_obj.get_frequencies_with_eigenvectors(q[i])
+        freq.append(f)
+        eps.append(e.T)
+    # freq.shape == (len(q), # bands)
+    freq = np.array(freq)
+    # eps.shape == (len(q), # bands, # bands)
+    eps = np.array(eps)
+    return freq, eps
 
 if __name__ == '__main__':
     ## Intro
@@ -97,12 +160,30 @@ if __name__ == '__main__':
     ## Argparse
     args = argparse()
 
-    # fname_kappa = 'kappa-m151515.hdf5'
-    # import h5py
-    # f = h5py.File(fname_kappa, 'r')
-    # # irre_q = np.array(f['qpoint'])
-    # gamma  = np.array(f['gamma'])
-    # vg     = np.array(f['group_velocity'])
-    # T      = np.array(f['temperature'])
-    # wei    = np.array(f['weight'])
+    import pickle as pckl
+    tc = pckl.load(open(args.phono3py_pckl, 'rb'))._thermal_conductivity
+    mesh = tc._mesh
+    # q.shape = (len(q), 3)
+    q = np.array(tc._qpoints)
+    # gamma.shape = (len(T), len(q), len(sigma))
+    gamma = np.array(tc._gamma)[0]
+    tau = 1.0 / np.where(gamma > 0, gamma, np.inf) / (2 * 2 * np.pi)
+    # v_g.shape = (len(q), len(sigma), 3)
+    v_g = np.array(tc._gv)
+    # T.shape = (len(T))
+    T = np.array(tc._temperatures)
+    # w.shape = (len(k), len(sigma))
+    w = np.array(tc._frequencies)
+    # eps.shape = (len(k), len(sigma), len(sigma))
+    eps = np.array(tc._eigenvectors)
 
+    from ase.io import read
+    V_uc = read(args.unitcell).get_volume()
+    V = V_uc * mesh[0] * mesh[1] * mesh[2]
+
+    # alpha shape=(len(T), 3, 3)
+    alpha = response(eps, w, T, V, tau, v_g)
+    
+    for i in range(len(T)):
+        print('T={}(K)'.format(T[i]))
+        print(np.real(alpha[i]))

@@ -214,7 +214,11 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
         job_name += '_s' + str(subscript)
     # Define names
     npy_name = '{}-fc2-forces.npy'.format(job_name)
-    pckl_name = '{}-fc2.bin'.format(job_name)
+    if phonon._nac_params is not None:
+        nac = True
+    else:
+        nac = False
+    pckl_name = '{}-NAC{}-fc2.bin'.format(job_name, nac)
     calc_dir = './calcs/{}'.format(job_name)
     # Environment preset
     call(['rm -rf '+calc_dir+'/poscars'], shell=True)
