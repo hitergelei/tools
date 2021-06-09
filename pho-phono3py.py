@@ -154,7 +154,7 @@ for i in q_range:
     pho.mesh_numbers = q_mesh
     pho.init_phph_interaction()
 
-    grid_points=list(range(len(pho._interaction._grid_address)))
+    # grid_points=list(range(len(pho._interaction._grid_address)))
     if run_mode == 'only f':
         continue
 
@@ -164,7 +164,7 @@ for i in q_range:
             temperatures=temp,
             # is_isotope=False,
             # mass_variances=None,
-            grid_points=grid_points,
+            # grid_points=grid_points,
             # boundary_mfp=None,  # in micrometre
             # solve_collective_phonon=False,
             # use_ave_pp=False,
@@ -191,12 +191,12 @@ for i in q_range:
             # input_filename=None,
             # output_filename=None,
             )
-        # import h5py
-        # with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            # kappa = np.array(f['kappa'])
-        # for j in range(len(temp)):
-            # print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
-            # print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
+        import h5py
+        with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
+            kappa = np.array(f['kappa'])
+        for j in range(len(temp)):
+            print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
+            print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
 
     elif run_mode == 'ltc-bte':
         pho.run_thermal_conductivity(
@@ -204,7 +204,7 @@ for i in q_range:
             temperatures=temp,
             # is_isotope=False,
             # mass_variances=None,
-            grid_points=grid_points,
+            # grid_points=grid_points,
             # boundary_mfp=None,  # in micrometre
             # solve_collective_phonon=False,
             # use_ave_pp=False,
@@ -231,12 +231,12 @@ for i in q_range:
             # input_filename=None,
             # output_filename=None,
             )
-        # import h5py
-        # with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            # kappa = np.array(f['kappa'])
-        # for j in range(len(temp)):
-            # print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
-            # print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
+        import h5py
+        with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
+            kappa = np.array(f['kappa'])
+        for j in range(len(temp)):
+            print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
+            print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
 
     elif run_mode == 'self-e':
         pts, delta = pho.run_real_self_energy(
@@ -294,7 +294,7 @@ for i in q_range:
             f_max=f_max,
             f_min=f_min,
             )
-    pckl_name = '3pho_{}_fc2x{}{}{}_fc3x{}{}{}-qx{}{}{}.pckl'.format(calc, *NNN2, *NNN3, *q_mesh)
+    pckl_name = '3pho_{}_fc2x{}{}{}_fc3x{}{}{}-nac{}-qx{}{}{}-rm{}.pckl'.format(calc, *NNN2, *NNN3, nac, *q_mesh, run_mode)
     import pickle as pckl
     pckl.dump(pho, open(pckl_name, 'wb'))
 

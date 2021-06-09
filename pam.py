@@ -3,7 +3,7 @@
 import numpy as np
 
 from ase import units
-hbar = 0.6582119569 # (eV*fs)
+hbar = 1e-3 *0.6582119569 # (eV*ps)
 k_B = units.kB # (eV/K)
 
 def argparse():
@@ -18,6 +18,8 @@ def argparse():
     parser.add_argument('phono3py_pckl', type=str, help='Phono3py class object saved in pickle format.')
     # # Optional arguments
     parser.add_argument('-t', '--tau', type=float, help='Phonon lifetime for constant lifetime approximation. In fs unit.')
+    parser.add_argument('-p', '--plot_pam', action='store_true', help='Plot mode-PAM.')
+    parser.add_argument('-i', '--tau_histo', action='store_true', help='Plot lifetime histogram.')
     # # Optional arguments
 
     return parser.parse_args()
@@ -88,7 +90,7 @@ def f_deriv(w, T):
     # beta.shape = (len(T))
     beta = 1. /k_B /T
     # bhw.shape = (len(T), len(k), len(sigma))
-    bhw = np.expand_dims(beta, axis=[1,2]) *hbar *np.expand_dims(w, axis=0) *1e-3
+    bhw = np.expand_dims(beta, axis=[1,2]) *hbar *np.expand_dims(w, axis=0)
     # return shape = (len(T), len(k), len(sigma))
     return bhw /np.expand_dims(T, axis=[1,2]) *np.exp(bhw) /(np.exp(bhw) -1.)**2
 
@@ -126,7 +128,7 @@ def response(eps, w, T, V, tau, v_g):
         alpha *= tau
     else:
         alpha = alpha * np.expand_dims(tau, axis=[3,4])
-    alpha *= np.expand_dims(dfdT, axis=[3,4])
+    alpha = alpha * np.expand_dims(dfdT, axis=[3,4])
     # return shape = (len(T), 3, 3)
     return np.sum(np.sum(alpha ,axis=1), axis=1)
 
@@ -166,8 +168,11 @@ if __name__ == '__main__':
     # q.shape = (len(q), 3)
     q = np.array(tc._qpoints)
     # gamma.shape = (len(T), len(q), len(sigma))
-    gamma = np.array(tc._gamma)[0]
-    tau = 1.0 / np.where(gamma > 0, gamma, np.inf) / (2 * 2 * np.pi)
+    if args.tau:
+        tau = args.tau
+    else:
+        gamma = np.array(tc._gamma)[0]
+        tau = 1. / np.where(gamma > 0, gamma, np.inf) / (2 * 2 * np.pi)
     # v_g.shape = (len(q), len(sigma), 3)
     v_g = np.array(tc._gv)
     # T.shape = (len(T))
@@ -175,7 +180,7 @@ if __name__ == '__main__':
     # w.shape = (len(k), len(sigma))
     w = np.array(tc._frequencies)
     # eps.shape = (len(k), len(sigma), len(sigma))
-    eps = np.array(tc._eigenvectors)
+    eps = np.transpose(tc._eigenvectors, [0,2,1])
 
     from ase.io import read
     V_uc = read(args.unitcell).get_volume()
@@ -184,6 +189,44 @@ if __name__ == '__main__':
     # alpha shape=(len(T), 3, 3)
     alpha = response(eps, w, T, V, tau, v_g)
     
+    scale = units._e * 1e-12 * 1e20 
     for i in range(len(T)):
         print('T={}(K)'.format(T[i]))
-        print(np.real(alpha[i]))
+        print('alpha=')
+        print(np.real(alpha[i]) *scale)
+
+    # Only check purpose.
+    if args.plot_pam:
+        from reciprocal_lattice import get_reciprocal_lattice
+        recip_latt = get_reciprocal_lattice(read(args.unitcell).get_cell())
+        q_cart = np.matmul(q, recip_latt)
+
+        mode_l = mode_PAM(eps)
+
+        # Plot PAM
+        from matplotlib import pyplot as plt
+        sigma = list(range(mode_l.shape[1]))
+        for s in sigma:
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            ax.quiver(
+                q_cart[:, 0], q_cart[:, 1], q_cart[:, 2],
+                mode_l[:, s, 0], mode_l[:, s, 1], mode_l[:, s, 2],
+                length=0.1,
+                )
+            from ss_util import axisEqual3D
+            axisEqual3D(ax)
+            ax.set_title('$\sigma$={}'.format(s+1), fontsize='x-large')
+            ax.set_xticks([0])
+            ax.set_yticks([0])
+            ax.set_xlabel(r'$k_x$', fontsize='x-large')
+            ax.set_ylabel(r'$k_y$', fontsize='x-large')
+            ax.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.show()
+
+    if args.tau_histo:
+        from matplotlib import pyplot as plt
+        print('tau.shape={}'.format(tau.shape))
+        plt.hist(np.reshape(tau, -1), bins=np.logspace(np.log10(1e-5),np.log10(1e5), 50))
+        plt.gca().set_xscale("log")
+        plt.show()
