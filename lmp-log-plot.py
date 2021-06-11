@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import numpy as np
 
 def argparse():
     import argparse
@@ -32,7 +33,6 @@ if __name__ == '__main__':
     # > Main
     from lmp2traj import read_lmp_log
     info = read_lmp_log(log_file)
-    import numpy as np
     with open(log_file) as f:
 
         # Read time interval
@@ -49,23 +49,25 @@ if __name__ == '__main__':
                 dt = float(words[3])
                 break
 
-    # > Post process
-    t = np.arange(len(info[list(info.keys())[0]]), dtype=float) * dt
+    for j in range(len(info)):
 
-    # Remove dummy info.
-    avail_info = []
-    for (key, value) in info.items():
-        if np.std(np.array(value, dtype=float)) > 1e-10:
-            avail_info.append(key)
+        # > Post process
+        t = np.arange(len(info[j][list(info[j].keys())[0]]), dtype=float) * dt
 
-    # > Plot
-    from matplotlib import pyplot as plt
-    for i in range(len(avail_info)):
-        plt.figure()
-        plt.plot(t, info[avail_info[i]], c='k')
-        plt.title(avail_info[i], fontsize='x-large')
-        plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.grid(alpha=0.2)
+        # Remove dummy info.
+        avail_info = []
+        for (key, value) in info[j].items():
+            if np.std(np.array(value, dtype=float)) > 1e-10:
+                avail_info.append(key)
+
+        # > Plot
+        from matplotlib import pyplot as plt
+        for i in range(len(avail_info)):
+            plt.figure()
+            plt.plot(t, info[j][avail_info[i]], c='k')
+            plt.title(avail_info[i], fontsize='x-large')
+            plt.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.grid(alpha=0.2)
     plt.show()
 
 

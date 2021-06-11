@@ -8,6 +8,7 @@ import numpy as np
 
 def read_lmp_log(
     log_file='log.lammps',
+    image_slice=':',
     ):
     # Load file
     with open(log_file) as f:
@@ -215,7 +216,7 @@ if __name__ == '__main__':
         dump_inp = [dump_inp]
     print('Successively read dump file!'.center(120))
     if load_log:
-        info = read_lmp_log()
+        info = read_lmp_log(image_slice=image_slice)
         print('Read log.lammps file.')
         print('((WARNING)) Even when there is atomic-energy info, potential energy will be read from the thermo log file.')
 
