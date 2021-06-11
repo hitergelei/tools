@@ -18,7 +18,7 @@ def argparse():
     parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
     parser.add_argument('phono3py_pckl', type=str, help='Phono3py class object saved in pickle format.')
     # # Optional arguments
-    parser.add_argument('-t', '--tau', type=float, help='Phonon lifetime for constant lifetime approximation. In fs unit.')
+    parser.add_argument('-t', '--tau', type=float, default=None, help='Phonon lifetime for constant lifetime approximation. In ps unit.')
     parser.add_argument('-p', '--plot_pam', action='store_true', help='Plot mode-PAM.')
     parser.add_argument('-i', '--tau_histo', action='store_true', help='Plot lifetime histogram.')
     # # Optional arguments
@@ -213,7 +213,7 @@ if __name__ == '__main__':
         print('T={}(K)'.format(T[i]))
         print('alpha ( J s / m^2 K ) =')
         print(np.real(alpha[i]))
-        np.save('alpha-qx{}{}{}-{}K.npy'.format(*mesh, T[i]), alpha[i])
+        np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), alpha[i])
 
     # Only check purpose.
     if args.plot_pam:
