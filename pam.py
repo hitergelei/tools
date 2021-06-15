@@ -247,6 +247,9 @@ if __name__ == '__main__':
     if args.tau_histo:
         from matplotlib import pyplot as plt
         print('tau.shape={}'.format(tau.shape))
-        plt.hist(np.reshape(tau, -1), bins=np.logspace(np.log10(1e-5),np.log10(1e5), 50))
-        plt.gca().set_xscale("log")
+        for i in range(len(tau)):
+            plt.figure()
+            plt.hist(np.reshape(tau[i], -1), bins=np.logspace(np.log10(np.min(tau[i])),np.log10(np.max(tau[i])), 50))
+            plt.title('T={}K'.format(T[i]))
+            plt.gca().set_xscale("log")
         plt.show()
