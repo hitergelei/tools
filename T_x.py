@@ -14,6 +14,8 @@ def argparse():
     # # Optional arguments
     parser.add_argument('-b', '--nbins', type=int, default=100, help='Number of bins for the function T(x). [Default: 100]')
     parser.add_argument('-n', '--img_slice', type=str, default=':', help='ASE understandable slice [Default: ":" ]')
+    parser.add_argument('-m', '--mem_saving', action='store_true',
+        help='It is Memory saving option. Read partly by partly, if provided.')
 
     return parser.parse_args()
 
@@ -61,6 +63,7 @@ def get_T_x(alist, direc, nbins=100,):
             divider[i].append(np.sum(ind[j]==i))
             T_x[i][j] *= divider[i][j]
     T_x = np.sum(T_x, axis=1) /np.sum(divider, axis=1)
+    del(cell, posi, disp, ind,)
     return T_x, centers
 
 if __name__ == '__main__':
@@ -80,11 +83,23 @@ if __name__ == '__main__':
     ## Argparse
     args = argparse()
 
-    from ase.io import read
-    alist = read(args.alist_ase, args.img_slice)
-    if not isinstance(alist, list):
-        alist = [alist]
-    T_x, centers = get_T_x(alist, args.direction, args.nbins)
+    if args.mem_saving:
+        from ase.io import read
+        T_x = []
+        for i in range(10):
+            alist = read(args.alist_ase, '{}::10'.format(i))
+            T_x_tmp, centers = get_T_x(alist, args.direction, args.nbins)
+            T_x.append(T_x_tmp)
+            print(' -> {}% calculated.'.format((i+1)*10))
+            del(alist)
+        T_x = np.mean(T_x, axis=0)
+
+    else:
+        from ase.io import read
+        alist = read(args.alist_ase, args.img_slice)
+        if not isinstance(alist, list):
+            alist = [alist]
+        T_x, centers = get_T_x(alist, args.direction, args.nbins)
     
     # Plot
     from matplotlib import pyplot as plt

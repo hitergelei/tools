@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import numpy as np
 
-def unfold_positions(alist):
+def unfold_positions(alist, ref_atoms=None):
     """
     This code will unfold the wrapped ASE atoms objects in PBC.
-    alist: List of ase atoms object (len(alist) must be larger than 1).
+    alist: List of ase atoms object.
+    ref_atoms: Unfolding refers this structure. 
     """
+
     # Extract position info
     r_list = []
     for i in range(len(alist)):
@@ -14,7 +16,11 @@ def unfold_positions(alist):
 
     # Unfold positions
     R = np.zeros(r_list.shape, int)
-    R[1:] = np.add.accumulate(np.rint(np.array(r_list[:-1]) - np.array(r_list[1:])))
+    R[1:] = np.add.accumulate(
+        np.rint(np.array(r_list[:-1]) - np.array(r_list[1:])),
+        )
+    if ref_atoms:
+        R = R + np.rint(ref_atoms.get_scaled_positions() - np.array(r_list[0]))
     unfolded_r_list = r_list + R
 
     # Update atoms object
@@ -32,6 +38,8 @@ def argparse():
     # Positional arguments
     parser.add_argument('traj_file', type=str, help='ASE readable structure file name. (Must be in current dir)')
     # Optional arguments
+    parser.add_argument('-r', '--ref_file', type=str, default=None,
+        help='ASE readable reference structure. Unfolding refers this structure. [Default: first atoms in traj_file]')
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='ASE understanable slice in str format. [Default: all]')
     return parser.parse_args()
 
@@ -56,5 +64,8 @@ if __name__ == '__main__':
     # @ Main
     from ase.io import read, write
     alist = read(traj_file, image_slice)
-    unfold_positions(alist)
+    if not isinstance(alist, list):
+        alist = [alist]
+    ref_atoms = read(args.ref_file)
+    unfold_positions(alist, ref_atoms)
     write('unfold_'+traj_file, alist)
