@@ -17,8 +17,8 @@ T_list     = np.arange(50, 121, 5, dtype=float) # (K)
 T          = 30.
 ij         = (0,1)
 tau        = None
-# color    = ['r', 'g', 'b', 'c', 'm', 'y']
-color      = ['r', 'g', 'b']
+color    = ['r', 'g', 'b', 'c', 'm', 'y']
+# color      = ['r', 'g', 'b']
 band_group = (range(0,3), range(3,12))
 # band_group = None
 
@@ -64,7 +64,7 @@ if rotate:
     alpha_T = rot_alpha(alpha_T, new_z)
 
 from matplotlib import pyplot as plt
-plt.plot(q_range, np.mean(alpha_q, axis=1)[:, ij[0], ij[1]])
+plt.plot(q_range, np.sum(alpha_q, axis=1)[:, ij[0], ij[1]])
 plt.tick_params(axis="both",direction="in", labelsize='x-large')
 plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
 plt.ylabel(r'$\alpha_{{{}{}}}$ $( J S / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
@@ -82,7 +82,7 @@ for s in range(len_sigma //len(color)):
     plt.figure()
     plt.plot(
         T_list,
-        np.mean(alpha_T, axis=1)[:, ij[0], ij[1]],
+        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
         c='k',
         label='Total',
         )
@@ -109,7 +109,7 @@ if band_group is not None:
     from matplotlib import pyplot as plt
     plt.plot(
         T_list,
-        np.mean(alpha_T, axis=1)[:, ij[0], ij[1]],
+        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
         c='k',
         label='Total',
         )
