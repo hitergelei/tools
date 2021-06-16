@@ -21,6 +21,7 @@ def argparse():
     parser.add_argument('-t', '--tau', type=float, default=None, help='Phonon lifetime for constant lifetime approximation. In ps unit.')
     parser.add_argument('-p', '--plot_pam', action='store_true', help='Plot mode-PAM.')
     parser.add_argument('-i', '--tau_histo', action='store_true', help='Plot lifetime histogram.')
+    parser.add_argument('-v', '--vg_histo', action='store_true', help='Plot group velocity histogram.')
     # # Optional arguments
 
     return parser.parse_args()
@@ -95,7 +96,7 @@ def f_deriv(w, T):
     # return shape = (len(T), len(k), len(sigma))
     return bhw /np.expand_dims(T, axis=[1,2]) *np.exp(bhw) /(np.exp(bhw) -1.)**2
 
-def response(eps, w, T, V, tau, v_g):
+def response(eps, w, T, V, tau, v_g, band_alpha=False):
     """
     Calculate response tensor, \alpha.
                    1    len(k)*3*len(atoms)
@@ -111,9 +112,12 @@ def response(eps, w, T, V, tau, v_g):
     tau : Lifetime of each phonon mode. shape=(len(T), len(k), len(\sigma))
         or Constant lifetime approximation. (type float)
     v_g : Group velocity vector of each phonon mode. shape=(len(k), len(\sigma), 3)
+    band_alpha: Return band-resolved alpha, if provided. (type boolean)
 
     RETURN
-    alpha : Response tensor. shape=(3,3)
+    alpha : Response tensor.
+        shape=(            3, 3) for band_alpha=False
+        shape=(len(sigma), 3, 3) for band_alpha=True
     """
 
     # l.shape == (len(k), len(sigma), 3)
@@ -130,8 +134,12 @@ def response(eps, w, T, V, tau, v_g):
     else:
         alpha = alpha * np.expand_dims(tau, axis=[3,4])
     alpha = alpha * np.expand_dims(dfdT, axis=[3,4])
-    # return shape = (len(T), 3, 3)
-    return np.sum(np.sum(alpha ,axis=1), axis=1)
+    if band_alpha:
+        # return shape = (len(T), len(sigma), 3, 3)
+        return np.sum(alpha ,axis=1)
+    else:
+        # return shape = (len(T), 3, 3)
+        return np.sum(np.sum(alpha ,axis=1), axis=1)
 
 def get_w_n_eps(phonopy_obj, q):
     freq = []
@@ -193,6 +201,7 @@ if __name__ == '__main__':
     po.run_qpoints(q, with_eigenvectors=True, with_group_velocities=True)
     # w.shape == (len(q), len(sigma))
     w = po.qpoints.frequencies
+    print('Max frequency={}Thz'.format(np.max(w)))
     # eps.shape == (len(q), len(sigma), len(sigma))
     eps = np.transpose(po.qpoints.eigenvectors, [0,2,1])
     # v_g.shape == (len(q), len(sigma), 3)
@@ -202,18 +211,21 @@ if __name__ == '__main__':
     V_uc = read(args.unitcell).get_volume()
     V = V_uc * mesh[0] * mesh[1] * mesh[2]
 
-    # alpha shape=(len(T), 3, 3)
-    alpha = response(eps, w, T, V, tau, v_g)
-    
-    # save
+    # band_alpha shape=(len(T), len(sigma), 3, 3)
+    band_alpha = response(eps, w, T, V, tau, v_g, band_alpha=True)
     # ( eV ps / A^2 K ) to ( J s / m^2 K )
     scale = units._e * 1e-12 * 1e20 
-    alpha *= scale
+    band_alpha *= scale
+
+    # alpha shape=(len(T), 3, 3)
+    alpha = np.sum(band_alpha, axis=1)
+    
+    # save
     for i in range(len(T)):
         print('T={}(K)'.format(T[i]))
         print('alpha ( J s / m^2 K ) =')
         print(np.real(alpha[i]))
-        np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), alpha[i])
+        np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), band_alpha[i])
 
     # Only check purpose.
     if args.plot_pam:
@@ -232,7 +244,7 @@ if __name__ == '__main__':
             ax.quiver(
                 q_cart[:, 0], q_cart[:, 1], q_cart[:, 2],
                 mode_l[:, s, 0], mode_l[:, s, 1], mode_l[:, s, 2],
-                length=0.1,
+                length=1e3,
                 )
             from ss_util import axisEqual3D
             axisEqual3D(ax)
@@ -249,7 +261,14 @@ if __name__ == '__main__':
         print('tau.shape={}'.format(tau.shape))
         for i in range(len(tau)):
             plt.figure()
-            plt.hist(np.reshape(tau[i], -1), bins=np.logspace(np.log10(np.min(tau[i])),np.log10(np.max(tau[i])), 50))
-            plt.title('T={}K'.format(T[i]))
+            plt.hist(np.reshape(tau[i], -1), bins=np.logspace(np.log10(1e-5),np.log10(1e5), 50))
+            plt.title('Lifetime, T={}K'.format(T[i]))
             plt.gca().set_xscale("log")
+        plt.show()
+
+    if args.vg_histo:
+        from matplotlib import pyplot as plt
+        print('v_g.shape={}'.format(v_g.shape))
+        plt.hist(np.reshape(np.linalg.norm(v_g *100, axis=-1), -1))
+        plt.title('Group velocity')
         plt.show()
