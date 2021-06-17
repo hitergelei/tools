@@ -13,7 +13,7 @@ ph2_pckl   = 'vasp-x442_d0.010_symTrue-NACTrue-fc2.bin'
 ph3_pckl   = '3pho_vasp_fc2x442_fc3x332-nacTrue-qx{}{}{}-rmltc-bte.pckl'
 q_range    = range(15,16)
 q          = (15,15,15)
-T_list     = np.arange(50, 121, 5, dtype=float) # (K)
+T_list     = np.arange(30, 121, 5, dtype=float) # (K)
 T          = 30.
 ij         = (0,1)
 tau        = None
@@ -41,6 +41,10 @@ if calculate:
         if tau is not None:
             cmd += ' -t {}'.format(tau)
         call(cmd, shell=True)
+    cmd = 'pam.py {} {} {}'.format(uc_file, ph2_pckl, ph3_pckl).format(*q)
+    if tau is not None:
+        cmd += ' -t {}'.format(tau)
+    call(cmd, shell=True)
 
 # Load
 # alpha_q.shape = (len(q_range), len(sigma), 3, 3)
@@ -75,7 +79,7 @@ plt.xlim(np.min(q_range),np.max(q_range))
 plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
 plt.grid(alpha=0.5)
 
-print('q={}x{}x{}'.format(*q), '\n', alpha_T)
+print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
 from matplotlib import pyplot as plt
 len_sigma = alpha_T.shape[1]
 for s in range(len_sigma //len(color)):
