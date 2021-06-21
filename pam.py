@@ -224,7 +224,7 @@ if __name__ == '__main__':
     for i in range(len(T)):
         print('T={}(K)'.format(T[i]))
         print('alpha ( J s / m^2 K ) =')
-        print(np.real(np.sum(alpha[i], axis=1)))
+        print(np.real(alpha[i]))
         np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), band_alpha[i])
 
     # Only check purpose.

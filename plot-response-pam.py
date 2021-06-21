@@ -9,7 +9,7 @@ rotate    = False
 
 # params
 uc_file    = '../GaN-prim.vasp'
-ph2_pckl   = 'vasp-x442_d0.010_symTrue-NACTrue-fc2.bin'
+ph2_pckl   = '../vasp-x442_d0.010_symTrue-NACTrue-fc2.bin'
 ph3_pckl   = '3pho_vasp_fc2x442_fc3x332-nacTrue-qx{}{}{}-rmltc-bte.pckl'
 q_range    = range(15,16)
 q          = (15,15,15)
