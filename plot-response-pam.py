@@ -67,17 +67,18 @@ if rotate:
     alpha_q = rot_alpha(alpha_q, new_z)
     alpha_T = rot_alpha(alpha_T, new_z)
 
-from matplotlib import pyplot as plt
-plt.plot(q_range, np.sum(alpha_q, axis=1)[:, ij[0], ij[1]])
-plt.tick_params(axis="both",direction="in", labelsize='x-large')
-plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
-plt.ylabel(r'$\alpha_{{{}{}}}$ $( J S / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-plt.legend(fontsize='large')
-plt.title(r'At {} K, $\tau$={} ps'.format(T, tau), fontsize='x-large')
-plt.xlim(np.min(q_range),np.max(q_range))
-# plt.ylim(0,130)
-plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
-plt.grid(alpha=0.5)
+if len(alpha_q) > 0:
+    from matplotlib import pyplot as plt
+    plt.plot(q_range, np.sum(alpha_q, axis=1)[:, ij[0], ij[1]])
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
+    plt.ylabel(r'$\alpha_{{{}{}}}$ $( J S / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    plt.legend(fontsize='large')
+    plt.title(r'At {} K, $\tau$={} ps'.format(T, tau), fontsize='x-large')
+    plt.xlim(np.min(q_range),np.max(q_range))
+    # plt.ylim(0,130)
+    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
+    plt.grid(alpha=0.5)
 
 print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
 from matplotlib import pyplot as plt
