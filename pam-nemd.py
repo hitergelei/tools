@@ -18,10 +18,11 @@ def argparse():
         help='Boundary condition to calculate PAM. form: (x low  x up  y low  y up  z low  z up). "n" means no limit. [Default: Include all range.]')
     parser.add_argument('-n', '--img_slice', type=str, default=':', help='ASE understandable slice [Default: ":" ]')
     parser.add_argument('-t', '--T_grad', action='store_true', help='Print gradient T if provided.')
+    parser.add_argument('-s', '--t_intvl', type=float, default=None, help='If specified, x axis will be time for J(t) plot. Unit is fs. Note) Care about img_slice.')
 
     return parser.parse_args()
 
-def calc_pam(disp, mom, vol):
+def calc_pam(disp, mom, vol, do_t_avg=True):
     """
          1      N        ___             
     J = --- * (sum) (r_i-r_i) X p_i 
@@ -38,8 +39,12 @@ def calc_pam(disp, mom, vol):
     PAM per volume. Unit=( eV fs / A^3 )
     """
 
-    # disp = posi - np.mean(posi, axis=0)
-    return np.mean(np.sum(np.cross(disp, mom), axis=1), axis=0) /vol
+    if do_t_avg:
+        # return shape=(3)
+        return np.mean(np.sum(np.cross(disp, mom), axis=1), axis=0) /vol
+    else:
+        # return shape=(len(alist), 3)
+        return np.sum(np.cross(disp, mom), axis=1) /vol
 
 if __name__ == '__main__':
     ## Intro
@@ -118,10 +123,29 @@ if __name__ == '__main__':
     # from ase.visualize  import view
     # view(atoms[mask])
 
-    J = calc_pam(disp, mom, vol)
-
+    J_t = calc_pam(disp, mom, vol, do_t_avg=False)
     # Unit conversion ( eV fs / A^3 ) to ( J s / m^3 )
     from ase import units
-    J *= units._e * 1e-15 / 1e-30
-    
+    J_t *= units._e * 1e-15 / 1e-30
+    J = np.mean(J_t, axis=0)
+
     print('PAM per volume = {} ( J s / m^3 )'.format(J))
+
+    from matplotlib import pyplot as plt
+    x = np.arange(len(J_t), dtype=float)
+    if args.t_intvl:
+        x *= args.t_intvl /1000
+    plt.plot(x, J_t[:,0], label='x', c='r')
+    plt.plot(x, J_t[:,1], label='y', c='b')
+    plt.plot(x, J_t[:,2], label='z', c='g')
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    if args.t_intvl:
+        plt.xlabel('Time (ps)', fontsize='x-large')
+    else:
+        plt.xlabel('Timestep', fontsize='x-large')
+    plt.ylabel('$J(t)$ (Js/m$^3$) ', fontsize='x-large')
+    plt.legend(fontsize='large').set_draggable(True)
+    plt.title('PAM per volume', fontsize='x-large')
+    # plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
+    plt.grid(alpha=0.5)
+    plt.show()

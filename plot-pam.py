@@ -73,6 +73,7 @@ if __name__ == '__main__':
     # Calc
     from pam import mode_PAM
     mode_l = mode_PAM(eps)
+    mode_t = mode_PAM(eps, mode_PAT=True)
 
     #
     if not args.plot_3d:
@@ -98,6 +99,7 @@ if __name__ == '__main__':
         R = np.linalg.inv([x,y,z]).T
         q_cart_2d = np.matmul(q_cart, R.T)
         mode_l_2d = np.matmul(mode_l, R.T)
+        mode_t_2d = np.matmul(mode_t, R.T)
 
         from matplotlib import pyplot as plt
         fig, ax = plt.subplots()
@@ -112,6 +114,7 @@ if __name__ == '__main__':
         sigma = list(range(mode_l.shape[1]))
     for s in sigma:
         if args.plot_3d:
+            # PAM
             fig = plt.figure()
             ax = fig.gca(projection='3d')
             ax.quiver(
@@ -121,11 +124,38 @@ if __name__ == '__main__':
                 )
             from ss_util import axisEqual3D
             axisEqual3D(ax)
+            # PAT
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            ax.quiver(
+                q_cart[:, 0], q_cart[:, 1], q_cart[:, 2],
+                mode_t[:, s, 0], mode_t[:, s, 1], mode_t[:, s, 2],
+                length=0.1,
+                )
+            from ss_util import axisEqual3D
+            axisEqual3D(ax)
         else:
+            # PAM
             fig, ax = plt.subplots()
             ax.quiver(
                 q_cart_2d[:, 0], q_cart_2d[:, 1],
                 mode_l_2d[:, s, 0], mode_l_2d[:, s, 1],
+                # units='xy',
+                # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
+                # edgecolors='k',
+                # scale=args.scale,
+                # minshaft=0,
+                # minlength=0,
+                headwidth=5,
+                # headlength=1,
+                pivot='mid',
+                )
+            ax.set_aspect('equal')
+            # PAT
+            fig, ax = plt.subplots()
+            ax.quiver(
+                q_cart_2d[:, 0], q_cart_2d[:, 1],
+                mode_t_2d[:, s, 0], mode_t_2d[:, s, 1],
                 # units='xy',
                 # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
                 # edgecolors='k',

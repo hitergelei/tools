@@ -28,6 +28,7 @@ def argparse():
 
 def mode_PAM(
     eps,
+    mode_PAT=False,
     ):
     """
     Calculate mode-PAM.
@@ -42,21 +43,38 @@ def mode_PAM(
     """
     
     n = eps.shape[-1] //3
-    Mx = np.array([
-        [  0,  0,  0],
-        [  0,  0,-1j],
-        [  0, 1j,  0],
-        ])
-    My = np.array([
-        [  0,  0, 1j],
-        [  0,  0,  0],
-        [-1j,  0,  0],
-        ])
-    Mz = np.array([
-        [  0,-1j,  0],
-        [ 1j,  0,  0],
-        [  0,  0,  0],
-        ])
+    if mode_PAT:
+        Mx = np.array([
+            [  0,  0,  0],
+            [  0,  0,  1],
+            [  0,  1,  0],
+            ])
+        My = np.array([
+            [  0,  0,  1],
+            [  0,  0,  0],
+            [  1,  0,  0],
+            ])
+        Mz = np.array([
+            [  0,  1,  0],
+            [  1,  0,  0],
+            [  0,  0,  0],
+            ])
+    else:
+        Mx = np.array([
+            [  0,  0,  0],
+            [  0,  0,-1j],
+            [  0, 1j,  0],
+            ])
+        My = np.array([
+            [  0,  0, 1j],
+            [  0,  0,  0],
+            [-1j,  0,  0],
+            ])
+        Mz = np.array([
+            [  0,-1j,  0],
+            [ 1j,  0,  0],
+            [  0,  0,  0],
+            ])
     # M.shape == (3, 3n, 3n)
     M = np.array([
         np.kron(np.identity(n), Mx),
