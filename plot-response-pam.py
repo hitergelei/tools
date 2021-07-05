@@ -2,24 +2,25 @@
 import numpy as np
 
 # Task
-# calculate = True
-calculate = False
-# rotate    = True
-rotate    = False
+calculate = True
+# calculate = False
+rotate    = True
+# rotate    = False
 
 # params
-uc_file    = '../GaN-prim.vasp'
-ph2_pckl   = '../vasp-x442_d0.010_symTrue-NACTrue-fc2.bin'
-ph3_pckl   = '3pho_vasp_fc2x442_fc3x332-nacTrue-qx{}{}{}-rmltc-bte.pckl'
-q_range    = range(15,16)
+uc_file    = '../gete-alpha-prim.vasp'
+ph2_pckl   = '../vasp-x444_d0.010_symTrue-NACTrue-fc2.bin'
+ph3_pckl   = '3pho_vasp_fc2x444_fc3x333-nacTrue-qx{}{}{}-rmltc-bte.pckl'
+q_range    = range( 1,16)
 q          = (15,15,15)
-T_list     = np.arange(30, 121, 5, dtype=float) # (K)
-T          = 30.
+# T_list     = np.arange(30, 121, 5, dtype=float) # (K)
+T_list     = [10., 50., 100., 200., 300., 500., 700.] # (K)
+T          = 10.
 ij         = (0,1)
 tau        = None
-color    = ['r', 'g', 'b', 'c', 'm', 'y']
-# color      = ['r', 'g', 'b']
-band_group = (range(0,3), range(3,12))
+# color    = ['r', 'g', 'b', 'c', 'm', 'y']
+color      = ['r', 'g', 'b']
+band_group = (range(0,3), range(3,6))
 # band_group = None
 
 def rot_alpha(alpha, new_z):
@@ -29,7 +30,7 @@ def rot_alpha(alpha, new_z):
     new_y /= np.linalg.norm(new_y)
     new_x = np.cross(new_y, new_z)
     # R.shape = (1, 1, 3, 3)
-    R = np.expand_dims(np.array([new_x, new_y, new_z]).T, axes=[0, 1])
+    R = np.expand_dims(np.array([new_x, new_y, new_z]).T, axis=[0, 1])
     alpha = np.matmul(np.transpose(R, [0,1,3,2]), alpha)
     alpha = np.matmul(alpha, R)
     return alpha
