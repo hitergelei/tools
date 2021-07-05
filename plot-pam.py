@@ -13,10 +13,12 @@ def argparse():
     parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
     # # Optional arguments
     parser.add_argument('-s', '--sigma', type=int, default=None, help='Phonon band index to plot. [Default: Plot all]')
-    parser.add_argument('-m', '--mesh', type=int, default=20, help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, 1) supported now. Takes integer input.')
+    parser.add_argument('-m', '--mesh', type=int, default=20,
+        help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, 1) supported now. Takes integer input. [Default: 20]')
     parser.add_argument('-q', '--qpoint_npy', type=str, default=False, help='Provide q-points manually. --mesh tag is ignored if this tag is activated.')
     parser.add_argument('-x', '--set_x', type=float, nargs=3, default=None, help='Set x-axis of 2D-plot. Insert b1, b2, and b3 for 2pi/a*(b1, b2, b3) vector.')
     parser.add_argument('-t', '--plot_3d', action='store_true', help='If provided, plot 3d texture of PAM.')
+    parser.add_argument('-c', '--scale', type=float, default=0.01, help='Set PAM vector scale for 2d plot. [Default:]')
 
     return parser.parse_args()
 
@@ -143,7 +145,7 @@ if __name__ == '__main__':
                 # units='xy',
                 # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
                 # edgecolors='k',
-                # scale=args.scale,
+                scale=args.scale,
                 # minshaft=0,
                 # minlength=0,
                 headwidth=5,
@@ -151,6 +153,12 @@ if __name__ == '__main__':
                 pivot='mid',
                 )
             ax.set_aspect('equal')
+            ax.set_title('PAM, $\sigma$={}'.format(s+1), fontsize='x-large')
+            ax.set_xticks([0])
+            ax.set_yticks([0])
+            ax.set_xlabel(r'$k_x$', fontsize='x-large')
+            ax.set_ylabel(r'$k_y$', fontsize='x-large')
+            ax.tick_params(axis="both",direction="in", labelsize='x-large')
             # PAT
             fig, ax = plt.subplots()
             ax.quiver(
@@ -159,7 +167,7 @@ if __name__ == '__main__':
                 # units='xy',
                 # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
                 # edgecolors='k',
-                # scale=args.scale,
+                scale=args.scale,
                 # minshaft=0,
                 # minlength=0,
                 headwidth=5,
@@ -167,11 +175,11 @@ if __name__ == '__main__':
                 pivot='mid',
                 )
             ax.set_aspect('equal')
-        ax.set_title('$\sigma$={}'.format(s+1), fontsize='x-large')
-        ax.set_xticks([0])
-        ax.set_yticks([0])
-        ax.set_xlabel(r'$k_x$', fontsize='x-large')
-        ax.set_ylabel(r'$k_y$', fontsize='x-large')
-        ax.tick_params(axis="both",direction="in", labelsize='x-large')
+            ax.set_title('PAT, $\sigma$={}'.format(s+1), fontsize='x-large')
+            ax.set_xticks([0])
+            ax.set_yticks([0])
+            ax.set_xlabel(r'$k_x$', fontsize='x-large')
+            ax.set_ylabel(r'$k_y$', fontsize='x-large')
+            ax.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.show()
 
