@@ -402,6 +402,7 @@ def plot_band_and_dos(
     ylim_upper       = None,
     reverse_seq      = False,
     scatter_interval = 1,
+    plot_adjust      = None,
     ):
     """
     proj_eigvec = (dict) = Eigenvectors that will be used for projection. Keys of dict will be used as label for pyplot.
@@ -468,7 +469,7 @@ def plot_band_and_dos(
 
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
-    plt.subplots_adjust(left=0.20, bottom=0.08, right=0.80, top=0.95, wspace=0.10, hspace=0.20)
+    plt.subplots_adjust(*plot_adjust)
     plt.ylim(ylim_lower, ylim_upper)
     # plt.tight_layout()
 

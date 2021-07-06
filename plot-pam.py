@@ -18,7 +18,7 @@ def argparse():
     parser.add_argument('-q', '--qpoint_npy', type=str, default=False, help='Provide q-points manually. --mesh tag is ignored if this tag is activated.')
     parser.add_argument('-x', '--set_x', type=float, nargs=3, default=None, help='Set x-axis of 2D-plot. Insert b1, b2, and b3 for 2pi/a*(b1, b2, b3) vector.')
     parser.add_argument('-t', '--plot_3d', action='store_true', help='If provided, plot 3d texture of PAM.')
-    parser.add_argument('-c', '--scale', type=float, default=0.01, help='Set PAM vector scale for 2d plot. [Default:]')
+    parser.add_argument('-c', '--scale', default=0.01, help='Set PAM vector scale for 2d plot. None is autoscale. [Default: 0.01]')
 
     return parser.parse_args()
 

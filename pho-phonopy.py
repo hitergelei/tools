@@ -65,6 +65,15 @@ doslim_low         = None
     ## Phonon arguments
 # reverse_seq        = True
 reverse_seq        = False
+# plot_adjust        = None
+plot_adjust        = (
+    0.20, # left
+    0.40, # bottom
+    0.85, # right
+    0.95, # top
+    0.10, # wspace
+    0.20, # hspace
+    )
 
 #
 if symmetry is True:
@@ -231,6 +240,7 @@ if phonon_or_pdos == 'phonon':
         ylim_upper       = freqlim_up,
         reverse_seq      = reverse_seq,
         scatter_interval = scatter_interval,
+        plot_adjust      = plot_adjust,
         ).show()
     # Only band plot
     #ssp.plot_band(phonon, labels = labels).show()
