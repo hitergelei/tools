@@ -22,6 +22,8 @@ def argparse():
     parser.add_argument('-p', '--plot_pam', action='store_true', help='Plot mode-PAM.')
     parser.add_argument('-i', '--tau_histo', action='store_true', help='Plot lifetime histogram.')
     parser.add_argument('-v', '--vg_histo', action='store_true', help='Plot group velocity histogram.')
+    parser.add_argument('--temperature', type=float, nargs='+',
+        help='Set temperature manually. Only works for constant lifetime approximation. Multiple temperature can be set.')
     # # Optional arguments
 
     return parser.parse_args()
@@ -202,6 +204,8 @@ if __name__ == '__main__':
     q = tc._grid_address[:len(q_map)] /mesh
     # T.shape = (len(T))
     T = tc.get_temperatures()
+    if args.temperature:
+        T = np.array(args.temperature, dtype=float)
 
     if args.tau:
         tau = args.tau
