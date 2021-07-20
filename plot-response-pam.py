@@ -128,7 +128,7 @@ if band_group is not None:
             )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
-    plt.ylabel(r'$\alpha_{{{}{}}}$ $( J S / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.legend(fontsize='large').set_draggable(True)
     plt.title(r'q-mesh={}X{}X{}, $\tau$={} ps'.format(*q, tau), fontsize='x-large', pad=20)
     plt.xlim(np.min(T_list),np.max(T_list))
