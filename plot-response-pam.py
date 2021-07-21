@@ -2,25 +2,26 @@
 import numpy as np
 
 # Task
-calculate = True
-# calculate = False
-rotate    = True
-# rotate    = False
+# calculate = True
+calculate = False
+# rotate    = True
+rotate    = False
 
 # params
-uc_file    = '../gete-alpha-prim.vasp'
-ph2_pckl   = '../vasp-x444_d0.010_symTrue-NACTrue-fc2.bin'
-ph3_pckl   = '3pho_vasp_fc2x444_fc3x333-nacTrue-qx{}{}{}-rmltc-bte.pckl'
-q_range    = range( 1,16)
-q          = (15,15,15)
-# T_list     = np.arange(30, 121, 5, dtype=float) # (K)
-T_list     = [10., 50., 100., 200., 300., 500., 700.] # (K)
-T          = 10.
+uc_file    = '../GaN-prim.vasp'
+ph2_pckl   = '../vasp-x442_d0.010_symTrue-NACTrue-fc2.bin'
+ph3_pckl   = '3pho_vasp_fc2x442_fc3x332-nacTrue-qx{}{}{}-rmltc-rta.pckl'
+q_range    = range(60,65,5)
+q          = (60,60,60)
+T_list     = list(np.arange(30, 63, 3, dtype=float)) + [100., 120., 200., 300.] # (K)
+# T_list     = list(np.arange(5, 35, 5, dtype=float)) # (K)
+T          = 30.
 ij         = (0,1)
-tau        = None
-# color    = ['r', 'g', 'b', 'c', 'm', 'y']
-color      = ['r', 'g', 'b']
-band_group = (range(0,3), range(3,6))
+const_tau  = False
+# const_tau  = True
+color    = ['r', 'g', 'b', 'c', 'm', 'y']
+# color      = ['r', 'g', 'b']
+band_group = (range(0,3), range(3,12))
 # band_group = None
 
 def rot_alpha(alpha, new_z):
@@ -30,10 +31,15 @@ def rot_alpha(alpha, new_z):
     new_y /= np.linalg.norm(new_y)
     new_x = np.cross(new_y, new_z)
     # R.shape = (1, 1, 3, 3)
-    R = np.expand_dims(np.array([new_x, new_y, new_z]).T, axis=[0, 1])
+    R = np.expand_dims(np.array([new_x, new_y, new_z]).T, axes=[0, 1])
     alpha = np.matmul(np.transpose(R, [0,1,3,2]), alpha)
     alpha = np.matmul(alpha, R)
     return alpha
+
+if const_tau:
+    tau = 1e12
+else:
+    tau = None
 
 if calculate:
     from subprocess import call
@@ -73,9 +79,12 @@ if len(alpha_q) > 0:
     plt.plot(q_range, np.sum(alpha_q, axis=1)[:, ij[0], ij[1]])
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
-    plt.ylabel(r'$\alpha_{{{}{}}}$ $( J S / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if const_tau:
+        plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    else:
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    plt.title(r'At {} K'.format(T), fontsize='x-large')
     plt.legend(fontsize='large')
-    plt.title(r'At {} K, $\tau$={} ps'.format(T, tau), fontsize='x-large')
     plt.xlim(np.min(q_range),np.max(q_range))
     # plt.ylim(0,130)
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
@@ -101,9 +110,12 @@ for s in range(len_sigma //len(color)):
             )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
-    plt.ylabel(r'$\alpha_{{{}{}}}$ $( J S / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if const_tau:
+        plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    else:
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
-    plt.title(r'q-mesh={}X{}X{}, $\tau$={} ps'.format(*q, tau), fontsize='x-large', pad=20)
     plt.xlim(np.min(T_list),np.max(T_list))
     # plt.ylim(0,130)
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
@@ -128,9 +140,12 @@ if band_group is not None:
             )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
-    plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if const_tau:
+        plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    else:
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
-    plt.title(r'q-mesh={}X{}X{}, $\tau$={} ps'.format(*q, tau), fontsize='x-large', pad=20)
     plt.xlim(np.min(T_list),np.max(T_list))
     # plt.ylim(0,130)
     plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
