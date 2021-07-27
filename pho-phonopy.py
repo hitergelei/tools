@@ -154,6 +154,18 @@ if nac:
 
 ######### Band structure ##########
 from ase.dft.kpoints import ibz_points
+# points = ibz_points['orthorhombic']
+# G = points['Gamma']
+# R = points['R']
+# S = points['S']
+# T = points['T']
+# U = points['U']
+# X = points['X']
+# Y = points['Y']
+# Z = points['Z']
+# path = [[G, X], [X, S], [S, Y], [Y, G]]
+# labels = ['$\Gamma$', 'X', 'S', 'Y', '$\Gamma$']
+
 # points = ibz_points['hexagonal2']
 points = ibz_points['hexagonal']
 G = points['Gamma']

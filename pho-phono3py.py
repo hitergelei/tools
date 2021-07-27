@@ -2,21 +2,22 @@
 import numpy as np
 
 # Params
-q_range    = range( 1,16)
-NNN2       = [4, 4, 4]
-NNN3       = [3, 3, 3]
+q_range    = range( 5,10, 5)
+NNN2       = [4, 4, 1]
+NNN3       = [3, 3, 1]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
-unitcell_f = 'gete-alpha-prim-dpmd.vasp'
-calc       = 'lmp'
-cp_files   = ['frozen_model.pb', 'input-phonon.in']
-# calc       = 'vasp'
-# cp_files   = ['INCAR', 'POTCAR',]
+unitcell_f = 'BN-mono-prim.vasp'
+# calc       = 'lmp'
+# cp_files   = ['frozen_model.pb', 'input-phonon.in']
+calc       = 'vasp'
+cp_files   = ['INCAR', 'POTCAR', 'KPOINTS']
 # run_mode   = 'onle f'
-# run_mode   = 'ltc-rta'
-run_mode   = 'ltc-bte'
+run_mode   = 'ltc-rta'
+# run_mode   = 'ltc-bte'
 # run_mode   = 'self-e'
 # run_mode   = 'gruneisen'
-temp       = (10, 50, 100, 200, 300, 500, 700,) # (K)
+# temp       = (10, 50, 100, 200, 300, 500, 700,) # (K)
+temp       = np.arange(30,61,3, dtype=float).tolist() + [100., 120., 200., 300.,] # (K)
 #
 sym_fc     = True
 # sym_fc     = False
