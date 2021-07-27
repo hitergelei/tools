@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+hbar = 1e-3 *0.6582119569 # (eV*ps)
 
 def argparse():
     import argparse
@@ -19,6 +20,8 @@ def argparse():
     parser.add_argument('-x', '--set_x', type=float, nargs=3, default=None, help='Set x-axis of 2D-plot. Insert b1, b2, and b3 for 2pi/a*(b1, b2, b3) vector.')
     parser.add_argument('-t', '--plot_3d', action='store_true', help='If provided, plot 3d texture of PAM.')
     parser.add_argument('-c', '--scale', default=0.01, help='Set PAM vector scale for 2d plot. None is autoscale. [Default: 0.01]')
+    parser.add_argument('-z', '--plot_l_z', action='store_true', help='If provided, plot out-of-plane PAM. Works only for 2d plot.')
+    parser.add_argument('-r', '--relative', action='store_true', help='If provided, each plot will be re-scaled.')
 
     return parser.parse_args()
 
@@ -94,7 +97,7 @@ if __name__ == '__main__':
             x = np.expand_dims(args.set_x, axis=0)
             x = np.matmul(x, recip_latt)[0]
         else:
-            x = q_cart[np.argmax(np.linalg.norm(q_cart, axis=1))]
+            x = q_cart[np.argmax(np.linalg.norm(q_cart, axis=1))].copy()
         x /= np.linalg.norm(x)
         y = np.cross(z, x)
         # Rotation matrix
@@ -136,6 +139,43 @@ if __name__ == '__main__':
                 )
             from ss_util import axisEqual3D
             axisEqual3D(ax)
+
+        elif args.plot_l_z:
+            from scipy.interpolate import griddata
+            intvl = (np.max(q_cart_2d[:, 0]) - np.min(q_cart_2d[:, 0])) /200.
+            gridx, gridy = np.mgrid[
+                np.min(q_cart_2d[:, 0]):np.max(q_cart_2d[:, 0]):intvl,
+                np.min(q_cart_2d[:, 1]):np.max(q_cart_2d[:, 1]):intvl,
+                ]
+            gdat = griddata(
+                np.transpose([q_cart_2d[:, 0], q_cart_2d[:, 1]]),
+                np.real(mode_l_2d[:, s, 2]) /hbar,
+                (gridx, gridy),
+                method='cubic',
+                )
+            fig, ax = plt.subplots()
+            if args.relative:
+                ish = ax.imshow(gdat, cmap='seismic')
+            else:
+                ish = ax.imshow(gdat, cmap='seismic', vmin=-1., vmax=1.)
+            # ax.contourf(
+                # gridx, gridy,
+                # gdat,
+                # 100,
+                # cmap='seismic',
+                # )
+            cbar = fig.colorbar(ish)
+            cbar.set_label(r'$l_{\sigma,z}(k) / \hbar$', fontsize='x-large')
+            cbar.ax.tick_params(labelsize='x-large')
+            ax.set_aspect('equal')
+            ax.set_title('PAM, $\sigma$={}, mesh={}X{}'.format(s+1, args.mesh, args.mesh), fontsize='x-large')
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlabel(r'$k_x$', fontsize='x-large')
+            ax.set_ylabel(r'$k_y$', fontsize='x-large')
+            ax.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.subplots_adjust(right=0.80)
+
         else:
             # PAM
             fig, ax = plt.subplots()

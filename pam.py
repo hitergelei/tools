@@ -24,6 +24,7 @@ def argparse():
     parser.add_argument('-v', '--vg_histo', action='store_true', help='Plot group velocity histogram.')
     parser.add_argument('--temperature', type=float, nargs='+',
         help='Set temperature manually. Only works for constant lifetime approximation. Multiple temperature can be set.')
+    parser.add_argument('--dim2', action='store_true', help='2-D PAM per area (not per volume) calc.')
     # # Optional arguments
 
     return parser.parse_args()
@@ -230,13 +231,22 @@ if __name__ == '__main__':
     v_g = po.qpoints.group_velocities
 
     from ase.io import read
-    V_uc = read(args.unitcell).get_volume()
-    V = V_uc * mesh[0] * mesh[1] * mesh[2]
+    if args.dim2:
+        a1, a2 = read(args.unitcell).get_cell()[:2][:,:2]
+        V_uc = np.linalg.norm(np.cross(a1, a2))
+        V = V_uc * mesh[0] * mesh[1]
+    else:
+        V_uc = read(args.unitcell).get_volume()
+        V = V_uc * mesh[0] * mesh[1] * mesh[2]
 
     # band_alpha shape=(len(T), len(sigma), 3, 3)
     band_alpha = response(eps, w, T, V, tau, v_g, band_alpha=True)
-    # ( eV ps / A^2 K ) to ( J s / m^2 K )
-    scale = units._e * 1e-12 * 1e20 
+    if args.dim2:
+        # ( eV ps / A K ) to ( J s / m K )
+        scale = units._e * 1e-12 * 1e10 
+    else:
+        # ( eV ps / A^2 K ) to ( J s / m^2 K )
+        scale = units._e * 1e-12 * 1e20 
     band_alpha *= scale
 
     # alpha shape=(len(T), 3, 3)
@@ -245,9 +255,13 @@ if __name__ == '__main__':
     # save
     for i in range(len(T)):
         print('T={}(K)'.format(T[i]))
-        print('alpha ( J s / m^2 K ) =')
+        if args.dim2:
+            print('alpha ( J s / m K ) =')
+            np.save('alpha-2d-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), band_alpha[i])
+        else:
+            print('alpha ( J s / m^2 K ) =')
+            np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), band_alpha[i])
         print(np.real(alpha[i]))
-        np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), band_alpha[i])
 
     # Only check purpose.
     if args.plot_pam:
