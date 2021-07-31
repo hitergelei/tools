@@ -22,6 +22,7 @@ def argparse():
     parser.add_argument('-c', '--scale', default=0.01, help='Set PAM vector scale for 2d plot. None is autoscale. [Default: 0.01]')
     parser.add_argument('-z', '--plot_l_z', action='store_true', help='If provided, plot out-of-plane PAM. Works only for 2d plot.')
     parser.add_argument('-r', '--relative', action='store_true', help='If provided, each plot will be re-scaled.')
+    parser.add_argument('--dont_rotate', action='store_true', help='Do not rotate.')
 
     return parser.parse_args()
 
@@ -83,25 +84,29 @@ if __name__ == '__main__':
     #
     if not args.plot_3d:
         #
-        perp = np.zeros(3)
-        for i in range(len(q_cart)):
-            for j in range(len(q_cart)):
-                cro = np.cross(q_cart[i], q_cart[j])
-                if np.dot(cro, perp) < 0:
-                    perp -= cro
-                else:
-                    perp += cro
-        # Find new xyz-axes
-        z = perp /np.linalg.norm(perp)
-        if args.set_x:
-            x = np.expand_dims(args.set_x, axis=0)
-            x = np.matmul(x, recip_latt)[0]
+        if args.dont_rotate:
+            # Rotation matrix
+            R = np.array([[1,0,0],[0,1,0],[0,0,1]])
         else:
-            x = q_cart[np.argmax(np.linalg.norm(q_cart, axis=1))].copy()
-        x /= np.linalg.norm(x)
-        y = np.cross(z, x)
-        # Rotation matrix
-        R = np.linalg.inv([x,y,z]).T
+            perp = np.zeros(3)
+            for i in range(len(q_cart)):
+                for j in range(len(q_cart)):
+                    cro = np.cross(q_cart[i], q_cart[j])
+                    if np.dot(cro, perp) < 0:
+                        perp -= cro
+                    else:
+                        perp += cro
+            # Find new xyz-axes
+            z = perp /np.linalg.norm(perp)
+            if args.set_x:
+                x = np.expand_dims(args.set_x, axis=0)
+                x = np.matmul(x, recip_latt)[0]
+            else:
+                x = q_cart[np.argmax(np.linalg.norm(q_cart, axis=1))].copy()
+            x /= np.linalg.norm(x)
+            y = np.cross(z, x)
+            # Rotation matrix
+            R = np.linalg.inv([x,y,z]).T
         q_cart_2d = np.matmul(q_cart, R.T)
         mode_l_2d = np.matmul(mode_l, R.T)
         mode_t_2d = np.matmul(mode_t, R.T)
