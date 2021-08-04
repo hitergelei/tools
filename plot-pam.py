@@ -160,9 +160,9 @@ if __name__ == '__main__':
                 ).T
             fig, ax = plt.subplots()
             if args.relative:
-                ish = ax.imshow(gdat, cmap='seismic')
+                ish = ax.imshow(gdat, cmap='seismic', origin='lower')
             else:
-                ish = ax.imshow(gdat, cmap='seismic', vmin=-1., vmax=1.)
+                ish = ax.imshow(gdat, cmap='seismic', origin='lower', vmin=-1., vmax=1.)
             # ax.contourf(
                 # gridx, gridy,
                 # gdat,
