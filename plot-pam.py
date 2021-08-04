@@ -157,7 +157,7 @@ if __name__ == '__main__':
                 np.real(mode_l_2d[:, s, 2]) /hbar,
                 (gridx, gridy),
                 method='cubic',
-                )
+                ).T
             fig, ax = plt.subplots()
             if args.relative:
                 ish = ax.imshow(gdat, cmap='seismic')

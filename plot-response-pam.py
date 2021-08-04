@@ -6,8 +6,12 @@ from ase.io import read
 # calculate = True
 calculate = False
 #
-rotate    = True
-# rotate    = False
+# rotate    = True
+rotate    = False
+#
+uc_file    = '../BN-mono-prim.vasp'
+ph2_pckl   = '../vasp-x441_d0.010_symTrue-NACTrue-fc2.bin'
+ph3_pckl   = '3pho_vasp_fc2x441_fc3x331-nacTrue-qx{}{}{}-rmltc-rta.pckl'
 #
 dim2  = True
 new_z = None
@@ -19,10 +23,6 @@ new_x = np.array([np.cos(1./3.*np.pi), np.sin(1./3.*np.pi), 0.])
 # new_z = np.sum(cell, axis = 0)
 
 # params
-uc_file    = '../BN-mono-prim.vasp'
-ph2_pckl   = '../vasp-x441_d0.010_symTrue-NACTrue-fc2.bin'
-ph3_pckl   = '3pho_vasp_fc2x441_fc3x331-nacTrue-qx{}{}{}-rmltc-rta.pckl'
-#
 q_range    = range(60,65,5)
 q          = (60,60,1)
 T_list     = list(np.arange(30, 63, 3, dtype=float)) + [100., 120., 200., 300.] # (K)
@@ -105,6 +105,10 @@ for i in T_list:
         alpha_T.append(np.load('alpha-tau{}-qx{}{}{}-{}K.npy'.format(tau,*q,i)))
 alpha_T = np.array(alpha_T)
 
+if const_tau:
+    alpha_T[0] = 0.
+    alpha_q[0] = 0.
+
 if rotate:
     if new_x is not None or False:
         alpha_q = rot_alpha_xy(alpha_q, new_x)
@@ -124,14 +128,14 @@ if len(alpha_q) > 0:
     plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
     if const_tau:
         if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     else:
         if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.title(r'At {} K'.format(T), fontsize='x-large')
     plt.legend(fontsize='large')
     plt.xlim(np.min(q_range),np.max(q_range))
@@ -161,14 +165,14 @@ for s in range(len_sigma //len(color)):
     plt.xlabel('Temperature (K)', fontsize='x-large')
     if const_tau:
         if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     else:
         if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))
@@ -190,21 +194,21 @@ if band_group is not None:
         plt.plot(
             T_list,
             np.sum(alpha_T[:, band_group[i], ij[0], ij[1]], axis=1),
-            label='Group {}\n{}'.format(i+1, band_group[i]),
+            label='Band {}-{}'.format(band_group[i][0]+1, band_group[i][-1]+1),
             c=color[i],
             )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
     if const_tau:
         if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     else:
         if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))
