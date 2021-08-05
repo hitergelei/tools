@@ -14,6 +14,8 @@ def argparse():
     parser.add_argument('-b', '--nbins', type=int, default=100, help='Number of bins for average plot. [Default: 100]')
     parser.add_argument('-t', '--temperature', type=float, nargs='+',
         help='Set temperature manually. The pckl file must include data at the temperatures. Multiple temperature can be set.')
+    parser.add_argument('-u', '--up_lim', type=float, default=None, help='Upper limit for frequency plot. [default: None]')
+    parser.add_argument('-l', '--low_lim', type=float, default=None, help='Lower limit for frequency plot. [default: None]')
 
     return parser.parse_args()
 
@@ -79,6 +81,7 @@ if __name__ == '__main__':
         for i in range(nbins):
             mask = cls == i
             tau_avg[j].append(np.sum(tau_flat[j, mask] * c_rep[mask]) / np.sum(c_rep[mask]))
+    tau_avg = np.array(tau_avg)
 
     # Table
     w_sigma_mean = []
@@ -102,6 +105,19 @@ if __name__ == '__main__':
     plt.xlabel('Frequency (THz)', fontsize='x-large')
     plt.ylabel('Lifetime (ps)', fontsize='x-large')
     plt.title('{}, n(bins)={}'.format(args.phono3py_pckl, nbins), fontsize='small')
+    #
+    tau_flat = np.reshape(tau_avg, [-1])
+    min_tau = np.min(tau_flat[tau_flat > 0])
+    max_tau = np.max(tau_flat[np.logical_not(np.isnan(tau_flat))])
+    if args.low_lim is None:
+        up_lim = max_tau * (max_tau / min_tau)**0.05
+    else:
+        up_lim = args.low_lim
+    if args.up_lim is None:
+        low_lim = min_tau / (max_tau / min_tau)**0.05
+    else:
+        low_lim = args.low_lim
+    plt.ylim([low_lim, up_lim])
     plt.yscale('log')
     # plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
     plt.grid(alpha=0.5)
