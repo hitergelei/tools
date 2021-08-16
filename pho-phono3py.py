@@ -17,7 +17,13 @@ run_mode   = 'ltc-rta'
 # run_mode   = 'self-e'
 # run_mode   = 'gruneisen'
 # temp       = (10, 50, 100, 200, 300, 500, 700,) # (K)
-temp       = np.arange(30,61,3, dtype=float).tolist() + [100., 120., 200., 300.,] # (K)
+temp       = np.arange(0,400,1, dtype=float)
+# temp       = np.concatenate([
+    # np.arange( 0,11,1, dtype=float),
+    # np.arange(12,60,3, dtype=float),
+    # np.arange(60,400,10, dtype=float),
+    # ]).tolist() # (K)
+
 #
 sym_fc     = True
 # sym_fc     = False

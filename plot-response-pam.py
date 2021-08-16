@@ -25,8 +25,13 @@ new_x = np.array([np.cos(1./3.*np.pi), np.sin(1./3.*np.pi), 0.])
 # params
 q_range    = range(60,65,5)
 q          = (60,60,1)
-T_list     = list(np.arange(30, 63, 3, dtype=float)) + [100., 120., 200., 300.] # (K)
-# T_list     = list(np.arange(5, 35, 5, dtype=float)) # (K)
+# T_list     = list(np.arange(30, 63, 3, dtype=float)) + [100., 120., 200., 300.] # (K)
+T_list     = np.arange(0,400,1, dtype=float)
+# T_list     = np.concatenate([
+    # np.arange( 0,11,1, dtype=float),
+    # np.arange(12,60,3, dtype=float),
+    # np.arange(60,400,10, dtype=float),
+    # ]).tolist() # (K)
 T          = 30.
 ij         = (2,0)
 const_tau  = False
