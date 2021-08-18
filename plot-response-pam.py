@@ -40,6 +40,10 @@ const_tau  = False
 color      = ['r', 'g', 'b']
 band_group = (range(0,3), range(3,6))
 # band_group = None
+# y_low      = -1.1e-26
+y_low      = None
+# y_up       = 0.7e-26
+y_up       = None
 
 def rot_alpha(alpha, new_z):
     # Rotate alpha's z-axis to (new_z)
@@ -144,7 +148,8 @@ if len(alpha_q) > 0:
     plt.title(r'At {} K'.format(T), fontsize='x-large')
     plt.legend(fontsize='large')
     plt.xlim(np.min(q_range),np.max(q_range))
-    # plt.ylim(0,130)
+    if y_low or y_up:
+        plt.ylim(y_low, y_up)
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
     plt.grid(alpha=0.5)
 
@@ -181,7 +186,8 @@ for s in range(len_sigma //len(color)):
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))
-    # plt.ylim(0,130)
+    if y_low or y_up:
+        plt.ylim(y_low, y_up)
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
     # plt.yscale('log')
     plt.grid(alpha=0.5)
@@ -217,7 +223,8 @@ if band_group is not None:
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))
-    # plt.ylim(0,130)
+    if y_low or y_up:
+        plt.ylim(y_low, y_up)
     plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
     # plt.yscale('log')
     plt.grid(alpha=0.5)

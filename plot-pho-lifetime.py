@@ -110,13 +110,13 @@ if __name__ == '__main__':
     min_tau = np.min(tau_flat[tau_flat > 0])
     max_tau = np.max(tau_flat[np.logical_not(np.isnan(tau_flat))])
     if args.low_lim is None:
-        up_lim = max_tau * (max_tau / min_tau)**0.05
-    else:
-        up_lim = args.low_lim
-    if args.up_lim is None:
         low_lim = min_tau / (max_tau / min_tau)**0.05
     else:
         low_lim = args.low_lim
+    if args.up_lim is None:
+        up_lim = max_tau * (max_tau / min_tau)**0.05
+    else:
+        up_lim = args.up_lim
     plt.ylim([low_lim, up_lim])
     plt.yscale('log')
     # plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
