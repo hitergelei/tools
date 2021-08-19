@@ -184,7 +184,7 @@ def calc_amp_tf_bunch(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files
         write(calc_dir+'/'+ndir+'/result.traj', atoms, 'traj')
     return np.array(forces)
 
-def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None, subscript=None, fc_calc=None):
+def calc_phonon(calculator, phonon, acoustic_sum_rule=True, r_cut=None, F_0_correction=False, verbose=False, ase_calc=None, cp_files=None, subscript=None, fc_calc=None):
     """
     calc -- Specify calculator. One of these. [vasp, lmp, amp, amp_tf, amp_tf_bunch]
     phonon -- Phonopy phonon object.
@@ -262,6 +262,39 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, F_0_correction=False
     phonon.set_forces(forces)
     # Produce fc
     phonon.produce_force_constants(fc_calculator=fc_calc)
+    if r_cut:
+        #
+        from ase.io import read
+        from ase.calculators.singlepoint import SinglePointDFTCalculator
+        sposcar = read(calc_dir+'/poscars/SPOSCAR')
+        supers = []
+        for i in range(len(forces)):
+            supers.append(sposcar.copy())
+            displacements = np.zeros(sposcar.get_positions().shape, dtype=float)
+            displacements[disp[i+1][0]] += disp[i+1][1:]
+            supers[-1].new_array(
+                'displacements',
+                displacements,
+                )
+            supers[-1]._calc = SinglePointDFTCalculator(supers[-1])
+            supers[-1]._calc.results['forces'] = forces[i]
+
+        # rotational sum rule
+        from hiphive import ForceConstants, ClusterSpace, StructureContainer
+        cs = ClusterSpace(sposcar, [r_cut])
+        sc = StructureContainer(cs)
+        for s in supers:
+            sc.add_structure(s)
+        from hiphive.fitting import Optimizer
+        opt = Optimizer(sc.get_fit_data(), train_size=1.0)
+        opt.train()
+        print(opt)
+        parameters = opt.parameters
+        from hiphive import ForceConstantPotential, enforce_rotational_sum_rules
+        parameters_rot = enforce_rotational_sum_rules(cs, parameters, ['Huang', 'Born-Huang'])
+        fcp_rot = ForceConstantPotential(cs, parameters_rot)
+        fcs = fcp_rot.get_force_constants(sposcar).get_fc_array(order=2)
+        phonon.set_force_constants(fcs)
     if acoustic_sum_rule:
         phonon.symmetrize_force_constants()
 
