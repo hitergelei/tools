@@ -11,6 +11,8 @@ unitcell_f = 'BN-mono-prim.vasp'
 # cp_files   = ['frozen_model.pb', 'input-phonon.in']
 calc       = 'vasp'
 cp_files   = ['INCAR', 'POTCAR', 'KPOINTS']
+r_cut      = None 
+# r_cut      = 4.5 
 # run_mode   = 'only f'
 run_mode   = 'ltc-rta'
 # run_mode   = 'ltc-bte'
@@ -139,21 +141,15 @@ bands = ssp.make_band(path, N_q)
 # # len_disp == len(sc) # sc is including harmonic supercells.
 # # print(len_disp)
 
-
-from ss_phono3py import calc_forces
-pho = calc_forces(
+from ss_phono3py import calc_fcs
+pho = calc_fcs(
     pho,
     calc,
     unitcell_f,
     cp_files,
-    )
-pho.produce_fc3(
-    symmetrize_fc3r=sym_fc,
-    fc_calculator=fc_calc,
-    )
-pho.produce_fc2(
-    symmetrize_fc2=sym_fc,
-    fc_calculator=fc_calc,
+    sym_fc,
+    fc_calc,
+    r_cut,
     )
 
 for i in q_range:
@@ -301,7 +297,7 @@ for i in q_range:
             f_max=f_max,
             f_min=f_min,
             )
-    pckl_name = '3pho_{}_fc2x{}{}{}_fc3x{}{}{}-nac{}-qx{}{}{}-rm{}.pckl'.format(calc, *NNN2, *NNN3, nac, *q_mesh, run_mode)
+    pckl_name = '3pho_{}_fc2x{}{}{}_fc3x{}{}{}-rcut{}-nac{}-qx{}{}{}-rm{}.pckl'.format(calc, *NNN2, *NNN3, r_cut, nac, *q_mesh, run_mode)
     import pickle as pckl
     pckl.dump(pho, open(pckl_name, 'wb'))
 

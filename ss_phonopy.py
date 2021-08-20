@@ -218,7 +218,7 @@ def calc_phonon(calculator, phonon, acoustic_sum_rule=True, r_cut=None, F_0_corr
         nac = True
     else:
         nac = False
-    pckl_name = '{}-NAC{}-fc2.bin'.format(job_name, nac)
+    pckl_name = '{}-rcut{}-NAC{}-fc2.bin'.format(job_name, r_cut, nac)
     calc_dir = './calcs/{}'.format(job_name)
     # Environment preset
     call(['rm -rf '+calc_dir+'/poscars'], shell=True)

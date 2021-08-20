@@ -53,12 +53,19 @@ def _calc_forces(
     atoms = calculator(wdir)
     return atoms.get_forces()
 
-def calc_forces(
+def calc_fcs(
     phono3py,
     calc,
     unitcell_f='Unknown',
     cp_files=None,
+    sym_fc=True,
+    fc_calc=None,
+    r_cut=None,
     ):
+    """
+    fc_calc: None or 'alm'
+    r_cut: None or float. Use hiPhive if provided.
+    """
 
     # Check if structure is lower triangular cell
     for c in ((0,1), (0,2), (1,2)):
@@ -70,13 +77,6 @@ def calc_forces(
     fc2_snd = phono3py.get_phonon_supercells_with_displacements()
     fc3_snd = phono3py.get_supercells_with_displacements()
 
-    #
-    # job_name = '3pho_{}_{}_fc2-{}-{}-{}_fc3-{}-{}-{}'.format(
-        # calc,
-        # unitcell_f,
-        # *np.diag(phono3py.phonon_supercell_matrix),
-        # *np.diag(phono3py.supercell_matrix),
-        # )
     fc2_job_name = '{}-x{}{}{}_d0.010_sym{}-fc2'.format(
         calc,
         *np.diag(phono3py.get_phonon_supercell_matrix()),
@@ -92,27 +92,19 @@ def calc_forces(
 
     calc_dir = 'calcs'
     fc2_path = '{}/{}'.format(calc_dir, fc2_job_name)
-    fc2_bu_path = '{}/bu-{}'.format(calc_dir, fc2_job_name)
     fc3_path = '{}/{}'.format(calc_dir, fc3_job_name)
-    fc3_bu_path = '{}/bu-{}'.format(calc_dir, fc3_job_name)
 
     #
-    # if load_fc2_calc:
-        # try:
-            # fc2_forces = []
-            # for i in range(len(fc2_snd)):
-                # wdir = '{}/pos{:03d}'.format(fc2_path, i+1)
-                # fc2_forces.append(_read_atoms(wdir, calc).get_forces())
-        # except:
-            # print('*** NOTE) Failed to load previous fc2 calc results. ***\n')
-            # load_fc2_calc=False
-            # #
-            # call('rm -rf {}'.format(fc2_bu_path), shell=True)
-            # call('mv {} {}'.format(fc2_path, fc2_bu_path), shell=True)
-            # call('mkdir -p {}'.format(fc2_path), shell=True)
-        # else:
-            # print('*** NOTE) Loaded the existing fc2 calc results. Be aware! ***\n')
-
+    from phonopy.interface.vasp import write_vasp
+    call('mkdir -p {}/poscars'.format(fc2_path), shell=True)
+    write_vasp('{}/poscars/SPOSCAR'.format(fc2_path), phono3py.get_phonon_supercell())
+    for i in range(len(fc2_snd)):
+        write_vasp('{}/poscars/POSCAR-{:03d}'.format(fc2_path, i+1), fc2_snd[i])
+    #
+    call('mkdir -p {}/poscars'.format(fc3_path), shell=True)
+    write_vasp('{}/poscars/SPOSCAR'.format(fc3_path), phono3py.get_supercell())
+    for i in range(len(fc3_snd)):
+        write_vasp('{}/poscars/POSCAR-{:05d}'.format(fc3_path, i+1), fc3_snd[i])
 
     try:
         fc2_forces = np.load(fc2_npy_name)
@@ -125,34 +117,18 @@ def calc_forces(
 
     if calc_fc2:
         print('=== NOTE) Starting fc2 calculations! ===\n')
-        call('rm -rf {}'.format(fc2_bu_path), shell=True)
-        call('mv {} {}'.format(fc2_path, fc2_bu_path), shell=True)
-        from phonopy.interface.vasp import write_vasp
         fc2_forces = []
         for i in range(len(fc2_snd)):
-            wdir = '{}/disp-{:03d}'.format(fc2_path, i+1)
+            folder = 'disp-{:03d}'.format(i+1)
+            wdir = '{}/{}'.format(fc2_path, folder)
+            budir = '{}/bu-{}'.format(fc2_path, folder)
+            call('rm -rf {}'.format(budir), shell=True)
+            call('mv {} {}'.format(wdir, budir), shell=True)
             call('mkdir -p {}'.format(wdir), shell=True)
             write_vasp('{}/POSCAR'.format(wdir), fc2_snd[i])
             fc2_forces.append(_calc_forces(wdir, calc, cp_files))
             print(' == Progress: {}/{}'.format(i+1, len(fc2_snd)))
         np.save(fc2_npy_name, fc2_forces)
-
-
-    # if load_fc3_calc:
-        # try:
-            # fc3_forces = []
-            # for i in range(len(fc3_snd)):
-                # wdir = '{}/disp-{:05d}'.format(fc3_path, i+1)
-                # fc3_forces.append(_read_atoms(wdir, calc).get_forces())
-        # except:
-            # print('*** NOTE) Failed to load previous fc3 calc results. ***\n')
-            # load_fc3_calc=False
-            # #
-            # call('rm -rf {}'.format(fc3_bu_path), shell=True)
-            # call('mv {} {}'.format(fc3_path, fc3_bu_path), shell=True)
-            # call('mkdir -p {}'.format(fc3_path), shell=True)
-        # else:
-            # print('*** NOTE) Loaded the existing fc3 calc results. Be aware! ***\n')
 
     try:
         fc3_forces = np.load(fc3_npy_name)
@@ -165,12 +141,13 @@ def calc_forces(
             
     if calc_fc3:
         print('=== NOTE) Starting fc3 calculations! ===\n')
-        call('rm -rf {}'.format(fc3_bu_path), shell=True)
-        call('mv {} {}'.format(fc3_path, fc3_bu_path), shell=True)
-        from phonopy.interface.vasp import write_vasp
         fc3_forces = []
         for i in range(len(fc3_snd)):
-            wdir = '{}/disp-{:05d}'.format(fc3_path, i+1)
+            folder = 'disp-{:05d}'.format(i+1)
+            wdir = '{}/{}'.format(fc3_path, folder)
+            budir = '{}/bu-{}'.format(fc3_path, folder)
+            call('rm -rf {}'.format(budir), shell=True)
+            call('mv {} {}'.format(wdir, budir), shell=True)
             call('mkdir -p {}'.format(wdir), shell=True)
             write_vasp('{}/POSCAR'.format(wdir), fc3_snd[i])
             fc3_forces.append(_calc_forces(wdir, calc, cp_files))
@@ -180,6 +157,68 @@ def calc_forces(
     #
     phono3py.phonon_forces = np.array(fc2_forces)
     phono3py.forces = np.array(fc3_forces)
+
+    #
+    phono3py.produce_fc3(
+        symmetrize_fc3r=sym_fc,
+        fc_calculator=fc_calc,
+        )
+    phono3py.produce_fc2(
+        symmetrize_fc2=sym_fc,
+        fc_calculator=fc_calc,
+        )
+    if r_cut:
+        #
+        from ase.io import read
+        from ase.calculators.singlepoint import SinglePointDFTCalculator
+        fc2_disp_ds = phono3py.get_phonon_displacement_dataset()['first_atoms']
+        fc2_sposcar = read('{}/poscars/SPOSCAR'.format(fc2_path))
+        fc2_supers = []
+        for i in range(len(fc2_disp_ds)):
+            displacements = np.zeros(fc2_sposcar.get_positions().shape, dtype=float)
+            displacements[fc2_disp_ds[i]['number']] += fc2_disp_ds[i]['displacement']
+            fc2_supers.append(fc2_sposcar.copy())
+            fc2_supers[-1].new_array(
+                'displacements',
+                displacements,
+                )
+            fc2_supers[-1]._calc = SinglePointDFTCalculator(fc2_supers[-1])
+            fc2_supers[-1]._calc.results['forces'] = fc2_disp_ds[i]['forces']
+        # rotational sum rule
+        from hiphive import ForceConstants, ClusterSpace, StructureContainer
+        cs = ClusterSpace(fc2_sposcar, [r_cut])
+        sc = StructureContainer(cs)
+        for s in fc2_supers:
+            sc.add_structure(s)
+        from hiphive.fitting import Optimizer
+        opt = Optimizer(sc.get_fit_data(), train_size=1.0)
+        opt.train()
+        print(opt)
+        parameters = opt.parameters
+        from hiphive import ForceConstantPotential, enforce_rotational_sum_rules
+        parameters_rot = enforce_rotational_sum_rules(cs, parameters, ['Huang', 'Born-Huang'])
+        fcp_rot = ForceConstantPotential(cs, parameters_rot)
+        fcs = fcp_rot.get_force_constants(fc2_sposcar).get_fc_array(order=2)
+        phono3py.set_fc2(fcs)
+
+        # # Not implemented yet in hiPhive
+        # fc3_disp_ds = phono3py.get_displacement_dataset()['first_atoms']
+        # fc3_sposcar = read('{}/poscars/SPOSCAR'.format(fc3_path))
+        # fc3_supers = []
+        # for i in range(len(fc3_disp_ds)):
+            # displacements_1st = np.zeros(fc3_sposcar.get_positions().shape, dtype=float)
+            # displacements_1st[fc3_disp_ds[i]['number']] += fc3_disp_ds[i]['displacement']
+            # for j in range(len(fc3_disp_ds[i]['second_atoms'])):
+                # displacements_2nd = np.zeros(fc3_sposcar.get_positions().shape, dtype=float)
+                # displacements_2nd[fc3_disp_ds[i]['second_atoms'][j]['number']] += fc3_disp_ds[i]['second_atoms'][j]['displacement']
+                # displacements = displacements_1st + displacements_2nd
+                # fc3_supers.append(fc3_sposcar.copy())
+                # fc3_supers[-1].new_array(
+                    # 'displacements',
+                    # displacements,
+                    # )
+                # fc3_supers[-1]._calc = SinglePointDFTCalculator(fc3_supers[-1])
+                # fc3_supers[-1]._calc.results['forces'] = fc3_disp_ds[i]['second_atoms'][j]['forces']
 
     return phono3py
 

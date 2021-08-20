@@ -68,9 +68,9 @@ if __name__ == '__main__':
     w_max = np.max(w)
     bin_width = w_max /nbins
     # bins.shape = (nbins+1)
-    bins = np.arange(0, w_max+bin_width/2., bin_width)
+    bins = np.arange(0, w_max+bin_width/2., bin_width, dtype=float)
     # bin_centers.shape = (nbins)
-    bin_centers = np.arange(0, w_max, bin_width, dtype=float) + bin_width/2.
+    bin_centers = bins[:-1] + bin_width/2.
 
     #
     cls = np.digitize(w_flat, bins) -1
