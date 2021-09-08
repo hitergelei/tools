@@ -90,11 +90,11 @@ if __name__ == '__main__':
     for i in range(nbands):
         w_sigma_mean.append(np.sum(w[:, i] * c) / np.sum(c))
         tau_sigma_mean.append([])
-        print(bcolors.okblue+'\nBand # = {}, mean[w]= {:10.4f} (THz)'.format(i+1, w_sigma_mean[i])+bcolors.endc)
+        print('\n{}Band # = {}, mean[w]= {:10.4f} (THz){}'.format(bcolors.okblue, i+1, w_sigma_mean[i], bcolors.endc))
         for j in range(len(T)):
             tau_sigma_mean[i].append(np.sum(tau[j, :, i] * c) / np.sum(c))
             print('mean[tau({}K)]= {:10.4f} (ps)'.format(T[j], tau_sigma_mean[i][j]))
-        print(bcolors.okgreen+' * tau({}K) / tau({}K) = {:6.3f}'.format(T[0], T[-1], tau_sigma_mean[i][0] / tau_sigma_mean[i][-1])+bcolors.endc)
+        print('{} * tau({}K) / tau({}K) = {:6.3f}{}'.format(bcolors.okgreen, T[0], T[-1], tau_sigma_mean[i][0] / tau_sigma_mean[i][-1], bcolors.endc))
 
     # Plot
     from matplotlib import pyplot as plt

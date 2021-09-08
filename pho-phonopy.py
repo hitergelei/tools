@@ -20,6 +20,8 @@ acou_sum_rule = True
 # acou_sum_rule = False
 r_cut = 4.5
 # r_cut = None
+# masses = [1., 1.2]
+masses = None
 
 ## Params
 from os import environ
@@ -37,8 +39,15 @@ symmetry           = True
 # symmetry           = False
 nac                = True
 # nac                = False
-phonon_or_pdos     = 'phonon'
-# phonon_or_pdos     = 'pdos'
+run_mode           = 'phonon'
+# run_mode           = 'pdos'
+# run_mode           = 'jdos'
+# num_freq_points    = 500
+# temp               = np.concatenate([
+    # np.arange( 0,11,1, dtype=float),
+    # np.arange(12,60,3, dtype=float),
+    # np.arange(60,400,10, dtype=float),
+    # ]).tolist() # (K)
 # freqlim_up         = 24.17989
 freqlim_up         = None
 # freqlim_low        = 0
@@ -57,7 +66,7 @@ scatter_interval   = 1
 proj_facecolors    = ['g', 'r', 'b']
 proj_edgecolors    = ['g', 'r', 'b']
     ## PDOS arguments
-pdos_precision     = 250
+pdos_mesh          = [60,60,60]
 chemical_pdos      = True
 proj_multiple_coef = 8.
 pdos_colors        = ['teal','firebrick','olive']
@@ -154,6 +163,8 @@ phonon = ssp.calc_phonon(
     # ase_calc=ase_calc,
     cp_files=cp_files,
     )
+if masses is not None:
+    phonon.masses = masses
 if nac:
     phonon.dynamical_matrix.show_nac_message()
 
@@ -207,13 +218,14 @@ labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
 # path = [[G, X], [X, U], [K, G], [G, L]]
 # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
-#
-N_q = 100
-bands = ssp.make_band(path, N_q)
-
-phonon.set_band_structure(
-    bands,
-    is_eigenvectors=True,
+# DOS grid
+# from kpoints_gen import get_grid_num
+# k_grids = get_grid_num(phonon.get_primitive().cell, precision=pdos_precision)
+phonon.run_mesh(
+    pdos_mesh,
+    # is_mesh_symmetry=False,
+    with_eigenvectors=True,
+    is_gamma_center=True,
     )
 
 
@@ -227,15 +239,16 @@ np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 ########## Plot ################
 from subprocess import call
 #### Band plot
-if phonon_or_pdos == 'phonon':
-    from kpoints_gen import get_grid_num
-    k_grids = get_grid_num(phonon.get_supercell().cell, precision=pdos_precision)
-    phonon.run_mesh(
-        [k_grids[0], k_grids[1], k_grids[2]],
-        # is_mesh_symmetry=False,
-        with_eigenvectors=True,
-        is_gamma_center=True,
+if run_mode == 'phonon':
+    #
+    N_q = 100
+    bands = ssp.make_band(path, N_q)
+
+    phonon.set_band_structure(
+        bands,
+        is_eigenvectors=True,
         )
+
     phonon.run_total_dos()
 
     # eu1 = eigvec[3]
@@ -263,11 +276,11 @@ if phonon_or_pdos == 'phonon':
     #ssp.plot_band(phonon, labels = labels).show()
 
 #### Partial DOS plot
-if phonon_or_pdos == 'pdos':
+if run_mode == 'pdos':
     ssp.calc_dos(
         phonon,
         mode_projection,
-        pdos_precision,
+        250,
         dos_tetrahedron,
         )
 
@@ -291,4 +304,21 @@ if phonon_or_pdos == 'pdos':
             save_svg,
             )
 
-
+if run_mode == 'jdos':
+    np.save('ir_grid_points-{}{}{}.npy'.format(*pdos_mesh), phonon.mesh.get_ir_grid_points())
+    np.save('grid_addresses-{}{}{}.npy'.format(*pdos_mesh), phonon.mesh.get_grid_address())
+    np.save('ir_grid_weights-{}{}{}.npy'.format(*pdos_mesh), phonon.mesh.get_weights())
+    from phono3py import Phono3pyJointDos as JDOS
+    jdos = JDOS(
+        phonon.get_supercell(),
+        phonon.get_primitive(),
+        pdos_mesh,
+        phonon.get_force_constants(),
+        nac_params=nac_params,
+        temperatures=temp,
+        num_frequency_points=num_freq_points,
+        )
+    jdos.run(
+        grid_points=phonon.mesh.get_ir_grid_points(),
+        write_jdos=True,
+        )
