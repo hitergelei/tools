@@ -34,8 +34,9 @@ T_list     = np.arange(0,400,1, dtype=float)
     # ]).tolist() # (K)
 T          = 30.
 ij         = (2,0)
-const_tau  = False
-# const_tau  = True
+const_tau  = None
+# const_tau  = 'dimless'
+# const_tau  = 'auto'
 # color    = ['r', 'g', 'b', 'c', 'm', 'y']
 color      = ['r', 'g', 'b']
 band_group = (range(0,3), range(3,6))
@@ -72,9 +73,11 @@ def rot_alpha_xy(alpha, new_x):
     # np.save('R.npy', R[0,0])
     return alpha
 
-if const_tau:
+if const_tau == 'dimless':
     tau = 1e12
-else:
+elif const_tau == 'auto':
+    tau = 'auto'
+elif not const_tau:
     tau = None
 
 if calculate:
@@ -114,9 +117,9 @@ for i in T_list:
         alpha_T.append(np.load('alpha-tau{}-qx{}{}{}-{}K.npy'.format(tau,*q,i)))
 alpha_T = np.array(alpha_T)
 
-if const_tau:
-    alpha_T[0] = 0.
-    alpha_q[0] = 0.
+# if const_tau:
+    # alpha_T[0] = 0.
+    # alpha_q[0] = 0.
 
 if rotate:
     if new_x is not None or False:
@@ -135,16 +138,16 @@ if len(alpha_q) > 0:
     plt.plot(q_range, np.sum(alpha_q, axis=1)[:, ij[0], ij[1]])
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
-    if const_tau:
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-    else:
+    if not const_tau or const_tau == 'auto':
         if dim2:
             plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
             plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    else:
+        if dim2:
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+        else:
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.title(r'At {} K'.format(T), fontsize='x-large')
     plt.legend(fontsize='large')
     plt.xlim(np.min(q_range),np.max(q_range))
@@ -153,17 +156,15 @@ if len(alpha_q) > 0:
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
     plt.grid(alpha=0.5)
 
-print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
+print('q={}x{}x{}'.format(*q))
+for i in range(len(T_list)):
+    print('T={}K'.format(T_list[i]))
+    print(np.real(np.sum(alpha_T[i], axis=0)), '\n')
+
 from matplotlib import pyplot as plt
 len_sigma = alpha_T.shape[1]
 for s in range(len_sigma //len(color)):
     plt.figure()
-    plt.plot(
-        T_list,
-        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
-        c='k',
-        label='Total',
-        )
     for i in range(len(color)):
         plt.plot(
             T_list,
@@ -171,18 +172,26 @@ for s in range(len_sigma //len(color)):
             label=r'$\sigma=${}'.format(len(color)*s+i+1),
             c=color[i],
             )
+    plt.plot(
+        T_list,
+        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
+        '--',
+        lw = 2,
+        c='k',
+        label='Total',
+        )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
-    if const_tau:
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-    else:
+    if not const_tau or const_tau == 'auto':
         if dim2:
             plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
             plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    else:
+        if dim2:
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+        else:
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))
@@ -195,12 +204,6 @@ plt.show()
 
 if band_group is not None:
     from matplotlib import pyplot as plt
-    plt.plot(
-        T_list,
-        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
-        c='k',
-        label='Total',
-        )
     for i in range(len(band_group)):
         plt.plot(
             T_list,
@@ -208,18 +211,26 @@ if band_group is not None:
             label='Band {}-{}'.format(band_group[i][0]+1, band_group[i][-1]+1),
             c=color[i],
             )
+    plt.plot(
+        T_list,
+        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
+        '--',
+        lw = 2,
+        c='k',
+        label='Total',
+        )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
-    if const_tau:
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-    else:
+    if not const_tau or const_tau == 'auto':
         if dim2:
             plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
         else:
             plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    else:
+        if dim2:
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+        else:
+            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))

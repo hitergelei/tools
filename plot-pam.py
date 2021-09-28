@@ -22,7 +22,7 @@ def argparse():
     parser.add_argument('-c', '--scale', default=0.01, help='Set PAM vector scale for 2d plot. None is autoscale. [Default: 0.01]')
     parser.add_argument('-z', '--plot_l_z', action='store_true', help='If provided, plot out-of-plane PAM. Works only for 2d plot.')
     parser.add_argument('-r', '--relative', action='store_true', help='If provided, each plot will be re-scaled.')
-    parser.add_argument('--dont_rotate', action='store_true', help='Do not rotate.')
+    parser.add_argument('--no_rot', action='store_true', help='Do not rotate.')
 
     return parser.parse_args()
 
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     #
     if not args.plot_3d:
         #
-        if args.dont_rotate:
+        if args.no_rot:
             # Rotation matrix
             R = np.array([[1,0,0],[0,1,0],[0,0,1]])
         else:

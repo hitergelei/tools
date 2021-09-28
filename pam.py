@@ -18,10 +18,11 @@ def argparse():
     parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
     parser.add_argument('phono3py_pckl', type=str, help='Phono3py class object saved in pickle format.')
     # # Optional arguments
-    parser.add_argument('-t', '--tau', type=float, default=None, help='Phonon lifetime for constant lifetime approximation. In ps unit.')
+    parser.add_argument('-t', '--tau', default=None, help='Phonon lifetime for constant lifetime approximation. In ps unit. "auto" will set the constant as the average value. [Default: no approximation].')
     parser.add_argument('-p', '--plot_pam', action='store_true', help='Plot mode-PAM.')
     parser.add_argument('-i', '--tau_histo', action='store_true', help='Plot lifetime histogram.')
     parser.add_argument('-v', '--vg_histo', action='store_true', help='Plot group velocity histogram.')
+    parser.add_argument('--set_l_0_zero', action='store_true', help='Set PAM of 1st band as zero. Use it very carefully.')
     parser.add_argument('--temperature', type=float, nargs='+',
         help='Set temperature manually. Only works for constant lifetime approximation. Multiple temperature can be set.')
     parser.add_argument('--dim2', action='store_true', help='2-D PAM per area (not per volume) calc.')
@@ -117,7 +118,7 @@ def f_deriv(w, T):
     # return shape = (len(T), len(k), len(sigma))
     return bhw /np.expand_dims(T, axis=[1,2]) *np.exp(bhw) /(np.exp(bhw) -1.)**2
 
-def response(eps, w, T, V, tau, v_g, band_alpha=False):
+def response(eps, w, T, V, tau, v_g, band_alpha=False, set_l_0_zero=False):
     """
     Calculate response tensor, \alpha.
                    1    len(k)*3*len(atoms)
@@ -143,6 +144,8 @@ def response(eps, w, T, V, tau, v_g, band_alpha=False):
 
     # l.shape == (len(k), len(sigma), 3)
     l = mode_PAM(eps)
+    if set_l_0_zero:
+        l[:,0] = 0.
     # dfdT.shape == (len(T), len(k), len(sigma))
     dfdT = f_deriv(w, T)
     # alpha.shape == (len(k), len(sigma), 3, 3)
@@ -208,9 +211,7 @@ if __name__ == '__main__':
     if args.temperature:
         T = np.array(args.temperature, dtype=float)
 
-    if args.tau:
-        tau = args.tau
-    else:
+    if args.tau == 'auto' or args.tau == None:
         # ir_gamma.shape = (len(T), len(ir_q), len(sigma))
         ir_gamma = np.array(tc.get_gamma()[0])
         #
@@ -219,6 +220,11 @@ if __name__ == '__main__':
         gamma = gamma[:, q_map]
         # tau.shape = (len(T), len(q), len(sigma))
         tau = 1. / np.where(gamma > 0, gamma, np.inf) / (2 * 2 * np.pi)
+        if args.tau == 'auto':
+            tau = np.mean(np.mean(tau, axis=1), axis=1)
+            tau = np.expand_dims(tau, [1,2])
+    else:
+        tau = float(args.tau)
 
     # v_g = np.array(v_g)
     po.run_qpoints(q, with_eigenvectors=True, with_group_velocities=True)
@@ -240,7 +246,7 @@ if __name__ == '__main__':
         V = V_uc * mesh[0] * mesh[1] * mesh[2]
 
     # band_alpha shape=(len(T), len(sigma), 3, 3)
-    band_alpha = response(eps, w, T, V, tau, v_g, band_alpha=True)
+    band_alpha = response(eps, w, T, V, tau, v_g, band_alpha=True, set_l_0_zero=args.set_l_0_zero)
     if args.dim2:
         # ( eV ps / A K ) to ( J s / m K )
         scale = units._e * 1e-12 * 1e10 

@@ -95,6 +95,11 @@ if __name__ == '__main__':
             tau_sigma_mean[i].append(np.sum(tau[j, :, i] * c) / np.sum(c))
             print('mean[tau({}K)]= {:10.4f} (ps)'.format(T[j], tau_sigma_mean[i][j]))
         print('{} * tau({}K) / tau({}K) = {:6.3f}{}'.format(bcolors.okgreen, T[0], T[-1], tau_sigma_mean[i][0] / tau_sigma_mean[i][-1], bcolors.endc))
+    tau_sigma_mean = np.array(tau_sigma_mean)
+    print()
+    for j in range(len(T)):
+        print('(All bands) mean[tau({}K)]= {:10.4f} (ps)'.format(T[j], np.mean(tau_sigma_mean[:, j])))
+
 
     # Plot
     from matplotlib import pyplot as plt
