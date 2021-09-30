@@ -35,12 +35,10 @@ T_list     = np.arange(0,400,1, dtype=float)
 T          = 30.
 ij         = (2,0)
 const_tau  = None
-# const_tau  = 'dimless'
+# const_tau  = 33.95 # picosecond
 # const_tau  = 'auto'
-# color    = ['r', 'g', 'b', 'c', 'm', 'y']
-color      = ['r', 'g', 'b']
-band_group = (range(0,3), range(3,6))
-# band_group = None
+# color    = ['r', 'b', 'g', 'c', 'm', 'y']
+color      = ['r', 'b', 'g']
 # y_low      = -1.1e-26
 y_low      = None
 # y_up       = 0.7e-26
@@ -73,12 +71,16 @@ def rot_alpha_xy(alpha, new_x):
     # np.save('R.npy', R[0,0])
     return alpha
 
-if const_tau == 'dimless':
-    tau = 1e12
-elif const_tau == 'auto':
+if const_tau == 'auto':
     tau = 'auto'
+    load_tau = tau
 elif not const_tau:
     tau = None
+    load_tau = tau
+else:
+    tau = const_tau
+    load_tau = 1e12
+
 
 if calculate:
     from subprocess import call
@@ -103,19 +105,23 @@ if calculate:
 alpha_q = []
 for i in q_range:
     if dim2:
-        alpha_q.append(np.load('alpha-2d-tau{}-qx{}{}{}-{}K.npy'.format(tau,i,i,1,T)))
+        alpha_q.append(np.load('alpha-2d-tau{}-qx{}{}{}-{}K.npy'.format(load_tau,i,i,1,T)))
     else:
-        alpha_q.append(np.load('alpha-tau{}-qx{}{}{}-{}K.npy'.format(tau,i,i,i,T)))
+        alpha_q.append(np.load('alpha-tau{}-qx{}{}{}-{}K.npy'.format(load_tau,i,i,i,T)))
 alpha_q = np.array(alpha_q)
+if isinstance(tau, float):
+    alpha_q *= tau *1e-12
 
 # alpha_T.shape = (len(T_list), len(sigma), 3, 3)
 alpha_T = []
 for i in T_list:
     if dim2:
-        alpha_T.append(np.load('alpha-2d-tau{}-qx{}{}{}-{}K.npy'.format(tau,*q,i)))
+        alpha_T.append(np.load('alpha-2d-tau{}-qx{}{}{}-{}K.npy'.format(load_tau,*q,i)))
     else:
-        alpha_T.append(np.load('alpha-tau{}-qx{}{}{}-{}K.npy'.format(tau,*q,i)))
+        alpha_T.append(np.load('alpha-tau{}-qx{}{}{}-{}K.npy'.format(load_tau,*q,i)))
 alpha_T = np.array(alpha_T)
+if isinstance(tau, float):
+    alpha_T *= tau *1e-12
 
 # if const_tau:
     # alpha_T[0] = 0.
@@ -138,17 +144,16 @@ if len(alpha_q) > 0:
     plt.plot(q_range, np.sum(alpha_q, axis=1)[:, ij[0], ij[1]])
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('q-mesh ($q^3$)', fontsize='x-large')
-    if not const_tau or const_tau == 'auto':
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if dim2:
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     else:
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-    plt.title(r'At {} K'.format(T), fontsize='x-large')
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if not const_tau:
+        plt.title(r'At {} K'.format(T), fontsize='x-large')
+    elif const_tau == 'auto':
+        plt.title(r'At {} K, CLA on'.format(T), fontsize='x-large')
+    else:
+        plt.title(r'At {} K, $\tau$={}ps'.format(T, const_tau), fontsize='x-large')
     plt.legend(fontsize='large')
     plt.xlim(np.min(q_range),np.max(q_range))
     if y_low or y_up:
@@ -156,11 +161,7 @@ if len(alpha_q) > 0:
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
     plt.grid(alpha=0.5)
 
-print('q={}x{}x{}'.format(*q))
-for i in range(len(T_list)):
-    print('T={}K'.format(T_list[i]))
-    print(np.real(np.sum(alpha_T[i], axis=0)), '\n')
-
+print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
 from matplotlib import pyplot as plt
 len_sigma = alpha_T.shape[1]
 for s in range(len_sigma //len(color)):
@@ -182,17 +183,16 @@ for s in range(len_sigma //len(color)):
         )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
-    if not const_tau or const_tau == 'auto':
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if dim2:
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     else:
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-    plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
+        plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+    if not const_tau:
+        plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
+    elif const_tau == 'auto':
+        plt.title(r'q-mesh={}X{}X{}, CLA on'.format(*q), fontsize='x-large', pad=20)
+    else:
+        plt.title(r'q-mesh={}X{}X{}, $\tau$={}ps'.format(*q, const_tau), fontsize='x-large', pad=20)
     plt.legend(fontsize='large').set_draggable(True)
     plt.xlim(np.min(T_list),np.max(T_list))
     if y_low or y_up:
@@ -202,41 +202,52 @@ for s in range(len_sigma //len(color)):
     plt.grid(alpha=0.5)
 plt.show()
 
-if band_group is not None:
-    from matplotlib import pyplot as plt
-    for i in range(len(band_group)):
-        plt.plot(
-            T_list,
-            np.sum(alpha_T[:, band_group[i], ij[0], ij[1]], axis=1),
-            label='Band {}-{}'.format(band_group[i][0]+1, band_group[i][-1]+1),
-            c=color[i],
-            )
-    plt.plot(
-        T_list,
-        np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
-        '--',
-        lw = 2,
-        c='k',
-        label='Total',
-        )
-    plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.xlabel('Temperature (K)', fontsize='x-large')
-    if not const_tau or const_tau == 'auto':
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-    else:
-        if dim2:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
-        else:
-            plt.ylabel(r'$\alpha_{{{}{}}}$/$\tau$ $\rm ( J / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+from matplotlib import pyplot as plt
+# for i in range(len(band_group)):
+    # plt.plot(
+        # T_list,
+        # np.sum(alpha_T[:, band_group[i], ij[0], ij[1]], axis=1),
+        # label='Band {}-{}'.format(band_group[i][0]+1, band_group[i][-1]+1),
+        # c=color[i],
+        # )
+plt.plot(
+    T_list,
+    np.sum(alpha_T[:, [0,1,2], ij[0], ij[1]], axis=1),
+    label='Acoustic',
+    c=color[0],
+    )
+nband = alpha_T.shape[1]
+plt.plot(
+    T_list,
+    np.sum(alpha_T[:, list(range(3,nband)), ij[0], ij[1]], axis=1),
+    label='Optical',
+    c=color[1],
+    )
+plt.plot(
+    T_list,
+    np.sum(alpha_T, axis=1)[:, ij[0], ij[1]],
+    '--',
+    lw = 2,
+    c='k',
+    label='Total',
+    )
+plt.tick_params(axis="both",direction="in", labelsize='x-large')
+plt.xlabel('Temperature (K)', fontsize='x-large')
+if dim2:
+    plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+else:
+    plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m^2 K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
+if not const_tau:
     plt.title(r'q-mesh={}X{}X{}'.format(*q), fontsize='x-large', pad=20)
-    plt.legend(fontsize='large').set_draggable(True)
-    plt.xlim(np.min(T_list),np.max(T_list))
-    if y_low or y_up:
-        plt.ylim(y_low, y_up)
-    plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
-    # plt.yscale('log')
-    plt.grid(alpha=0.5)
-    plt.show()
+elif const_tau == 'auto':
+    plt.title(r'q-mesh={}X{}X{}, CLA on'.format(*q), fontsize='x-large', pad=20)
+else:
+    plt.title(r'q-mesh={}X{}X{}, $\tau$={}ps'.format(*q, const_tau), fontsize='x-large', pad=20)
+plt.legend(fontsize='large').set_draggable(True)
+plt.xlim(np.min(T_list),np.max(T_list))
+if y_low or y_up:
+    plt.ylim(y_low, y_up)
+plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
+# plt.yscale('log')
+plt.grid(alpha=0.5)
+plt.show()

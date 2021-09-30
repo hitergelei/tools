@@ -223,8 +223,10 @@ if __name__ == '__main__':
         if args.tau == 'auto':
             tau = np.mean(np.mean(tau, axis=1), axis=1)
             tau = np.expand_dims(tau, [1,2])
+        const_tau = 1.
     else:
-        tau = float(args.tau)
+        tau = 1e12
+        const_tau = float(args.tau) *1e-12
 
     # v_g = np.array(v_g)
     po.run_qpoints(q, with_eigenvectors=True, with_group_velocities=True)
@@ -267,7 +269,7 @@ if __name__ == '__main__':
         else:
             print('alpha ( J s / m^2 K ) =')
             np.save('alpha-tau{}-qx{}{}{}-{}K.npy'.format(args.tau, *mesh, T[i]), band_alpha[i])
-        print(np.real(alpha[i]))
+        print(np.real(alpha[i] * const_tau))
 
     # Only check purpose.
     if args.plot_pam:
