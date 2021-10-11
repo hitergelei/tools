@@ -47,4 +47,4 @@ if __name__ == '__main__':
         alist = [alist]
 
     wrapped_alist = wrap_alist(alist, log=True)
-    write('wrapped-'+alist_file, wrapped_alist, format='traj')
+    write('wrapped-'+alist_file, wrapped_alist)
