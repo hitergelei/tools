@@ -1,25 +1,18 @@
 #!/usr/bin/env python 
 
-# Read
-with open('checkpoint', 'r') as f:
-    lines = f.readlines()   
-
-for i in range(len(lines)):
-    lines[i] = lines[i].split('/')
-
-from os import getcwd, environ
-pwd = getcwd()
-new_lines = []
-for i in range(len(lines)):
-    new_lines.append('{}{}/{}'.format(lines[i][0], pwd, lines[i][-1]))
-
-with open('checkpoint', 'w') as f:
-    for i in range(len(new_lines)):
-        f.write(new_lines[i])
-
+#
 from sys import argv
-opts = ' '.join(argv[1:])
+step = int(argv[1].split('/')[1])
 
+# Write
+with open('ckpt/{}/checkpoint'.format(step), 'w') as f:
+    f.write('model_checkpoint_path: "model.ckpt-{}"\n'.format(step))
+    f.write('all_model_checkpoint_paths: "model.ckpt-{}"'.format(step))
+
+from os import environ
 from subprocess import call
 environ['CUDA_VISIBLE_DEVICES']=''
-call('dp freeze {}'.format(opts), shell=True)
+call('dp freeze', shell=True, cwd='ckpt/{}/'.format(step))
+
+call('mkdir {}'.format(step), shell=True)
+call('cp -n ckpt/{}/frozen_model.pb {}'.format(step, step), shell=True)

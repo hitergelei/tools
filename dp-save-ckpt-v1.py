@@ -52,7 +52,7 @@ if __name__ == '__main__':
             sleep(t_intvl)
 
     # Main
-    call('mkdir ckpt', shell=True)
+    call('mkdir bu', shell=True)
     last_save = None
     while True:
         words = str(check_output('tail -n 1 {}'.format(l_file), shell=True))[2:].split()
@@ -61,9 +61,9 @@ if __name__ == '__main__':
             if last_save is None:
                 last_save = (step // s_intvl) * s_intvl
             elif last_save + s_intvl <= step:
-                call('rm -rf ckpt/{}; mkdir ckpt/{}'.format(last_save + s_intvl, last_save + s_intvl), shell=True)
+                call('rm -rf bu/{}; mkdir bu/{}'.format(last_save + s_intvl, last_save + s_intvl), shell=True)
                 sleep(1)
-                call('cp bu/model.ckpt-{}* ./* ckpt/{}/'.format(last_save + s_intvl, last_save + s_intvl), shell=True)
+                call('cp * bu/{}/'.format(last_save + s_intvl), shell=True)
                 call("echo ' >>_dp-save-ckpt.py:_Step_{}_saved!' >> {}".format(last_save + s_intvl, l_file), shell=True)
                 last_save += s_intvl
         sleep(t_intvl)
