@@ -92,7 +92,7 @@ if __name__ == '__main__':
             alpha = 'z'
         line = bcolors.okblue + '  ({},{})'.format(i//3, alpha) + bcolors.endc
         for j in range(len(fc)):
-            num = '{:6.1f}'.format(fc[i,j])
+            num = '{:7.2f}'.format(fc[i,j])
             if num == '  -0.0':
                 num = '   0.0'
             if num != '   0.0':
