@@ -50,6 +50,8 @@ if __name__ == '__main__':
             )
         m = d < cut_r
         new_alist.append(alist[i][m])
+        from ase.calculators.singlepoint import SinglePointCalculator as SPC
+        new_alist[-1].calc = SPC(new_alist[-1], forces=alist[i].get_forces()[m])
         print('\nimg #{} - {}'.format(i, np.arange(len(alist[i]))[m].tolist()))
 
     from ase.visualize import view
