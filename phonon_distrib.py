@@ -30,7 +30,7 @@ def get_eigen_set(
     rminv = (masses ** -0.5).repeat(3)
     dynamical_matrix = fc * rminv[:, None] * rminv[None, :]
     # Solve eigenvalue problem to compute phonon spectrum and eigenvectors
-    eigen_set = np.linalg.eigh(dynamical_matrix)
+    eigen_set = np.linalg.eig(dynamical_matrix)
     return eigen_set
 
 def get_phonon_distrib_alist(
