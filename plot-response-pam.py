@@ -52,9 +52,9 @@ def rot_alpha(alpha, new_z):
     new_y /= np.linalg.norm(new_y)
     new_x = np.cross(new_y, new_z)
     # R.shape = (1, 1, 3, 3)
-    R = np.expand_dims(np.array([new_x, new_y, new_z]).T, axis=[0, 1])
-    alpha = np.matmul(np.transpose(R, [0,1,3,2]), alpha)
-    alpha = np.matmul(alpha, R)
+    R = np.expand_dims(np.array([new_x, new_y, new_z]), axis=[0, 1])
+    alpha = np.matmul(R, alpha)
+    alpha = np.matmul(alpha, np.transpose(R, [0,1,3,2]))
     return alpha
 
 def rot_alpha_xy(alpha, new_x):
@@ -65,9 +65,9 @@ def rot_alpha_xy(alpha, new_x):
     new_y /= np.linalg.norm(new_y)
     new_z = np.cross(new_x, new_y)
     # R.shape = (1, 1, 3, 3)
-    R = np.expand_dims(np.array([new_x, new_y, new_z]).T, axis=[0, 1])
-    alpha = np.matmul(np.transpose(R, [0,1,3,2]), alpha)
-    alpha = np.matmul(alpha, R)
+    R = np.expand_dims(np.array([new_x, new_y, new_z]), axis=[0, 1])
+    alpha = np.matmul(R, alpha)
+    alpha = np.matmul(alpha, np.transpose(R, [0,1,3,2]))
     # np.save('R.npy', R[0,0])
     return alpha
 

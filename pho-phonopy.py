@@ -18,6 +18,8 @@ cp_files = None
 # cp_files = ['frozen_model.pb',]
 acou_sum_rule = True
 # acou_sum_rule = False
+# rot_sum_rule = True
+rot_sum_rule = False
 r_cut = 4.5
 # r_cut = None
 # masses = [1., 1.2]
@@ -157,6 +159,7 @@ phonon = ssp.calc_phonon(
     calc,
     phonon,
     acoustic_sum_rule=acou_sum_rule,
+    rot_sum_rule=rot_sum_rule,
     r_cut=r_cut,
     # F_0_correction=True,
     # verbose=True,

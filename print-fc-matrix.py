@@ -42,31 +42,31 @@ if __name__ == '__main__':
         # Rotation
         rot_ang = np.array(args.rot_angle) /180 *np.pi
         # Rot 1
-        R = np.array([[ np.cos(rot_ang[0]),-np.sin(rot_ang[0]),                  0],
-                      [ np.sin(rot_ang[0]), np.cos(rot_ang[0]),                  0],
+        R = np.array([[ np.cos(rot_ang[0]), np.sin(rot_ang[0]),                  0],
+                      [-np.sin(rot_ang[0]), np.cos(rot_ang[0]),                  0],
                       [                  0,                  0,                  1]])
         R = np.tile(R, (fc.shape[0], fc.shape[1], 1, 1))
         fc = np.matmul(
-            np.matmul(np.transpose(R, (0,1,3,2)), fc),
-            R,
+            np.matmul(R, fc),
+            np.transpose(R, (0,1,3,2)),
             )
         # Rot 2
         R = np.array([[                  1,                  0,                  0],
-                      [                  0, np.cos(rot_ang[1]),-np.sin(rot_ang[1])],
-                      [                  0, np.sin(rot_ang[1]), np.cos(rot_ang[1])]])
+                      [                  0, np.cos(rot_ang[1]), np.sin(rot_ang[1])],
+                      [                  0,-np.sin(rot_ang[1]), np.cos(rot_ang[1])]])
         R = np.tile(R, (fc.shape[0], fc.shape[1], 1, 1))
         fc = np.matmul(
-            np.matmul(np.transpose(R, (0,1,3,2)), fc),
-            R,
+            np.matmul(R, fc),
+            np.transpose(R, (0,1,3,2)),
             )
         # Rot 3
-        R = np.array([[ np.cos(rot_ang[2]),-np.sin(rot_ang[2]),                  0],
-                      [ np.sin(rot_ang[2]), np.cos(rot_ang[2]),                  0],
+        R = np.array([[ np.cos(rot_ang[2]), np.sin(rot_ang[2]),                  0],
+                      [-np.sin(rot_ang[2]), np.cos(rot_ang[2]),                  0],
                       [                  0,                  0,                  1]])
         R = np.tile(R, (fc.shape[0], fc.shape[1], 1, 1))
         fc = np.matmul(
-            np.matmul(np.transpose(R, (0,1,3,2)), fc),
-            R,
+            np.matmul(R, fc),
+            np.transpose(R, (0,1,3,2)),
             )
 
     from ss_util import bcolors
@@ -92,10 +92,10 @@ if __name__ == '__main__':
             alpha = 'z'
         line = bcolors.okblue + '  ({},{})'.format(i//3, alpha) + bcolors.endc
         for j in range(len(fc)):
-            num = '{:7.2f}'.format(fc[i,j])
-            if num == '  -0.0':
-                num = '   0.0'
-            if num != '   0.0':
+            num = '{:9.4f}'.format(fc[i,j])
+            if num == '  -0.0000':
+                num = '   0.0000'
+            if num != '   0.0000':
                 num = bcolors.okgreen + num + bcolors.endc
             line += num
             if j % 3 == 2:
