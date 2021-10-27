@@ -92,10 +92,10 @@ if __name__ == '__main__':
             alpha = 'z'
         line = bcolors.okblue + '  ({},{})'.format(i//3, alpha) + bcolors.endc
         for j in range(len(fc)):
-            num = '{:9.4f}'.format(fc[i,j])
-            if num == '  -0.0000':
-                num = '   0.0000'
-            if num != '   0.0000':
+            num = '{:11.6f}'.format(fc[i,j])
+            if num == '  -0.000000':
+                num = '   0.000000'
+            if num != '   0.000000':
                 num = bcolors.okgreen + num + bcolors.endc
             line += num
             if j % 3 == 2:

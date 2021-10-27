@@ -158,7 +158,7 @@ if len(alpha_q) > 0:
     plt.xlim(np.min(q_range),np.max(q_range))
     if y_low or y_up:
         plt.ylim(y_low, y_up)
-    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
+    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.58, top=0.80)
     plt.grid(alpha=0.5)
 
 print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
@@ -183,6 +183,10 @@ for s in range(len_sigma //len(color)):
         )
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Temperature (K)', fontsize='x-large')
+    # plt.xticks(
+        # plt.xticks()[0].tolist() + [np.max(T_list)],
+        # np.array(plt.xticks()[0], dtype=int).tolist() + ['$T$ (K)'],
+        # )
     if dim2:
         plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
     else:
@@ -197,7 +201,7 @@ for s in range(len_sigma //len(color)):
     plt.xlim(np.min(T_list),np.max(T_list))
     if y_low or y_up:
         plt.ylim(y_low, y_up)
-    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
+    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.58, top=0.80)
     # plt.yscale('log')
     plt.grid(alpha=0.5)
 plt.show()
@@ -214,6 +218,7 @@ plt.plot(
     T_list,
     np.sum(alpha_T[:, [0,1,2], ij[0], ij[1]], axis=1),
     label='Acoustic',
+    lw = 2,
     c=color[0],
     )
 nband = alpha_T.shape[1]
@@ -221,6 +226,7 @@ plt.plot(
     T_list,
     np.sum(alpha_T[:, list(range(3,nband)), ij[0], ij[1]], axis=1),
     label='Optical',
+    lw = 2,
     c=color[1],
     )
 plt.plot(
@@ -232,7 +238,11 @@ plt.plot(
     label='Total',
     )
 plt.tick_params(axis="both",direction="in", labelsize='x-large')
-plt.xlabel('Temperature (K)', fontsize='x-large')
+plt.xlabel('$T$ (K)', fontsize='x-large')
+# plt.xticks(
+    # plt.xticks()[0].tolist() + [np.max(T_list)],
+    # np.array(plt.xticks()[0], dtype=int).tolist() + ['$T$ (K)'],
+    # )
 if dim2:
     plt.ylabel(r'$\alpha_{{{}{}}}$ $\rm ( J s / m K )$'.format(ij[0]+1, ij[1]+1), fontsize='x-large')
 else:
@@ -247,7 +257,7 @@ plt.legend(fontsize='large').set_draggable(True)
 plt.xlim(np.min(T_list),np.max(T_list))
 if y_low or y_up:
     plt.ylim(y_low, y_up)
-plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
+plt.subplots_adjust(left=0.18, bottom=0.20, right=0.58, top=0.80)
 # plt.yscale('log')
 plt.grid(alpha=0.5)
 plt.show()

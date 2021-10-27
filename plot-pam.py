@@ -169,7 +169,7 @@ if __name__ == '__main__':
                 # 100,
                 # cmap='seismic',
                 # )
-            cbar = fig.colorbar(ish)
+            cbar = fig.colorbar(ish, orientation="horizontal", pad=0.10)
             cbar.set_label(r'$l_{\sigma,z}(k) / \hbar$', fontsize='x-large')
             cbar.ax.tick_params(labelsize='x-large')
             ax.set_aspect('equal')
@@ -179,7 +179,7 @@ if __name__ == '__main__':
             ax.set_xlabel(r'$k_x$', fontsize='x-large')
             ax.set_ylabel(r'$k_y$', fontsize='x-large')
             ax.tick_params(axis="both",direction="in", labelsize='x-large')
-            plt.subplots_adjust(right=0.80)
+            plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
 
         else:
             # PAM
@@ -193,17 +193,18 @@ if __name__ == '__main__':
                 scale=args.scale,
                 # minshaft=0,
                 # minlength=0,
-                headwidth=5,
+                headwidth=8,
                 # headlength=1,
                 pivot='mid',
                 )
             ax.set_aspect('equal')
             ax.set_title('PAM, $\sigma$={}'.format(s+1), fontsize='x-large')
-            ax.set_xticks([0])
-            ax.set_yticks([0])
-            ax.set_xlabel(r'$k_x$', fontsize='x-large')
-            ax.set_ylabel(r'$k_y$', fontsize='x-large')
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlabel(r'$k_x$', fontsize='xx-large')
+            ax.set_ylabel(r'$k_y$', fontsize='xx-large')
             ax.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
             # PAT
             fig, ax = plt.subplots()
             ax.quiver(
@@ -215,16 +216,17 @@ if __name__ == '__main__':
                 scale=args.scale,
                 # minshaft=0,
                 # minlength=0,
-                headwidth=5,
+                headwidth=8,
                 # headlength=1,
                 pivot='mid',
                 )
             ax.set_aspect('equal')
             ax.set_title('PAT, $\sigma$={}'.format(s+1), fontsize='x-large')
-            ax.set_xticks([0])
-            ax.set_yticks([0])
-            ax.set_xlabel(r'$k_x$', fontsize='x-large')
-            ax.set_ylabel(r'$k_y$', fontsize='x-large')
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlabel(r'$k_x$', fontsize='xx-large')
+            ax.set_ylabel(r'$k_y$', fontsize='xx-large')
             ax.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
     plt.show()
 
