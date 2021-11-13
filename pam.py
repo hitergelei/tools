@@ -26,7 +26,8 @@ def argparse():
     parser.add_argument('--temperature', type=float, nargs='+',
         help='Set temperature manually. Only works for constant lifetime approximation. Multiple temperature can be set.')
     parser.add_argument('--dim2', action='store_true', help='2-D PAM per area (not per volume) calc.')
-    # # Optional arguments
+    parser.add_argument('--plot_response_ratio_to_direc', type=str, default=None,
+        help='Plot f_1 / f_0 for all phonons. T-perturbation is 1% and L=100 micrometer. Provide direction of T-gradient')
 
     return parser.parse_args()
 
@@ -96,6 +97,24 @@ def mode_PAM(
     # mode_l.shape == (len(q), len(sigma), 3)
     return hbar *np.array(mode_l)
 
+def f_zero(w, T):
+    """
+    Calculate B-E distribution.
+    f_0 = [exp(\beta * \hbar * w) - 1]**(-1)
+
+    w (=\omega_\sigma (k)) : Harmonic phonon frequency [w.shape = (len(k), len(\sigma))]
+    \beta = (k_B * T)^-1
+
+    RETURN
+    f: shape=(len(T), len(k), len(\sigma))
+    """
+    # beta.shape = (len(T))
+    beta = 1. /k_B /T
+    # bhw.shape = (len(T), len(k), len(sigma))
+    bhw = np.expand_dims(beta, axis=[1,2]) *hbar *np.expand_dims(w, axis=0)
+    # return shape = (len(T), len(k), len(sigma))
+    return 1. /(np.exp(bhw) -1.)
+
 def f_deriv(w, T):
     """
     Calculate temperature derivative of B-E distribution.
@@ -104,7 +123,7 @@ def f_deriv(w, T):
     ------------ = ------------------- * --------------------------------
       \round T              T             [exp(\beta * \hbar * w) - 1]^2
 
-    w (=\omega_\sigma (k)) : Harmonic phonon frequency 
+    w (=\omega_\sigma (k)) : Harmonic phonon frequency [w.shape = (len(k), len(\sigma))]
     \beta = (k_B * T)^-1
 
     RETURN
@@ -117,6 +136,39 @@ def f_deriv(w, T):
     bhw = np.expand_dims(beta, axis=[1,2]) *hbar *np.expand_dims(w, axis=0)
     # return shape = (len(T), len(k), len(sigma))
     return bhw /np.expand_dims(T, axis=[1,2]) *np.exp(bhw) /(np.exp(bhw) -1.)**2
+
+def f_response(w, T, tau, v_g, direc, L=1e6, dT_over_T=0.01):
+    """
+    Calculate response of B-E distribution.
+    f_response = -tau * (v_g)_i * dfdT * (dTdx_i)
+
+    INPUT
+    w : Harmonic phonon frequencies in Thz, shape=(len(k), len(\sigma)).
+    T : Temperature in kelvin, shape=(len(T))
+    tau : Lifetime of each phonon mode. shape=(len(T), len(k), len(\sigma))
+        or Constant lifetime approximation. (type float)
+    v_g : Group velocity vector of each phonon mode. shape=(len(k), len(\sigma), 3)
+    direc: ('x', 'y', or 'z') (type str)
+    L : Size of sample in Angstrom unit. (Default: 100 micrometer = 1e6 Angstrom, type float)
+    dT_over_T: Delta_T / T (Perturbation strength, type float)
+
+    RETURN
+    f_1 : Response value of B-E distribution. f_1.shape = (len(T), len(k), len(sigma))
+    """
+    if direc == 'x':
+        v_g_i = v_g[:,:,0]
+    elif direc == 'y':
+        v_g_i = v_g[:,:,1]
+    elif direc == 'z':
+        v_g_i = v_g[:,:,2]
+    else:
+        raise RuntimeError('Wrong argument for "direc" parameter.')
+    # dTdx_i.shape = (len(T))
+    dTdx_i = T * dT_over_T / L
+    # dfdT.shape = (len(T), len(k), len(sigma))
+    dfdT = f_deriv(w, T)
+    # RETURN.shape = (len(T), len(k), len(sigma))
+    return -1 * tau * np.expand_dims(v_g_i, axis=0) * dfdT * np.expand_dims(dTdx_i, axis=[1,2])
 
 def response(eps, w, T, V, tau, v_g, band_alpha=False, set_l_0_zero=False):
     """
@@ -246,6 +298,29 @@ if __name__ == '__main__':
     else:
         V_uc = read(args.unitcell).get_volume()
         V = V_uc * mesh[0] * mesh[1] * mesh[2]
+
+    if args.plot_response_ratio_to_direc:
+        f_1 = f_response(w, T, tau, v_g, direc=args.plot_response_ratio_to_direc)
+        f_0 = f_zero(w, T)
+        from matplotlib import pyplot as plt
+        max_ratio = []
+        for i in range(len(T)):
+            # plt.figure()
+            # ratio = np.sort(np.reshape(f_1[i] / f_0[i], -1))
+            # plt.plot(ratio[:len(ratio)//2:10])
+            # plt.title('{}K'.format(T[i]), fontsize='x-large')
+            max_ratio.append(np.amax(np.reshape(f_1[i] / f_0[i], -1)))
+        plt.plot(T, max_ratio, c='k')
+        plt.yscale('log')
+        plt.axhline(y=1e-1, ls='--', label='0.1', c='k')
+        plt.legend(fontsize='large').set_draggable(True)
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.xlabel('Temperature (K)', fontsize='x-large')
+        plt.ylabel(r'max($f_1$/$f_0$)', fontsize='x-large')
+        plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
+        plt.grid(alpha=0.5)
+        plt.show()
+        exit()
 
     # band_alpha shape=(len(T), len(sigma), 3, 3)
     band_alpha = response(eps, w, T, V, tau, v_g, band_alpha=True, set_l_0_zero=args.set_l_0_zero)
