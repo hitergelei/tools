@@ -29,7 +29,7 @@ A_2_BB_LT  = [ -0.2871  ,  -0.1949  ,  -0.1133  ]
 # A_2_BB_LL  = [0., 0., 0.]
 # A_2_BB_ZZ  = [0., 0., 0.]
 # A_2_BB_LT  = [0., 0., 0.]
-zz_factor = [1.0, 1.0]
+zz_factor = [0.25, 4.0]
 # zz_factor = [0.5, 2.0]
 mass_factor = None
 # mass_factor = 5.0
@@ -229,9 +229,10 @@ def main(
     if ylim is not None:
         plt.ylim(ylim)
     plt.xlim((0, k_line[-1,-1]))
-    plt.subplots_adjust(left=0.20, bottom=0.35, right=0.70, top=0.90, wspace=0.1, hspace=0.2)
+    plt.subplots_adjust(left=0.28, bottom=0.35, right=0.70, top=0.80, wspace=0.1, hspace=0.2)
     plt.xticks([0.]+k_line[:,-1].tolist(), k_labels)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.axhline(0, ls=':', c='k', lw=0.5)
     plt.grid(alpha=0.5)
     return plt
 
@@ -277,7 +278,7 @@ plt.plot(np.array(A_2_BB_LL )/A_2_BB_LL [0], label='A_2_BB_LL')
 plt.plot(np.array(A_2_BB_ZZ )/A_2_BB_ZZ [0], label='A_2_BB_ZZ', ls='--')
 plt.plot(np.array(A_2_BB_LT )/A_2_BB_LT [0], label='A_2_BB_LT')
 plt.legend(fontsize='large').set_draggable(True)
-# plt.subplots_adjust(left=0.20, bottom=0.35, right=0.70, top=0.90, wspace=0.1, hspace=0.2)
+# plt.subplots_adjust(left=0.28, bottom=0.35, right=0.70, top=0.80, wspace=0.1, hspace=0.2)
 plt.xticks(range(len(titles)), titles)
 plt.tick_params(axis="both",direction="in", labelsize='x-large')
 plt.grid(alpha=0.5)
