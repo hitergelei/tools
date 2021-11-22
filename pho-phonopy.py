@@ -82,10 +82,10 @@ doslim_low         = None
 reverse_seq        = False
 # plot_adjust        = None
 plot_adjust        = (
-    0.20, # left
+    0.25, # left
     0.40, # bottom
-    0.85, # right
-    0.95, # top
+    0.75, # right
+    0.85, # top
     0.10, # wspace
     0.20, # hspace
     )
@@ -247,9 +247,9 @@ if run_mode == 'phonon':
     N_q = 100
     bands = ssp.make_band(path, N_q)
 
-    phonon.set_band_structure(
+    phonon.run_band_structure(
         bands,
-        is_eigenvectors=True,
+        with_eigenvectors=True,
         )
 
     phonon.run_total_dos()

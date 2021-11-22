@@ -29,10 +29,10 @@ A_2_BB_LT  = [ -0.2871  ,  -0.1949  ,  -0.1133  ]
 # A_2_BB_LL  = [0., 0., 0.]
 # A_2_BB_ZZ  = [0., 0., 0.]
 # A_2_BB_LT  = [0., 0., 0.]
-zz_factor = [0.25, 4.0]
-# zz_factor = [0.5, 2.0]
-mass_factor = None
-# mass_factor = 5.0
+zz_factor = [1.0, 1.0]
+# zz_factor = [2.00, 0.5]
+# mass_factor = None
+mass_factor = 5.0
 ylim = ((-7, 47), (-5, 31), (-3, 28))
 
 def get_D_q(
@@ -144,7 +144,8 @@ def main(
     A_2_AA_ZZ *= zz_factor[0]
     A_2_BB_ZZ *= zz_factor[1]
     if mass_factor is not None:
-        m_A = m_B * mass_factor
+        # m_A = m_B * mass_factor
+        m_B = m_A * mass_factor
 
     #
     a1 = np.array([a                  , 0.                 ])
@@ -230,10 +231,12 @@ def main(
         plt.ylim(ylim)
     plt.xlim((0, k_line[-1,-1]))
     plt.subplots_adjust(left=0.28, bottom=0.35, right=0.70, top=0.80, wspace=0.1, hspace=0.2)
+    # plt.yticks(range(0,50,10))
+    plt.yticks(range(0,50,10))
     plt.xticks([0.]+k_line[:,-1].tolist(), k_labels)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.axhline(0, ls=':', c='k', lw=0.5)
-    plt.grid(alpha=0.5)
+    plt.grid(alpha=0.2)
     return plt
 
 for i in range(3):

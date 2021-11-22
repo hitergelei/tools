@@ -13,7 +13,7 @@ def argparse():
     # Positional arguments
     parser.add_argument('phonopy_pckl', type=str, help='Phonopy class object saved in pickle format.')
     # # Optional arguments
-    parser.add_argument('-s', '--sigma', type=int, default=None, help='Phonon band index to plot. [Default: Plot all]')
+    parser.add_argument('-s', '--sigma', type=int, default=None, help='Phonon band index to plot (starts from 1). [Default: Plot all]')
     parser.add_argument('-m', '--mesh', type=int, default=20,
         help='Set k-point mesh at which calculate PAM. Only (mesh, mesh, 1) supported now. Takes integer input. [Default: 20]')
     parser.add_argument('-q', '--qpoint_npy', type=str, default=False, help='Provide q-points manually. --mesh tag is ignored if this tag is activated.')

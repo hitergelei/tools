@@ -318,7 +318,7 @@ if __name__ == '__main__':
         plt.xlabel('Temperature (K)', fontsize='x-large')
         plt.ylabel(r'max($f_1$/$f_0$)', fontsize='x-large')
         plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80)
-        plt.grid(alpha=0.5)
+        plt.grid(alpha=0.2)
         plt.show()
         exit()
 

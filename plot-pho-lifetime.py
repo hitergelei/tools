@@ -14,8 +14,9 @@ def argparse():
     parser.add_argument('-b', '--nbins', type=int, default=100, help='Number of bins for average plot. [Default: 100]')
     parser.add_argument('-t', '--temperature', type=float, nargs='+',
         help='Set temperature manually. The pckl file must include data at the temperatures. Multiple temperature can be set.')
-    parser.add_argument('-u', '--up_lim', type=float, default=None, help='Upper limit for frequency plot. [default: None]')
-    parser.add_argument('-l', '--low_lim', type=float, default=None, help='Lower limit for frequency plot. [default: None]')
+    parser.add_argument('-c', '--color_list', type=str, nargs='+', help='Color list for the plot. [pyplot convention]')
+    parser.add_argument('-x', '--xlim', type=float, nargs=2, help='Provide xmin and xmax [e.g. -x 1 1e4]')
+    parser.add_argument('-y', '--ylim', type=float, nargs=2, help='Provide ymin and ymax [e.g. -x 0 50]')
 
     return parser.parse_args()
 
@@ -104,7 +105,14 @@ if __name__ == '__main__':
     # Plot
     from matplotlib import pyplot as plt
     for j in range(len(T)):
-        plt.plot(bin_centers, tau_avg[j], label='{}K'.format(T[j]))
+        if args.color_list is not None:
+            plt.plot(bin_centers, tau_avg[j], label='{}K'.format(T[j]), c=args.color_list[j])
+        else:
+            plt.plot(bin_centers, tau_avg[j], label='{}K'.format(T[j]))
+    if args.xlim is not None:
+        plt.xlim(args.xlim)
+    if args.ylim is not None:
+        plt.ylim(args.ylim)
     plt.legend(fontsize='large').set_draggable(True)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.xlabel('Frequency (THz)', fontsize='x-large')
@@ -114,17 +122,17 @@ if __name__ == '__main__':
     tau_flat = np.reshape(tau_avg, [-1])
     min_tau = np.min(tau_flat[tau_flat > 0])
     max_tau = np.max(tau_flat[np.logical_not(np.isnan(tau_flat))])
-    if args.low_lim is None:
-        low_lim = min_tau / (max_tau / min_tau)**0.05
-    else:
-        low_lim = args.low_lim
-    if args.up_lim is None:
-        up_lim = max_tau * (max_tau / min_tau)**0.05
-    else:
-        up_lim = args.up_lim
-    plt.ylim([low_lim, up_lim])
     plt.yscale('log')
-    # plt.subplots_adjust(left=0.18, bottom=0.20, right=0.88, top=0.80)
+    plt.xticks(range(0,25,5))
+    plt.yticks([1, 10, 100, 1000, 10000, 100000])
+    plt.subplots_adjust(
+        0.30, # left
+        0.25, # bottom
+        0.70, # right
+        0.75, # top
+        0.10, # wspace
+        0.20, # hspace
+        )
     plt.grid(alpha=0.5)
     plt.show()
 
