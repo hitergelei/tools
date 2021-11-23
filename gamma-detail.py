@@ -53,8 +53,7 @@ if __name__ == '__main__':
     # q_points.shape = (len(grid_address))
     q_points = grid_address / mesh
 
-    # gam_i = tc.gamma[0,0,gp]
-
+    # gam_sum = tc.gamma[0,0,gp]
 
     import h5py
     gam_hdf5 = 'gamma_detail-m{}-g{}.hdf5'.format(pho3_pckl.split('-')[-3][2:], gp)
@@ -66,8 +65,8 @@ if __name__ == '__main__':
     # trip.shape = (len(triplet), 3)
     trip = gam_db['triplet'][()]
 
-    # gam_i.shape = (len(T), len(triplet), len(band), len(band), len(band))
-    gam_i = gam_ir * np.expand_dims(gam_wei, [0, 2, 3, 4])
+    # gam_sum.shape = (len(T), len(triplet), len(band), len(band), len(band))
+    gam_sum = gam_ir * np.expand_dims(gam_wei, [0, 2, 3, 4])
 
     # Print
     from ss_util import bcolors
@@ -87,26 +86,29 @@ if __name__ == '__main__':
         > Linewidths: {}
             """.format(
             temp[i],
-            np.sum(gam_i, (1, 3, 4))[i],
+            np.sum(gam_sum, (1, 3, 4))[i],
             ))
 
     band_ind = int(input('\n***Enter band index to search: \n(NOTE! python numbering! i.e. starts from 0, 1, 2,...)\n> '))
+    temp_spec = float(input('Specify temperature in Kelvin.\n> '))
     crit_width = float(input('\n***Enter the critical linewidth to search: \n(Info shows if linewidth is larger than this.\n> '))
 
     print("""
         > Selected Band: #{}   ({}-th band)
+        > Selected temperature: {} K
         > Critical linewidth: {:e}
         """.format(
         band_ind, band_ind+1,
+        temp_spec,
         crit_width,
         ))
 
     # inds.shape = (len(search results), 4)
     # inds[i] components = (T_ind, triplet_ind, band2_ind, band3_ind)
-    inds = np.transpose(np.where(gam_i[:, :, band_ind] > crit_width))
+    inds = np.transpose(np.where(gam_ir[:, :, band_ind] > crit_width))
     gam_sel = []
     for i in range(len(inds)):
-        gam_sel.append(gam_i[inds[i,0], inds[i,1], band_ind, inds[i,2], inds[i,3]])
+        gam_sel.append(gam_ir[inds[i,0], inds[i,1], band_ind, inds[i,2], inds[i,3]])
     gam_sel = np.array(gam_sel)
     decending_order = np.argsort(gam_sel)[::-1]
 
@@ -114,14 +116,23 @@ if __name__ == '__main__':
         trip_i = trip[inds[i,1]]
         trip_ir = [0, 0, 0]
         for j in range(3):
-            trip_ir[j] = ir_grid_points.tolist().index(grid_map[trip_i[j]])
-        print("""      #{}: {}gamma_lambda_1({}K) = {:.5e} THz{}
-            {}Phonon 1{}: band #{}, q_1=({:.5f}, {:.5f}, {:.5f}), w={:.5f}THz
-            {}Phonon 2{}: band #{}, q_2=({:.5f}, {:.5f}, {:.5f}), w={:.5f}THz
-            {}Phonon 3{}: band #{}, q_3=({:.5f}, {:.5f}, {:.5f}), w={:.5f}THz
-            """.format(
-            i, bcolors.okgreen, temp[inds[i][0]], gam_sel[i], bcolors.endc,
-            bcolors.okblue, bcolors.endc, band_ind,  *q_points[trip_i[0]], freq[trip_ir[0], band_ind ],
-            bcolors.okblue, bcolors.endc, inds[i,2], *q_points[trip_i[1]], freq[trip_ir[1], inds[i,2]],
-            bcolors.okblue, bcolors.endc, inds[i,3], *q_points[trip_i[2]], freq[trip_ir[2], inds[i,3]],
-            ))
+            pass_it = False
+            if trip_i[j] < len(grid_map):
+                trip_ir[j] = ir_grid_points.tolist().index(grid_map[trip_i[j]])
+            else:
+                pass_it = True
+                break
+        if pass_it:
+            print("{} %%%%% Passing one result due to lack of grid mapping table %%%%%{}\n".format(bcolors.okgreen, bcolors.endc))
+            continue
+        if temp[inds[i,0]] == temp_spec:
+            print("""     Triplet #{}: {}gamma_lambda_1({}K) = {:.5e} THz{}
+                {}Phonon 1{}: band #{}, q_1=({:.5f}, {:.5f}, {:.5f}), w={:.5f}THz
+                {}Phonon 2{}: band #{}, q_2=({:.5f}, {:.5f}, {:.5f}), w={:.5f}THz
+                {}Phonon 3{}: band #{}, q_3=({:.5f}, {:.5f}, {:.5f}), w={:.5f}THz
+                """.format(
+                inds[i,1], bcolors.okgreen, temp[inds[i,0]], gam_sel[i], bcolors.endc,
+                bcolors.okblue, bcolors.endc, band_ind,  *q_points[trip_i[0]], freq[trip_ir[0], band_ind ],
+                bcolors.okblue, bcolors.endc, inds[i,2], *q_points[trip_i[1]], freq[trip_ir[1], inds[i,2]],
+                bcolors.okblue, bcolors.endc, inds[i,3], *q_points[trip_i[2]], freq[trip_ir[2], inds[i,3]],
+                ))
