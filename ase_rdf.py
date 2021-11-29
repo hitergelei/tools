@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
+from subprocess import call
+from ase.io import read
 
 def get_RDF(
     alist,
@@ -60,6 +62,85 @@ def get_s_factor(
     realpart = k >= 0.
     return k[realpart], S[realpart]
 
+def get_curve(
+    image_slice,
+    file_list,
+    symb1,
+    symb2,
+    nBin,
+    rcut,
+    load_bool,
+    save_bool,
+    rectify_cut,
+    gsmear_std,
+    dr,
+    ):
+    # Slice process
+    from ss_util import str_slice_to_list
+    slice_list = str_slice_to_list(image_slice)
+    # out file
+    out_fname  = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
+        file_list[0], slice_list[0], slice_list[1], slice_list[2], symb1, symb2, nBin, rcut)
+    out_fname2 = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
+        file_list[0], slice_list[0], slice_list[1], slice_list[2], symb2, symb1, nBin, rcut)
+
+    ## Main
+    try:
+        assert load_bool == True
+        assert len(file_list) == 1
+        curve = np.load(out_fname)
+    except:
+        try:
+            assert load_bool == True
+            assert len(file_list) == 1
+            curve = np.load(out_fname2)
+        except:
+            do_calc = True
+            if load_bool:
+                print('Failed to load saved npy file. Calculation will be carried out')
+                print('Case 1) Number of input file must be 1 to load npy. len(file_list)=={}'.format(len(file_list)))
+                print('Case 2) Failed to load npy file "{}"'.format(out_fname))
+                print('             or equivalent data "{}"'.format(out_fname2))
+        else:
+            print('File "{}" has been loaded.'.format(out_fname2))
+            do_calc = False
+        if do_calc:
+            ## Read inputs
+            alist = []
+            for infname in file_list:
+                read_obj = read(infname, image_slice)
+                if isinstance(read_obj, list):
+                    alist.extend(read_obj)
+                else:
+                    alist.append(read_obj)
+            if len(alist) == 0:
+                raise ValueError('No an image provided.')
+            curve = get_RDF(alist, rcut, nBin, (symb1, symb2), log=True)
+            if save_bool and len(file_list) == 1:
+                call('mkdir rdf-saved', shell=True)
+                np.save(out_fname, curve)
+                print('=================================================================================================='.center(120))
+                print('RDF saved! ----------> {}'.format(out_fname).center(120))
+                print('=================================================================================================='.center(120))
+    else:
+        print('File "{}" has been loaded.'.format(out_fname))
+
+    # @ Rectify curve
+    if rectify_cut:
+        from ss_util import rectify_curve
+        curve = rectify_curve(curve, rectify_cut)
+
+    if not gsmear_std == 0:
+        print(' Gaussian smearing...')
+        # from gaussian_smear import gsmear
+        # agr= gsmear(angd,agr,gsmear_std)
+        from scipy.ndimage.filters import gaussian_filter1d
+        curve[:,1] = gaussian_filter1d(curve[:,1], gsmear_std /dr)
+    # Debug option
+    print('Integration of RDF.={}'.format(np.trapz(curve[:,1], curve[:,0])))
+
+    return curve
+
 def argparse():
     import argparse
     parser = argparse.ArgumentParser(description = """
@@ -68,7 +149,7 @@ def argparse():
     """)
     # Positional arguments
     parser.add_argument('symbol1', type=str, help='symbol1,2, are chemical symbols consisting bonds.')
-    parser.add_argument('symbol2', type=str, help='e.g. Ge-Te == Te-Ge | "a": any symbols.')
+    parser.add_argument('symbol2', type=str, help='e.g. Ge Te | "a": any symbols, "x": do all partial.')
     parser.add_argument('file_list', type=str, nargs='+', help='ASE readable atoms list file name. Multiple files can be read.')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
@@ -78,6 +159,7 @@ def argparse():
     parser.add_argument('-e', '--rectify-cut', type=float, default=None, help='All of drastic kink higher than this will be omitted. [Default: no rectify]')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npy will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
+    parser.add_argument('-t', '--dont_share_y', action='store_true', help='Subplots will not share y-axes if provided.')
     parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
     parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
     parser.add_argument('-p', '--s_upper', type=float, default=None, help='Upper bound for S(Q) plot [Default: automatic]')
@@ -112,125 +194,144 @@ if __name__ == '__main__':
     dr          = rcut/ nBin
     gsmear_std  = args.gsmear
     rectify_cut = args.rectify_cut
-    # Slice process
-    from ss_util import str_slice_to_list
-    slice_list = str_slice_to_list(args.image_slice)
-    # out file
-    file_list = args.file_list
-    out_fname  = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
-        file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol1, symbol2, nBin, rcut)
-    out_fname2 = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
-        file_list[0], slice_list[0], slice_list[1], slice_list[2], symbol2, symbol1, nBin, rcut)
 
-    ## Main
-    try:
-        assert args.load_bool == True
-        assert len(file_list) == 1
-        curve = np.load(out_fname)
-    except:
-        try:
-            assert args.load_bool == True
-            assert len(file_list) == 1
-            curve = np.load(out_fname2)
-        except:
-            do_calc = True
-            if args.load_bool:
-                print('Failed to load saved npy file. Calculation will be carried out')
-                print('Case 1) Number of input file must be 1 to load npy. len(file_list)=={}'.format(len(file_list)))
-                print('Case 2) Failed to load npy file "{}"'.format(out_fname))
-                print('             or equivalent data "{}"'.format(out_fname2))
-        else:
-            print('File "{}" has been loaded.'.format(out_fname2))
-            do_calc = False
-        if do_calc:
-            ## Read inputs
-            alist = []
-            from ase.io import read
-            for infname in file_list:
-                read_obj = read(infname, args.image_slice)
-                if isinstance(read_obj, list):
-                    alist.extend(read_obj)
-                else:
-                    alist.append(read_obj)
-            if len(alist) == 0: raise ValueError('No an image provided.')
-            curve = get_RDF(alist, rcut, nBin, (symbol1, symbol2), log=True)
-            if args.save_bool and len(file_list) == 1:
-                from subprocess import call
-                call('mkdir rdf-saved', shell=True)
-                np.save(out_fname, curve)
-                print('=================================================================================================='.center(120))
-                print('RDF saved! ----------> {}'.format(out_fname).center(120))
-                print('=================================================================================================='.center(120))
+    # In case symbol is 'x'
+    chem_list = np.unique(read(args.file_list[0], 0).get_chemical_symbols()).tolist()
+    if symbol1 == 'x':
+        symb1_list = chem_list[:]
     else:
-        print('File "{}" has been loaded.'.format(out_fname))
+        symb1_list = [symbol1]
+    if symbol2 == 'x':
+        symb2_list = chem_list[:]
+    else:
+        symb2_list = [symbol2]
+    
+    # Make symbol_sets
+    symbol_sets = []
+    if len(symb1_list) == 1 or len(symb2_list) == 1:
+        for s1 in symb1_list:
+            for s2 in symb2_list:
+                symbol_sets.append([s1, s2])
+    else:
+        for i in range(len(chem_list)):
+            for j in range(i,len(chem_list)):
+                symbol_sets.append([chem_list[i], chem_list[j]])
 
-    # @ Rectify curve
-    if rectify_cut:
-        from ss_util import rectify_curve
-        curve = rectify_curve(curve, rectify_cut)
-
-    if not gsmear_std == 0:
-        print(' Gaussian smearing...')
-        # from gaussian_smear import gsmear
-        # agr= gsmear(angd,agr,gsmear_std)
-        from scipy.ndimage.filters import gaussian_filter1d
-        curve[:,1] = gaussian_filter1d(curve[:,1], gsmear_std /dr)
-    # Debug option
-    print('Integration of RDF.={}'.format(np.trapz(curve[:,1], curve[:,0])))
+    # Main
+    curve_list = []
+    for symb_set in symbol_sets:
+        curve_list.append(
+            get_curve(
+                args.image_slice,
+                args.file_list,
+                symb_set[0],
+                symb_set[1],
+                nBin,
+                rcut,
+                args.load_bool,
+                args.save_bool,
+                rectify_cut,
+                gsmear_std,
+                dr,
+                ),
+            )
 
     # @ Get structure factor
-    k, S = get_s_factor(curve[:,0], curve[:,1])
+    k_list = []
+    S_list = []
+    for curve in curve_list:
+        k, S = get_s_factor(curve[:,0], curve[:,1])
+        k_list.append(k)
+        S_list.append(S)
 
     # @ Plot
+    title  = '{} slice-{} symb-{},{} nBin-{} rcut-{}'.format(
+        args.file_list[0], args.image_slice, symbol1, symbol2, nBin, rcut)
     import matplotlib.pyplot as plt
-    font = {'family':'Arial'}
-    plt.rc('font', **font)
+    if args.dont_share_y:
+        fig, axs = plt.subplots(len(curve_list), sharex=True)
+    else:
+        fig, axs = plt.subplots(len(curve_list), sharex=True, sharey=True)
+    if not isinstance(axs, np.ndarray):
+        axs = [axs]
+
     # Plot RDF
-    plt.plot(curve[:,0], curve[:,1], c='r')
-    if (symbol1, symbol2) == ('a', 'a'):
-        plt.ylabel('Total RDF $(\AA^{-1})$', fontsize='x-large')
+    if args.rdf_upper is not None:
+        rdf_upper = args.rdf_upper
     else:
-        plt.ylabel('Partial RDF$_{{{}}}$'.format(symbol1+symbol2)+' $(\AA^{-1})$', fontsize='x-large')
-    plt.xlabel('Distance $(\AA)$', fontsize='x-large')
-    plt.subplots_adjust(left=0.09, bottom=0.30, right=0.97, top=0.60, wspace=0.2, hspace=0.2)
-    if args.xtick_list is not None:
-        plt.xticks(args.xtick_list ,fontsize='x-large')
-    else:
-        from math import ceil
-        plt.xticks(range(1,int(ceil(rcut))), fontsize='x-large')
-    if args.ytick_list is not None:
-        plt.yticks(args.ytick_list ,fontsize='x-large')
-    else:
-        plt.yticks(fontsize='x-large')
-    plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.xlim(0., rcut)
-    plt.ylim(args.rdf_lower, args.rdf_upper)
-    plt.axhline(1., linestyle='dashed', linewidth=1, c='k')
-    plt.title(out_fname[11:-4], pad=10)
-    plt.grid(alpha=0.2)
+        rdf_upper = np.max(np.array(curve_list)[:,:,1]) * 1.10
+    for i in range(len(curve_list)):
+        #
+        axs[i].plot(curve_list[i][:,0], curve_list[i][:,1], c='k', lw=2)
+        #
+        if (symbol_sets[i][0], symbol_sets[i][1]) == ('a', 'a'):
+            axs[i].set_ylabel(r'$g_{tot}(r)$', fontsize='x-large')
+        else:
+            axs[i].set_ylabel(r'$g_{{{}}}$(r)'.format(symbol_sets[i][0]+symbol_sets[i][1]), fontsize='x-large')
+        #
+        if args.xtick_list is not None:
+            axs[i].set_xticks(args.xtick_list)
+        else:
+            intvl = int(rcut // 10 + 1)
+            axs[i].set_xticks(range(0, int(rcut)+1, intvl))
+        #
+        if args.ytick_list is not None:
+            axs[i].set_yticks(args.ytick_list)
+        else:
+            intvl = int(np.max(np.array(curve_list)[:,:,1]) * 1.10 // 4 + 1)
+            axs[i].set_yticks(range(0, int(np.max(np.array(curve_list)[:,:,1]) * 1.10)+1, intvl))
+        #
+        axs[i].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=False)
+        axs[i].set_xlim(0., rcut)
+        axs[i].set_ylim(args.rdf_lower, rdf_upper)
+        axs[i].axhline(1., linestyle='dashed', linewidth=1, c='k')
+        axs[i].grid(alpha=0.4)
+    axs[-1].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=True)
+    axs[-1].set_xlabel('Distance $(\AA)$', fontsize='x-large')
+    axs[0].set_title(title, pad=10)
+    bottom = (1.-len(axs)*0.1) /2.
+    plt.subplots_adjust(left=0.20, bottom=bottom, right=0.80, top=1-bottom, wspace=0.20, hspace=0.20)
 
     # Plot S(Q)
-    plt.figure()
-    plt.plot(k, S, c='r')
-    if (symbol1, symbol2) == ('a', 'a'):
-        plt.ylabel('Structure factor, $S(Q)$', fontsize='x-large')
+    if args.s_upper is not None:
+        s_upper = args.s_upper
     else:
-        plt.ylabel('Partial structure factor, $S_{{{}}}(Q)$'.format(symbol1+symbol2), fontsize='x-large')
-    plt.xlabel('Q $(\AA^{-1})$', fontsize='x-large')
-    # plt.subplots_adjust(left=0.09, bottom=0.30, right=0.97, top=0.60, wspace=0.2, hspace=0.2)
-    if args.s_xtick_list is not None:
-        plt.xticks(args.s_xtick_list ,fontsize='x-large')
+        s_upper = np.max(np.array(S_list)) * 1.10
+    if args.dont_share_y:
+        fig, axs = plt.subplots(len(curve_list), sharex=True)
     else:
-        from math import ceil
-        plt.xticks(range(1,int(ceil(np.max(k)))), fontsize='x-large')
-    if args.s_ytick_list is not None:
-        plt.yticks(args.s_ytick_list ,fontsize='x-large')
-    else:
-        plt.yticks(fontsize='x-large')
-    plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.xlim(0., np.max(k))
-    plt.ylim(args.s_lower, args.s_upper)
-    plt.axhline(1., linestyle='dashed', linewidth=1, c='k')
-    plt.title(out_fname[11:-4], pad=10)
-    plt.grid(alpha=0.2)
+        fig, axs = plt.subplots(len(curve_list), sharex=True, sharey=True)
+    if not isinstance(axs, np.ndarray):
+        axs = [axs]
+    for i in range(len(curve_list)):
+        #
+        axs[i].plot(k_list[i], S_list[i], c='k', lw=2)
+        #
+        if (symbol_sets[i][0], symbol_sets[i][0]) == ('a', 'a'):
+            axs[i].set_ylabel('$S_{tot}(Q)$', fontsize='x-large')
+        else:
+            axs[i].set_ylabel('$S_{{{}}}(Q)$'.format(symbol_sets[i][0]+symbol_sets[i][1]), fontsize='x-large')
+        #
+        if args.s_xtick_list is not None:
+            axs[i].set_xticks(args.s_xtick_list)
+        else:
+            intvl = int(np.max(k_list[i]) // 10 + 1)
+            axs[i].set_xticks(range(0, int(np.max(k_list[i]))+1, intvl))
+        #
+        if args.s_ytick_list is not None:
+            axs[i].set_yticks(args.s_ytick_list)
+        else:
+            intvl = int(np.max(S_list[i]) * 1.10 // 4 + 1)
+            axs[i].set_yticks(range(0, int(np.max(S_list[i]) * 1.10)+1, intvl))
+        #
+        axs[i].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=False)
+        axs[i].set_xlim(0., np.max(k_list[i]))
+        axs[i].set_ylim(args.s_lower, s_upper)
+        axs[i].axhline(1., linestyle='dashed', linewidth=1, c='k')
+        axs[i].grid(alpha=0.4)
+    axs[-1].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=True)
+    axs[-1].set_xlabel('Q $(\AA^{-1})$', fontsize='x-large')
+    axs[0].set_title(title, pad=10)
+    bottom = (1.-len(axs)*0.1) /2.
+    plt.subplots_adjust(left=0.20, bottom=bottom, right=0.80, top=1-bottom, wspace=0.20, hspace=0.20)
     plt.show()
