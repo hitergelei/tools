@@ -47,5 +47,6 @@ def get_gpu_avail(
 # @ Main
 gpu_avail = get_gpu_avail()
 if len(gpu_avail) == 0:
-    raise RuntimeError('No GPU device available.')
-print(gpu_avail[0])
+    print(' ')
+else:
+    print(gpu_avail[0])
