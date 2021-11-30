@@ -518,7 +518,8 @@ def plot_band_and_dos(
 
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.2)
-    plt.subplots_adjust(*plot_adjust)
+    if plot_adjust is not None:
+        plt.subplots_adjust(*plot_adjust)
     plt.ylim(ylim_lower, ylim_upper)
     # plt.tight_layout()
 
