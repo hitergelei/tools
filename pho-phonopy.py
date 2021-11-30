@@ -80,15 +80,15 @@ doslim_low         = None
     ## Phonon arguments
 # reverse_seq        = True
 reverse_seq        = False
-plot_adjust        = None
-# plot_adjust        = (
-    # left=0.25, # left
-    # bottom=0.40, # bottom
-    # right=0.75, # right
-    # top=0.85, # top
-    # wspace=0.10, # wspace
-    # hspace=0.20, # hspace
-    # )
+# plot_adjust        = None
+plot_adjust        = (
+    0.25, # left
+    0.40, # bottom
+    0.75, # right
+    0.85, # top
+    0.10, # wspace
+    0.20, # hspace
+    )
 
 #
 if symmetry is True:
