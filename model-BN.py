@@ -31,8 +31,8 @@ A_2_BB_LT  = [ -0.2871  ,  -0.1949  ,  -0.1133  ]
 # A_2_BB_LT  = [0., 0., 0.]
 zz_factor = [1.0, 1.0]
 # zz_factor = [2.00, 0.5]
-# mass_factor = None
-mass_factor = 5.0
+mass_factor = None
+# mass_factor = 5.0
 ylim = ((-7, 47), (-5, 31), (-3, 28))
 
 def get_D_q(
@@ -201,6 +201,8 @@ def main(
             __w2, __ev = np.linalg.eigh(D_q)
             _w2.append(__w2)
             _ev.append(__ev)
+            # if i == 0 and j == 0:
+                # np.save('D_q_at_gamma.npy', D_q)
         w2.append(_w2)
         eig_vec.append(_ev)
 

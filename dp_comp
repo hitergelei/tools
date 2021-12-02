@@ -1,3 +1,4 @@
 #!/bin/sh
 
 CUDA_VISIBLE_DEVICES= dp compress -i ../frozen_model.pb -t ../../j-test.json
+cp frozen_model_compressed.pb frozen_model.pb
