@@ -173,13 +173,13 @@ if __name__ == '__main__':
             cbar.set_label(r'$l_{\sigma,z}(k) / \hbar$', fontsize='x-large')
             cbar.ax.tick_params(labelsize='x-large')
             ax.set_aspect('equal')
-            ax.set_title('PAM, $\sigma$={}, mesh={}X{}'.format(s+1, args.mesh, args.mesh), fontsize='x-large')
+            ax.set_title('PAM, $\sigma$={}'.format(s+1), fontsize='x-large')
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_xlabel(r'$k_x$', fontsize='x-large')
             ax.set_ylabel(r'$k_y$', fontsize='x-large')
             ax.tick_params(axis="both",direction="in", labelsize='x-large')
-            plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
+            plt.subplots_adjust(left=0.30, bottom=0.20, right=0.70, top=0.80, wspace=0.2, hspace=0.2)
 
         else:
             # PAM
