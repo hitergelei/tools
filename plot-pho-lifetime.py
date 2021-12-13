@@ -123,8 +123,8 @@ if __name__ == '__main__':
     min_tau = np.min(tau_flat[tau_flat > 0])
     max_tau = np.max(tau_flat[np.logical_not(np.isnan(tau_flat))])
     plt.yscale('log')
-    plt.xticks(range(0,25,5))
-    plt.yticks([1, 10, 100, 1000, 10000, 100000])
+    # plt.xticks(range(0,25,5))
+    # plt.yticks([1, 10, 100, 1000, 10000, 100000])
     plt.subplots_adjust(
         0.30, # left
         0.25, # bottom
