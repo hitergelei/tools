@@ -159,7 +159,7 @@ if len(alpha_q) > 0:
     if y_low or y_up:
         plt.ylim(y_low, y_up)
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.58, top=0.80)
-    plt.grid(alpha=0.2)
+    plt.grid(alpha=0.4)
 
 print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
 from matplotlib import pyplot as plt
@@ -203,7 +203,7 @@ for s in range(len_sigma //len(color)):
         plt.ylim(y_low, y_up)
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.58, top=0.80)
     # plt.yscale('log')
-    plt.grid(alpha=0.2)
+    plt.grid(alpha=0.4)
 plt.show()
 
 from matplotlib import pyplot as plt
@@ -259,5 +259,5 @@ if y_low or y_up:
     plt.ylim(y_low, y_up)
 plt.subplots_adjust(left=0.18, bottom=0.20, right=0.58, top=0.80)
 # plt.yscale('log')
-plt.grid(alpha=0.2)
+plt.grid(alpha=0.4)
 plt.show()
