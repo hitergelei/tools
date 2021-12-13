@@ -1,4 +1,9 @@
 #!/bin/sh
 
+rm -rf comp
+mkdir comp
+cd comp
 CUDA_VISIBLE_DEVICES= dp compress -i ../frozen_model.pb -t ../../j-test.json
 cp frozen_model_compressed.pb frozen_model.pb
+cd ..
+ls -F --color=auto
