@@ -20,7 +20,7 @@ def _read_atoms(
 def calc_vasp(
     wdir,
     ):
-    call('mpiexec.hydra -machinefile $TMPDIR/machines -np $NSLOTS vasp_std > out', shell=True, cwd=wdir)
+    call('mpirun -np $NSLOTS vasp_std > out', shell=True, cwd=wdir)
     return _read_atoms(wdir, 'vasp')
 
 def calc_lmp(

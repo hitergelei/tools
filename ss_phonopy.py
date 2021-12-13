@@ -53,7 +53,7 @@ def calc_vasp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
             # txt.write('KPOINTS\n0\nGamma\n{} {} {}\n0 0 0'.format(kgrid[0], kgrid[1], kgrid[2]))
         call(['cp POSCAR-'+str(i).zfill(3)+' POSCAR'], cwd=calc_dir+'/'+ndir, shell=True)
         call(['cp WAVECAR CHGCAR ../'+ndir], cwd=calc_dir+'/'+ndir_prev, shell=True)
-        call(['mpiexec.hydra -np $NSLOTS vasp_std > out'], cwd = calc_dir+'/'+ndir, shell=True)
+        call(['mpirun -np $NSLOTS vasp_std > out'], cwd = calc_dir+'/'+ndir, shell=True)
         result = read(calc_dir+'/'+ndir+'/vasprun.xml', 0)
         # with io.open(calc_dir+'/'+ndir+'/vasprun.xml', 'rb') as xmlfile:
             # vasprun = VasprunxmlExpat(xmlfile)
