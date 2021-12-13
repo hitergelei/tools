@@ -161,7 +161,9 @@ if len(alpha_q) > 0:
     plt.subplots_adjust(left=0.20, bottom=0.20, right=0.58, top=0.80)
     plt.grid(alpha=0.4)
 
-print('q={}x{}x{}'.format(*q), '\n', np.real(np.sum(alpha_T, axis=1)))
+print('q={}x{}x{}'.format(*q))
+for i in range(len(T_list)):
+    print('T={}K'.format(T_list[i]), '\n', np.real(np.sum(alpha_T[i], axis=0)))
 from matplotlib import pyplot as plt
 len_sigma = alpha_T.shape[1]
 for s in range(len_sigma //len(color)):
