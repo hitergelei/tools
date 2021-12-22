@@ -81,7 +81,7 @@ atoms.set_calculator(calc)
 # dyn = Langevin(
     # atoms       = atoms,
     # timestep    = 10 *units.fs,
-    # temperature = temp,
+    # temperature_K = temp,
     # friction    = 1e-02,
     # trajectory  = label+'.traj',
     # logfile     = 'log_'+label+'.txt',
@@ -90,7 +90,7 @@ from ase.md.npt import NPT
 dyn = NPT(
     atoms = atoms,
     timestep = d_t,
-    temperature = temp,
+    temperature_K = temp,
     externalstress = 0.,
     ttime = 75 * units.fs,
     pfactor = (75. *units.fs)**2 * 100. *units.GPa,
