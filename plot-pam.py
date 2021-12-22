@@ -42,6 +42,10 @@ if __name__ == '__main__':
 
     ## Argparse
     args = argparse()
+    if args.scale is not None:
+        scale = float(args.scale)
+    else:
+        scale = args.scale
 
     # # MAIN
     # Load phonon
@@ -190,7 +194,7 @@ if __name__ == '__main__':
                 # units='xy',
                 # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
                 # edgecolors='k',
-                scale=args.scale,
+                scale=scale,
                 # minshaft=0,
                 # minlength=0,
                 headwidth=8,
@@ -213,7 +217,7 @@ if __name__ == '__main__':
                 # units='xy',
                 # linewidths=l_size[:,s] /np.max(l_size[:,s]) *2.,
                 # edgecolors='k',
-                scale=args.scale,
+                scale=scale,
                 # minshaft=0,
                 # minlength=0,
                 headwidth=8,
