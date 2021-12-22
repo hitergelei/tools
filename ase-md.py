@@ -8,31 +8,31 @@ from ase import units
 from ase.build import make_supercell
 import datetime
 from ss_util import random_atoms_gen as RAG
-from ase.calculators.lammpsrun import LAMMPS
 import os
 
 #### Global params
 ## cell
-label = "gete-crystallization"
-atoms = read('POSCAR_init-2x2x2.vasp', -1)
+label = "gst-liquid"
+atoms = read('POSCAR-init', -1)
 ##
-temp   = 650 *units.kB
+temp   = 1100
 d_t    = 10 *units.fs
-t_step = 50000
+t_step = 10000
 ############# calculator ############
 ### Vasp
-from kpoints_gen import get_grid_num, write_KPOINTS
-write_KPOINTS(get_grid_num(atoms.get_cell(), 45))
+# from kpoints_gen import get_grid_num, write_KPOINTS
+# write_KPOINTS(get_grid_num(atoms.get_cell(), 45))
 from ase.calculators.vasp import Vasp
-calc = Vasp()
+calc = Vasp(txt='-')
 atoms.set_calculator(calc)
-calc.read_incar()
-calc.read_kpoints()
+calc.read_incar('INCAR-init')
+calc.read_kpoints('KPOINTS')
 ### LJ potential
 # from ase.calculators.lj import LennardJones as LJ
 # calc = LJ(epsilon=120 *units.kB, sigma=0.34 *units.nm)
 # atoms.set_calculator(calc)
 ### Lammps
+# from ase.calculators.lammpsrun import LAMMPS
 # calc = LAMMPS(
     # specorder=['Ge','Te'],
     # parameters={
@@ -62,10 +62,10 @@ atoms.set_calculator(calc)
 ########### dynamics ###############
 #### Initialization
 ## Maxwell-Boltzmann distribution
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution as Max
-Max(atoms, temp * 1)
+# from ase.md.velocitydistribution import MaxwellBoltzmannDistribution as Max
+# Max(atoms, temperature_K=temp * 1.)
 ## Multiply
-# atoms.arrays['momenta'] *= temp / units.kB / atoms.get_temperature()
+# atoms.arrays['momenta'] *= temp / atoms.get_temperature()
 ## Global
 # Stationary(atoms)
 
@@ -81,7 +81,7 @@ Max(atoms, temp * 1)
 # dyn = Langevin(
     # atoms       = atoms,
     # timestep    = 10 *units.fs,
-    # temperature = 100 *units.kB,
+    # temperature = temp,
     # friction    = 1e-02,
     # trajectory  = label+'.traj',
     # logfile     = 'log_'+label+'.txt',
