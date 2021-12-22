@@ -14,7 +14,7 @@ pair_style		deepmd frozen_model.pb
 pair_coeff		* *
 
 velocity		all create 800.0 1031
-compute         1 all pe/atom
+compute         pe all pe/atom
 compute         2 all pressure thermo_temp
 
 #read_dump       init.dump 100 x y z vx vy vz
@@ -28,7 +28,7 @@ thermo_modify   format float %.15g
 thermo			1
 
 #dump			myDump all atom 100 atom.dump
-dump			1 all custom 1 out.dump id element mass type x y z fx fy fz vx vy vz c_1
+dump			1 all custom 1 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
 dump_modify		1 element Ge Te
 
 #minimize        1e-7 1e-3 1000 10000
