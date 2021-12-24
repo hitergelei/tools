@@ -27,25 +27,25 @@
    ISYM    =        -1      ! switch symmetry on (1,2,3) or off (-1,0)
    #KSPACING =      0.07     ! Unit of inverse Angstrom. 0.14 for rlx, 0.07 for oneshot.
    #KGAMMA   =    .FALSE.    ! Default: .TRUE.
-   IVDW    =        12
+   #IVDW    =        12
    #KPAR    =         1      ! 
    #POTIM   =       0.015    ! timestep in unit of angst
    #NPAR    =          6     ! node number
-   NCORE   =        20      ! half of number of cpu per node
+   #NCORE   =        20      ! half of number of cpu per node
  DOS related values:
    ISMEAR  =         0      ! for semiconductor or insulators ISMEAR=-5, SIGMA=0.05
    SIGMA   =         0.01   ! for metal ISMEAR=1 or =2 SIGMA=0.2
    #EMIN    = -10
    #EMAX    =  10
-   #NEDOS   = 20000
-   #LORBIT  = 11
-   #LORBMOM = .TRUE.
+   #NEDOS   = 1000
+   LORBIT  = 11
+   LORBMOM = .TRUE.
  Write flags
    LWAVE   =        .FALSE. ! These tags determine whether the orbitals (file WAVECAR),
    LCHARG  =        .FALSE. ! the charge densities (files CHGCAR and CHG) are written
    #LVTOT   =        .TRUE.  ! whether the total local potential is written to the LOCPOT file.
  Non-colinear calculations and spin orbit coupling
-   LSORBIT =        .TRUE.  ! switch on SOC and automatically set LNONCOLLINEAR=.TRUE.
+   #LSORBIT =        .TRUE.  ! switch on SOC and automatically set LNONCOLLINEAR=.TRUE.
    #SAXIS   =         0 0 1  ! quantisation axis for spin
-   GGA_COMPAT =     .FALSE. ! apply spherical cutoff on gradient field
+   #GGA_COMPAT =     .FALSE. ! apply spherical cutoff on gradient field
 
