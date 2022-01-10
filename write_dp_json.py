@@ -2,8 +2,6 @@
 import json
 from sys import argv
 
-# argv sequence: batch_size, stop_batch, disp_freq, save_freq, json_name
-
 #
 with open('input.json') as rf:
     data = json.load(rf)
