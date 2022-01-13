@@ -17,7 +17,7 @@ pair_coeff		* *
 compute         pe all pe/atom
 compute         2 all pressure thermo_temp
 
-read_dump       init.dump 10000 x y z vx vy vz
+read_dump       init.dump 10000 x y z vx vy vz box yes replace yes
 region          sink   block INF INF  0.      1.5    INF INF
 region          source block INF INF 73.1007 74.6007 INF INF
 

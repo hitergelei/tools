@@ -11,8 +11,7 @@ def argparse():
     # Positional arguments
     parser.add_argument('alist_files', type=str, nargs='+', help='ASE reabable atoms list files. Multiple files can be provided.')
     # Optional arguments
-    parser.add_argument('-f', '--file_format', type=str, default=None, help='Atoms list file format can be specified. [Default: auto detection]')
-
+    parser.add_argument('-f', '--file_format', type=str, default=None, help='Atoms list file format can be specified. [Default: same as input]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -35,9 +34,11 @@ if __name__ == '__main__':
     # @ Main
     from ase.io import read, write
     for alist_file in args.alist_files:
-        alist = read(alist_file, ':', format=args.file_format)
+        alist = read(alist_file, ':')
+        if not isinstance(alist, list):
+            alist = [alist]
         from random import shuffle
         shuffle(alist)
-        write('sffld-{}'.format(alist_file), alist)
+        write('sffld-{}'.format(alist_file), alist, format=args.file_format)
         print(' * File sffld-{} has been written.'.format(alist_file))
     print('')

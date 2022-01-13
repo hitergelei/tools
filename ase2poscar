@@ -56,6 +56,7 @@ if __name__ == '__main__':
 
     ##
     indices = range(img_num)[args.image_slice]
+    sp.call("rm -rf vasp_images_{}.d".format(inp_file), shell=True)
     sp.call("mkdir vasp_images_{}.d".format(inp_file), shell=True)
     for i in range(len(indices)):
         write("vasp_images_{}.d/POSCAR_{}".format(inp_file, str(indices[i]).zfill(6)), alist[i])
