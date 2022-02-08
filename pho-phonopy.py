@@ -236,7 +236,7 @@ phonon.run_mesh(
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
 freq, eigvec = phonon.get_frequencies_with_eigenvectors(G)
-eigvec = eigvec.T
+eigvec = eigvec.T # Numpy convention
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 
 ########## Plot ################

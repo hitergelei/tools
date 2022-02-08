@@ -371,10 +371,11 @@ def set_projection(phonon, proj_eigvec):
             proj_tmp.append(proj_tmp2)
             freq_tmp.append(freq_tmp2)
         #### Transform to array
+        # proj_tmp.shape = (len(_self.paths), len(_path), 3n(=number of bands), 3n(=number of basis))
         proj_tmp = np.array(proj_tmp)
         freq_tmp = np.array(freq_tmp)
         #### calculate similarity
-        proj_tmp = np.square(np.absolute(np.squeeze(np.matmul(np.conj(proj_tmp), np.expand_dims(proj_eigvec[key], axis=-1)))))
+        proj_tmp = np.square(np.abs(np.squeeze(np.matmul(np.conj(proj_tmp), np.expand_dims(proj_eigvec[key], axis=-1)))))
         self._projections[key] = proj_tmp
         self._proj_freq[key]   = freq_tmp
 
