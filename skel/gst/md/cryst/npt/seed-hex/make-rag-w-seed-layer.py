@@ -3,12 +3,12 @@
 import numpy as np
 
 from ase.io import read, write
-backbone = read('wrapped-POSCAR_1_Kooi-wo-vdw-16x32x4.vasp')
+backbone = read('wrapped-POSCAR_1_Kooi-wo-vdw-16x16x4.vasp')
 
 posi = backbone.get_positions()
 fix_ind = []
 for i in range(len(backbone)):
-    if posi[i][1] < 30.00:
+    if posi[i][1] < 28.7:
         fix_ind.append(i)
 
 # from ase.visualize import view
@@ -25,4 +25,4 @@ atoms = RAG(
     pin_the_fixed = True,
     )
 
-write('rag_w_kooi_seed_layer-16x32x4.traj', atoms)
+write('rag_w_kooi_seed_layer-16x16x4.traj', atoms)
