@@ -21,7 +21,7 @@ compute         2 all pressure thermo_temp
 read_dump       init.dump 20000 x y z vx vy vz box yes replace yes
 #fix				1 all nve
 #fix				1 all nvt temp 600 600 1.00
-fix				1 all npt temp 3 700 1.0 aniso 0 0 100.0
+fix				1 all npt temp 3 700 10.0 aniso 0 0 100.0
 
 thermo_style    custom step etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press pxx pyy pzz pyz pxz pxy vol
 thermo_modify   format float %.15g
