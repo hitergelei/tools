@@ -100,6 +100,7 @@ def plot_total_DOS(
         ax.plot(DOS, f, c=lcolor_list[0])
         ax.set_ylim((freqlim_low, freqlim_up))
         ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_xlim((DOS_low,DOS_up))
     else:
@@ -107,10 +108,11 @@ def plot_total_DOS(
         ax.set_xlim((freqlim_low, freqlim_up))
         ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_yticklabels([])
         ax.set_ylim((DOS_low,DOS_up))
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.grid(alpha=0.2)
-    plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)
+    plt.grid(alpha=0.5)
+    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.75, wspace=0.2, hspace=0.2)
     plt.show()
 
 def plot_partial_DOS(
@@ -169,6 +171,7 @@ def plot_partial_DOS(
             ax.plot(PDOS_list[spec_i], f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
         ax.set_ylim((freqlim_low, freqlim_up))
         ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.plot(np.sum(PDOS_list,axis=0), f, color='k', label='Total')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
@@ -179,16 +182,17 @@ def plot_partial_DOS(
         ax.set_xlim((freqlim_low, freqlim_up))
         ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
         ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_yticklabels([])
         ax.plot(f, np.sum(PDOS_list,axis=0), color='k', label='Total')
         # ax.fill_betweenx(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_ylim((DOS_low, DOS_up))
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.grid(alpha=0.2)
+    plt.grid(alpha=0.5)
     if legend_bool:
         plt.legend(fontsize='large')
     else:
         plt.legend().set_visible(False)
-    plt.subplots_adjust(left=0.35, bottom=0.15, right=0.60, top=0.95, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.75, wspace=0.2, hspace=0.2)
     plt.show()
 
 def argparse():
