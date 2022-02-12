@@ -6,8 +6,8 @@ iter_range   = range( 0, 1,1)
 temp         = 300
 dt           = 0.001
 sample_intvl = 1
-corr_len     = 20000
-simul_len    = 100000
+corr_len     = 1000000
+simul_len    = 1000000
 
 # > MAIN
 from subprocess import call
@@ -71,7 +71,7 @@ for i in iter_range:
         '# thermal conductivity calculation, switch to NVE if desired\n',
         '\n',
         'unfix       NPT\n',
-        # 'fix         NPT all npt/omp temp ${T} ${T} 100. iso 0 0 100.0\n',
+        # 'fix         NPT all npt/omp temp ${T} ${T} 100. aniso 0 0 100.0\n',
         'fix         NVE all nve/omp\n',
         # '\n',
         'reset_timestep 0\n',
@@ -84,9 +84,9 @@ for i in iter_range:
         '             c_flux[1] c_flux[2] c_flux[3] type auto file J0Jt.dat ave running\n',
         'thermo_style custom step temp etotal ke pe press pxx pyy pzz pyz pxz pxy vol c_flux[1] c_flux[2] c_flux[3]\n',
         'thermo_modify   format float %.15g\n',
-        'thermo       50\n',
+        'thermo       1000\n',
         'log          log.lammps\n',
-        'dump         1 all custom 50 out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
+        'dump         1 all custom 1000 out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
         'dump_modify  1 element Ge Sb Te\n',
         'run          $d\n',
         ]
