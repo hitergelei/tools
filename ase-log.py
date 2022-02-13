@@ -13,6 +13,7 @@ def argparse():
     # Optional arguments
     parser.add_argument('-t', '--dt', type=float, default=None, help='Time interval of provide file. (unit of ps) [default: steps unit]')
     parser.add_argument('-n', '--slice', type=str, default=':', help='ASE readable slice. [default: ":"]')
+    parser.add_argument('-f', '--small_fig', action='store_true', help='Plot small figure.')
 
     return parser.parse_args()
 
@@ -73,6 +74,9 @@ if __name__ == '__main__':
             plt.xlabel('Steps', fontsize='x-large')
         plt.ylabel(labels[i], fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.subplots_adjust(left=0.20)
+        if args.small_fig:
+            plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
+        else:
+            plt.subplots_adjust(left=0.20)
     plt.show()
 

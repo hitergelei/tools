@@ -112,7 +112,7 @@ def plot_total_DOS(
         ax.set_ylim((DOS_low,DOS_up))
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.5)
-    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.75, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
     plt.show()
 
 def plot_partial_DOS(
@@ -192,7 +192,7 @@ def plot_partial_DOS(
         plt.legend(fontsize='large')
     else:
         plt.legend().set_visible(False)
-    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.75, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
     plt.show()
 
 def argparse():

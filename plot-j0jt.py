@@ -14,6 +14,7 @@ def argparse():
     parser.add_argument('dt', type=float, help='Time step of J0Jt.dat file. Becareful about unit. (Real: fs, metal: ps)')
     # Optional arguments
     parser.add_argument('-u', '--lammps_unit', type=str, default='metal', help='Set unit of J0Jt.dat file between metal and real. [default: metal]')
+    parser.add_argument('-n', '--not_log', dest='log_scale', action='store_false', help="If provided, HFACF is set to normal scale. [default: log]")
     parser.add_argument('-l', '--dont_load', dest='load_bool', action='store_false', help="If provided, don't load the data. [default: load]")
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help="If provided, don't save the data. [default: save]")
     parser.add_argument('-p', '--dont_plot', dest='plot_bool', action='store_false', help="If provided, don't plot the data. [default: plot]")
@@ -99,7 +100,8 @@ if __name__ == '__main__':
         ax1.plot(t, scale_hfacf, c='b')
         ax2.plot(t, kappa, c='r')
         #
-        ax1.set_yscale('log')
+        if args.log_scale:
+            ax1.set_yscale('log')
         ax1.set_xlabel('Time (ps)', fontsize='x-large')
         ax1.set_ylabel('Scaled HFACF (Arb. Unit)', fontsize='x-large', color='b')
         ax2.set_ylabel('$\kappa$ (W/mK)', fontsize='x-large', color='r')
