@@ -18,6 +18,7 @@ def argparse():
     parser.add_argument('-r', '--rcut', type=float, default=3., help='Cutoff radius of the bonding pair. [default: 3.0]')
     parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in degree unit. Zero means no smearing. [default: 0]')
     parser.add_argument('-a', '--no_average', dest='avg_bool', action='store_false', help='Not to take average over files. [default: take average]')
+    parser.add_argument('-b', '--large_plot', action='store_true', help='Plot large figure.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npz will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npz will not be loaded. Default: Load if possible')
     parser.add_argument('-p', '--dont_plot', dest='plot_bool', action='store_false', help='If provided, plot will be skipped. Default: Plot ADF.')
@@ -146,11 +147,14 @@ if __name__ == '__main__':
         plt.rc('font', **font)
         plt.plot(angd,agr,'-',c='k')
         if (symbol1, symbol2, symbol3) == ('a','a','a'):
-            plt.ylabel('Total ADF (deg$^{-1}$)', fontsize='x-large')
+            plt.ylabel('Total ADF', fontsize='x-large')
         else:
-            plt.ylabel('Partial ADF$_{{{}}}$'.format(symbol1+'\_'+symbol2+'\_'+symbol3)+' (deg$^{-1}$)', fontsize='x-large')
+            plt.ylabel('Partial ADF$_{{{}}}$'.format(symbol1+'\_'+symbol2+'\_'+symbol3), fontsize='x-large')
         plt.xlabel('Bond angle (deg)', fontsize='x-large')
-        plt.subplots_adjust(left=0.15, bottom=0.28, right=0.95, top=0.75, wspace=0.20, hspace=0.20)
+        if args.large_plot:
+            plt.subplots_adjust(left=0.15, bottom=0.28, right=0.95, top=0.75, wspace=0.20, hspace=0.20)
+        else:
+            plt.subplots_adjust(left=0.25, bottom=0.35, right=0.75, top=0.65, wspace=0.20, hspace=0.20)
         plt.xticks(range(20,181,20),fontsize='x-large')
         plt.yticks(fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
