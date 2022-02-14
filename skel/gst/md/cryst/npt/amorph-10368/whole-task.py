@@ -2,7 +2,14 @@
 
 from subprocess import call
 
-job_list = ['1-melt', '2-quench', '3-heat', '4-cryst', '6-cool']
+job_list = [
+    '1-melt',
+    '2-quench',
+    '3-heat',
+    '4-cryst',
+    # '5-cryst',
+    '6-cool',
+    ]
 
 from ase.io import read
 len_atoms = len(read('init.traj'))
