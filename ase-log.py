@@ -13,7 +13,7 @@ def argparse():
     # Optional arguments
     parser.add_argument('-t', '--dt', type=float, default=None, help='Time interval of provide file. (unit of ps) [default: steps unit]')
     parser.add_argument('-n', '--slice', type=str, default=':', help='ASE readable slice. [default: ":"]')
-    parser.add_argument('-f', '--small_fig', action='store_true', help='Plot small figure.')
+    parser.add_argument('-l', '--large_fig', action='store_true', help='Plot small figure.')
 
     return parser.parse_args()
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     #
     from matplotlib import pyplot as plt
     props = [den, kepa, pepa, tepa, T]
-    labels = ['Number density ($\AA^{-3}$)', 'Kinetic energy per atom (eV)', 'Potential energy per atom (eV)', 'Total energy per atom (eV)', 'Temperature (K)']
+    labels = ['Number density ($\AA^{-3}$)', 'Kinetic energy (eV/atom)', 'Potential energy (eV/atom)', 'Total energy (eV/atom)', 'Temperature (K)']
     for i in range(len(props)):
         plt.figure()
         plt.plot(t, props[i], c='k')
@@ -74,9 +74,10 @@ if __name__ == '__main__':
             plt.xlabel('Steps', fontsize='x-large')
         plt.ylabel(labels[i], fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        if args.small_fig:
-            plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
-        else:
+        if args.large_fig:
             plt.subplots_adjust(left=0.20)
+        else:
+            plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
+        plt.grid(alpha=0.5)
     plt.show()
 

@@ -155,7 +155,7 @@ if __name__ == '__main__':
             plt.subplots_adjust(left=0.15, bottom=0.28, right=0.95, top=0.75, wspace=0.20, hspace=0.20)
         else:
             plt.subplots_adjust(left=0.25, bottom=0.35, right=0.75, top=0.65, wspace=0.20, hspace=0.20)
-        plt.xticks(range(20,181,20),fontsize='x-large')
+        plt.xticks(range(30,181,30),fontsize='x-large')
         plt.yticks(fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.xlim(0., 180.)

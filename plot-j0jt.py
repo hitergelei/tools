@@ -46,11 +46,12 @@ if __name__ == '__main__':
 
     # Load
     from os import stat
-    mod_date = '{}-{}'.format(stat('out.dump')[8], stat('J0Jt.dat')[8])
+    # mod_date = '{}-{}'.format(stat('out.dump')[8], stat('J0Jt.dat')[8])
     fname = 'j0jt-plot/T{}_dt{}.npy'.format(temp, dt)
     if load_bool:
         try:
             hfacf = np.load(fname)
+            vol = np.load(fname+'-vol.npy')
         except:
             load_bool = False
             print('Failed to load "{}" file.'.format(fname))
@@ -64,19 +65,21 @@ if __name__ == '__main__':
         len_t = int(lines[3].split()[1])
         hfacf = np.loadtxt(lines[-len_t:], usecols=(3,4,5))
 
+        from ase.io import read
+        atoms = read('out.dump', 0)
+        vol = np.linalg.det(atoms.get_cell())
+
         # Save
         if save_bool:
             from subprocess import call
             call('mkdir j0jt-plot', shell=True)
             np.save(fname, hfacf)
+            np.save(fname+'-vol.npy', vol)
 
     #
     hfacf = np.mean(hfacf, axis=1)
     scale_hfacf = hfacf / hfacf[0]
     # Scale
-    from ase.io import read
-    atoms = read('out.dump', 0)
-    vol = np.linalg.det(atoms.get_cell())
     if lammps_unit == 'metal':
         scale =  1.60218e-19 *1e22 /8.61733034e-5 / temp**2 /vol *dt
     elif lammps_unit == 'real':
