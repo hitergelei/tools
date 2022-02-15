@@ -7,7 +7,7 @@ job_list = [
     '2-quench',
     '3-heat',
     '4-cryst',
-    # '5-cryst',
+    '5-cryst',
     '6-cool',
     ]
 

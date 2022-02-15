@@ -2,11 +2,11 @@
 import numpy as np
 
 # Params
-q_range    = range(50,55, 5)
-NNN2       = [4, 4, 1]
-NNN3       = [3, 3, 1]
+q_mesh     = [50, 50, 50]
+NNN2       = [4, 4, 4]
+NNN3       = [3, 3, 3]
 prim_mat   = [[1,0,0],[0,1,0],[0,0,1]]
-unitcell_f = 'POSCAR_1_Kooi-wo-vdw-dpmd'
+unitcell_f = 'POSCAR_1_Kooi-dpmd'
 calc       = 'lmp'
 cp_files   = ['frozen_model.pb', 'input-phonon.in']
 # calc       = 'vasp'
@@ -31,8 +31,8 @@ temp       = np.concatenate([
 #
 sym_fc     = True
 # sym_fc     = False
-nac        = True
-# nac        = False
+# nac        = True
+nac        = False
 #
 # fc_calc    = 'alm'
 fc_calc    = None
@@ -154,152 +154,150 @@ pho = calc_fcs(
     r_cut,
     )
 
-for i in q_range:
-    q_mesh     = [i,i,i]
-    pho.mesh_numbers = q_mesh
-    pho.init_phph_interaction()
+pho.mesh_numbers = q_mesh
+pho.init_phph_interaction()
 
-    # grid_points=list(range(len(pho._interaction._grid_address)))
-    if run_mode == 'only f':
-        continue
+# grid_points=list(range(len(pho._interaction._grid_address)))
+if run_mode == 'only f':
+    pass
 
-    elif run_mode == 'ltc-rta':
-        pho.run_thermal_conductivity(
-            is_LBTE=False,
-            temperatures=temp,
-            # is_isotope=False,
-            # mass_variances=None,
-            # grid_points=grid_points,
-            # boundary_mfp=None,  # in micrometre
-            # solve_collective_phonon=False,
-            # use_ave_pp=False,
-            # gamma_unit_conversion=None,
-            # mesh_divisors=None,
-            # coarse_mesh_shifts=None,
-            # is_reducible_collision_matrix=False,
-            # is_kappa_star=True,
-            # gv_delta_q=None,  # for group velocity
-            # is_full_pp=False,
-            # pinv_cutoff=1.0e-8,  # for pseudo-inversion of collision matrix
-            # pinv_solver=0,  # solver of pseudo-inversion of collision matrix
-            write_gamma=store_detail,
-            # read_gamma=False,
-            # is_N_U=False,
-            write_kappa=True,
-            write_gamma_detail=store_detail,
-            write_collision=store_detail,
-            # read_collision=False,
-            write_pp=store_detail,
-            # read_pp=False,
-            # write_LBTE_solution=False,
-            # compression="gzip",
-            # input_filename=None,
-            # output_filename=None,
-            )
-        import h5py
-        with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            kappa = np.array(f['kappa'])
-        for j in range(len(temp)):
-            print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
-            print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
+elif run_mode == 'ltc-rta':
+    pho.run_thermal_conductivity(
+        is_LBTE=False,
+        temperatures=temp,
+        # is_isotope=False,
+        # mass_variances=None,
+        # grid_points=grid_points,
+        # boundary_mfp=None,  # in micrometre
+        # solve_collective_phonon=False,
+        # use_ave_pp=False,
+        # gamma_unit_conversion=None,
+        # mesh_divisors=None,
+        # coarse_mesh_shifts=None,
+        # is_reducible_collision_matrix=False,
+        # is_kappa_star=True,
+        # gv_delta_q=None,  # for group velocity
+        # is_full_pp=False,
+        # pinv_cutoff=1.0e-8,  # for pseudo-inversion of collision matrix
+        # pinv_solver=0,  # solver of pseudo-inversion of collision matrix
+        write_gamma=store_detail,
+        # read_gamma=False,
+        # is_N_U=False,
+        write_kappa=True,
+        write_gamma_detail=store_detail,
+        write_collision=store_detail,
+        # read_collision=False,
+        write_pp=store_detail,
+        # read_pp=False,
+        # write_LBTE_solution=False,
+        # compression="gzip",
+        # input_filename=None,
+        # output_filename=None,
+        )
+    import h5py
+    with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
+        kappa = np.array(f['kappa'])
+    for j in range(len(temp)):
+        print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
+        print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
 
-    elif run_mode == 'ltc-bte':
-        pho.run_thermal_conductivity(
-            is_LBTE=True,
-            temperatures=temp,
-            # is_isotope=False,
-            # mass_variances=None,
-            # grid_points=grid_points,
-            # boundary_mfp=None,  # in micrometre
-            # solve_collective_phonon=False,
-            # use_ave_pp=False,
-            # gamma_unit_conversion=None,
-            # mesh_divisors=None,
-            # coarse_mesh_shifts=None,
-            # is_reducible_collision_matrix=False,
-            # is_kappa_star=True,
-            # gv_delta_q=None,  # for group velocity
-            # is_full_pp=False,
-            # pinv_cutoff=1.0e-8,  # for pseudo-inversion of collision matrix
-            # pinv_solver=0,  # solver of pseudo-inversion of collision matrix
-            write_gamma=store_detail,
-            # read_gamma=False,
-            # is_N_U=False,
-            write_kappa=True,
-            write_gamma_detail=store_detail,
-            write_collision=store_detail,
-            # read_collision=False,
-            write_pp=store_detail,
-            # read_pp=False,
-            # write_LBTE_solution=False,
-            # compression="gzip",
-            # input_filename=None,
-            # output_filename=None,
-            )
-        import h5py
-        with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
-            kappa = np.array(f['kappa'])
-        for j in range(len(temp)):
-            print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
-            print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
+elif run_mode == 'ltc-bte':
+    pho.run_thermal_conductivity(
+        is_LBTE=True,
+        temperatures=temp,
+        # is_isotope=False,
+        # mass_variances=None,
+        # grid_points=grid_points,
+        # boundary_mfp=None,  # in micrometre
+        # solve_collective_phonon=False,
+        # use_ave_pp=False,
+        # gamma_unit_conversion=None,
+        # mesh_divisors=None,
+        # coarse_mesh_shifts=None,
+        # is_reducible_collision_matrix=False,
+        # is_kappa_star=True,
+        # gv_delta_q=None,  # for group velocity
+        # is_full_pp=False,
+        # pinv_cutoff=1.0e-8,  # for pseudo-inversion of collision matrix
+        # pinv_solver=0,  # solver of pseudo-inversion of collision matrix
+        write_gamma=store_detail,
+        # read_gamma=False,
+        # is_N_U=False,
+        write_kappa=True,
+        write_gamma_detail=store_detail,
+        write_collision=store_detail,
+        # read_collision=False,
+        write_pp=store_detail,
+        # read_pp=False,
+        # write_LBTE_solution=False,
+        # compression="gzip",
+        # input_filename=None,
+        # output_filename=None,
+        )
+    import h5py
+    with h5py.File('kappa-m{}{}{}.hdf5'.format(*q_mesh), 'r') as f:
+        kappa = np.array(f['kappa'])
+    for j in range(len(temp)):
+        print(' >> q-mesh: {}x{}x{} <<'.format(*q_mesh))
+        print(' ==> kappa(T={}K) = {}(W/mK)'.format(temp[j], kappa[j]))
 
-    elif run_mode == 'self-e':
-        pts, delta = pho.run_real_self_energy(
-            grid_points=grid_points,
-            temperatures=temp,
-            # run_on_bands=False,
-            # frequency_points=None,
-            # frequency_step=None,
-            # num_frequency_points=None,
-            # epsilons=None,
-            # write_txt=False,
-            # write_hdf5=False,
-            # output_filename=None,
-            )
-        pts, gamma = pho.run_imag_self_energy(
-            grid_points=grid_points,
-            temperatures=temp,
-            # frequency_points=None,
-            # frequency_step=None,
-            # num_frequency_points=None,
-            # scattering_event_class=None,
-            # write_txt=False,
-            # write_gamma_detail=False,
-            # keep_gamma_detail=False,
-            # output_filename=None,
-            )
+elif run_mode == 'self-e':
+    pts, delta = pho.run_real_self_energy(
+        grid_points=grid_points,
+        temperatures=temp,
+        # run_on_bands=False,
+        # frequency_points=None,
+        # frequency_step=None,
+        # num_frequency_points=None,
+        # epsilons=None,
+        # write_txt=False,
+        # write_hdf5=False,
+        # output_filename=None,
+        )
+    pts, gamma = pho.run_imag_self_energy(
+        grid_points=grid_points,
+        temperatures=temp,
+        # frequency_points=None,
+        # frequency_step=None,
+        # num_frequency_points=None,
+        # scattering_event_class=None,
+        # write_txt=False,
+        # write_gamma_detail=False,
+        # keep_gamma_detail=False,
+        # output_filename=None,
+        )
 
-    elif run_mode == 'gruneisen':
-        if NNN2 != NNN3:
-            raise ValueError('Supercell for fc2 and fc3 should be same.')
-        from phono3py.phonon3.gruneisen import run_gruneisen_parameters
-        from phonopy.units import VaspToTHz
-        run_gruneisen_parameters(
-            pho.fc2,
-            pho.fc3,
-            pho.supercell,
-            pho.primitive,
-            band_paths=np.array(bands),
-            mesh=None,
-            rotations=None,
-            qpoints=None,
-            nac_params=nac_params,
-            # nac_q_direction=None,
-            # ion_clamped=True,
-            factor=VaspToTHz,
-            # symprec=1e-5,
-            # output_filename=None,
-            # log_level=1,
-            )
-        from ss_phono3py import plot_fc3_gruneisen_yaml
-        plot_fc3_gruneisen_yaml(
-            labels=labels,
-            g_max=g_max,
-            g_min=g_min,
-            f_max=f_max,
-            f_min=f_min,
-            )
-    pckl_name = '3pho_{}_fc2x{}{}{}_fc3x{}{}{}-rcut{}-nac{}-qx{}{}{}-rm{}.pckl'.format(calc, *NNN2, *NNN3, r_cut, nac, *q_mesh, run_mode)
-    import pickle as pckl
-    pckl.dump(pho, open(pckl_name, 'wb'))
+elif run_mode == 'gruneisen':
+    if NNN2 != NNN3:
+        raise ValueError('Supercell for fc2 and fc3 should be same.')
+    from phono3py.phonon3.gruneisen import run_gruneisen_parameters
+    from phonopy.units import VaspToTHz
+    run_gruneisen_parameters(
+        pho.fc2,
+        pho.fc3,
+        pho.supercell,
+        pho.primitive,
+        band_paths=np.array(bands),
+        mesh=None,
+        rotations=None,
+        qpoints=None,
+        nac_params=nac_params,
+        # nac_q_direction=None,
+        # ion_clamped=True,
+        factor=VaspToTHz,
+        # symprec=1e-5,
+        # output_filename=None,
+        # log_level=1,
+        )
+    from ss_phono3py import plot_fc3_gruneisen_yaml
+    plot_fc3_gruneisen_yaml(
+        labels=labels,
+        g_max=g_max,
+        g_min=g_min,
+        f_max=f_max,
+        f_min=f_min,
+        )
+pckl_name = '3pho_{}_fc2x{}{}{}_fc3x{}{}{}-rcut{}-nac{}-qx{}{}{}-rm{}.pckl'.format(calc, *NNN2, *NNN3, r_cut, nac, *q_mesh, run_mode)
+import pickle as pckl
+pckl.dump(pho, open(pckl_name, 'wb'))
 
