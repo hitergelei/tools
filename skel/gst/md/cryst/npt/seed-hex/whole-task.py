@@ -3,7 +3,7 @@
 from subprocess import call
 
 # liquid part
-job_list = ['1-melt-quench-heat', '4-cryst', '6-cool']
+job_list = ['1-melt-quench-heat', '4-cryst', '6-cool', '7-vacf']
 
 from ase.io import read
 len_atoms = len(read('init.traj'))

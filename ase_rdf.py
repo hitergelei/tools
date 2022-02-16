@@ -157,6 +157,7 @@ def argparse():
     parser.add_argument('-b', '--nBin', type=int, default=500, help='Number of bins. Default: 500')
     parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in Angstrom unit. Zero means no smearing. [default: 0]')
     parser.add_argument('-e', '--rectify-cut', type=float, default=None, help='All of drastic kink higher than this will be omitted. [Default: no rectify]')
+    parser.add_argument('-m', '--multiply', type=float, default=1., help='Multiply this value to RDF (re-scale). [default: 1.]')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npy will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
     parser.add_argument('-t', '--dont_share_y', action='store_true', help='Subplots will not share y-axes if provided.')
@@ -220,21 +221,21 @@ if __name__ == '__main__':
     # Main
     curve_list = []
     for symb_set in symbol_sets:
-        curve_list.append(
-            get_curve(
-                args.image_slice,
-                args.file_list,
-                symb_set[0],
-                symb_set[1],
-                nBin,
-                rcut,
-                args.load_bool,
-                args.save_bool,
-                rectify_cut,
-                gsmear_std,
-                dr,
-                ),
+        cv = get_curve(
+            args.image_slice,
+            args.file_list,
+            symb_set[0],
+            symb_set[1],
+            nBin,
+            rcut,
+            args.load_bool,
+            args.save_bool,
+            rectify_cut,
+            gsmear_std,
+            dr,
             )
+        cv[:,1] *= args.multiply,
+        curve_list.append(cv)
 
     # @ Get structure factor
     k_list = []

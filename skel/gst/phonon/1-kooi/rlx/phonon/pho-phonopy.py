@@ -29,7 +29,7 @@ masses = None
 from os import environ
 environ['CUDA_VISIBLE_DEVICES'] = ''
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('POSCAR_1_Kooi-wo-vdw-dpmd')
+atoms = vasp.read_vasp('POSCAR_1_Kooi-dpmd')
 N                  = 4
 NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.010

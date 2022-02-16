@@ -2,12 +2,12 @@
 import numpy
 
 from ase.io import read, write
-alist = read('last-10.traj', ':')
+alist = read('lmp-results-:-0.traj', ':')
 new_alist = []
 
 posi = alist[0].get_positions()
-mask = posi[:,1] > 23.5
-mask *= posi[:,1] < 52.6
+mask = posi[:,1] > 23.2
+mask *= posi[:,1] < 48.7
 for i in range(len(alist)):
     new_alist.append(alist[i][mask])
 
