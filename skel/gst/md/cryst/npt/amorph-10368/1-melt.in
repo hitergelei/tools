@@ -11,7 +11,7 @@ mass			1 72.64
 mass            2 121.76
 mass			3 127.60
 
-pair_style		deepmd frozen_model.pb
+pair_style		deepmd ../../../../../frozen_model.pb
 pair_coeff		* *
 
 velocity		all create 1100.0 1031

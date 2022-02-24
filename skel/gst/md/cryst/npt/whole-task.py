@@ -17,7 +17,7 @@ len_atoms = len(read('init.traj'))
 for job in job_list:
     call('rm -rf {}/'.format(job), shell=True)
     call('mkdir {}/'.format(job), shell=True)
-    call('cp {}.in run.sh frozen_model.pb {}/'.format(job, job), shell=True)
+    call('cp {}.in run.sh {}/'.format(job, job), shell=True)
 
 call('cp init.traj {}/'.format(job_list[0]), shell=True)
 
