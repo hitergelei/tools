@@ -15,7 +15,7 @@ calc = 'lmp'
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
 # cp_files = None
 # cp_files = ['Si.tersoff',]
-cp_files = ['frozen_model.pb',]
+cp_files = ['input-phonon.in',]
 acou_sum_rule = True
 # acou_sum_rule = False
 # rot_sum_rule = True

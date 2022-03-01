@@ -25,10 +25,10 @@ fix				1 all npt temp 600 600 1.0 aniso 0 0 100.0
 
 thermo_style    custom step etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press pxx pyy pzz pyz pxz pxy vol
 thermo_modify   format float %.15g
-thermo			100
+thermo			1000
 
 #dump			myDump all atom 100 atom.dump
-dump			1 all custom 100 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump			1 all custom 1000 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
 dump_modify		1 element Ge Sb Te
 
 timestep		0.01

@@ -15,7 +15,7 @@ export OUTPUT=out
 
 export EXEC=python
 export INPUT=pho-phono3py.py
-time $EXEC $INPUT > $OUTPUT
+time $EXEC $INPUT
 
 #export EXEC=lmp_mpi
 #export INPUT=input-rlx.in

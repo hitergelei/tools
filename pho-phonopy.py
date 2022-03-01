@@ -13,9 +13,9 @@ calc = 'vasp'
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
-cp_files = None
+# cp_files = None
 # cp_files = ['Si.tersoff',]
-# cp_files = ['frozen_model.pb',]
+cp_files = ['input-phonon.in',]
 acou_sum_rule = True
 # acou_sum_rule = False
 # rot_sum_rule = True
