@@ -1,0 +1,53 @@
+#### Prepare
+units           metal
+atom_style      atomic
+boundary        p p p
+
+#box             tilt large
+read_data       structure.in
+
+mass            1 72.64
+mass            2 121.76
+mass            3 127.60
+
+pair_style      deepmd frozen_model.pb
+pair_coeff      * *
+
+velocity        all create 700.0 1031
+compute         pe all pe/atom
+compute         2 all pressure thermo_temp
+
+#read_dump       init.dump 40000 x y z vx vy vz box yes replace yes
+#velocity        all zero linear
+#velocity        all zero angular
+#fix             1 all nve
+#fix             1 all nvt temp 600 600 1.00
+fix             1 all npt temp 700 700 1.0 iso 0 0 10.0
+
+thermo_style    custom step temp etotal ke pe press pxx pyy pzz pyz pxz pxy vol
+thermo_modify   format float %.15g
+thermo          1000
+log             pre-log.lammps
+
+#dump            myDump all atom 100 atom.dump
+dump            1 all custom 1000 pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify     1 element Ge Sb Te
+
+timestep        0.01
+run             5000
+
+#### Main
+velocity        all zero linear
+velocity        all zero angular
+
+undump          1
+dump            1 all custom 5 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify     1 element Ge Sb Te
+thermo          5
+log             log.lammps
+
+unfix           1
+fix             1 all nve
+
+timestep        0.01
+run             10000

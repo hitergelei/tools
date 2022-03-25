@@ -1,0 +1,39 @@
+# Si 4nd
+
+units			metal
+atom_style		atomic
+boundary		p p p
+
+box             tilt large
+read_data		structure.in
+
+mass			1 72.64
+mass            2 121.76
+mass			3 127.60
+
+pair_style		deepmd ../../../frozen_model.pb
+pair_coeff		* *
+
+#velocity		all create 1000.0 1031
+compute         1 all pe/atom
+compute         2 all pressure thermo_temp
+
+#read_dump       init.dump 100 x y z vx vy vz
+#fix				1 all nve
+#fix				1 all nvt temp 600 600 1.00
+#fix				1 all npt temp 0.0001 0.0001 10. aniso 0 0 10.
+#fix             1 all box/relax tri 0.0 vmax 1e-4
+
+thermo_style    custom step etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press pxx pyy pzz pyz pxz pxy vol
+thermo_modify   format float %.15g
+thermo			1
+
+#dump			myDump all atom 100 atom.dump
+dump			1 all custom 1 out.dump id element mass type x y z fx fy fz vx vy vz c_1
+dump_modify		1 element Ge Sb Te
+
+min_style       fire
+minimize        0e-7 1e-3 1000 10000
+#timestep		0.0001
+#run			1000
+
