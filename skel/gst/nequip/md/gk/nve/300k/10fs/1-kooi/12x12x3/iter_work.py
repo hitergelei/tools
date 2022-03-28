@@ -56,7 +56,7 @@ for i in iter_range:
         '# equilibration and thermalization\n',
         '\n',
         'velocity     all create ${T2}'+' {} mom yes dist gaussian\n'.format(i+1),
-        'fix          NPT all npt temp ${T} ${T} 1. iso 0 0 1.0\n',
+        'fix          NPT all npt temp ${T} ${T} 1. aniso 0 0 100.0\n',
         'compute      pe all pe/atom\n',
         'dump         0 all custom 1000 pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
         'dump_modify  0 element Ge Sb Te\n',

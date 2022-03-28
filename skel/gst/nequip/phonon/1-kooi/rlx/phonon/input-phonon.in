@@ -2,6 +2,7 @@
 
 units			metal
 atom_style		atomic
+newton          off
 boundary		p p p
 
 box             tilt large
@@ -11,8 +12,8 @@ mass			1 72.64
 mass            2 121.76
 mass			3 127.60
 
-pair_style		deepmd ../../../../../../../frozen_model.pb
-pair_coeff		* *
+pair_style	    nequip
+pair_coeff      * * ../../../../../../../frozen_model.pb Ge Sb Te
 #pair_style		tersoff
 #pair_coeff		* * Si.tersoff Si
 

@@ -22,6 +22,7 @@ def argparse():
     parser.add_argument('-l', '--log_scale', action='store_true', help='If provided, Plot y axis as log scale.')
     parser.add_argument('-c', '--color_list', type=str, nargs='+', default=[], help='Scatter color list. len(color_list) == len(y_axis). [default: Automatic].')
     parser.add_argument('-b', '--label_list', type=str, nargs='+', default=[], help='Legend label list. len(label_list) == len(y_axis). [default: Column number]. If you want no legend, set it "none"')
+    parser.add_argument('-d', '--delimiter', type=str, default=' ', help='Specify delimiter. [default: " "]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -63,7 +64,7 @@ if __name__ == '__main__':
         plt.yscale('log')
     if x_axis_seq != -1:
         for line in data:
-            word_list = line.split()
+            word_list = line.split(args.delimiter)
             try:
                 x.append(float(word_list[x_axis_seq]))
             except:
@@ -95,7 +96,7 @@ if __name__ == '__main__':
             plt.scatter(x, y_list[i], 1, c=color, marker='o', label=label)
     else:
         for line in data:
-            word_list = line.split()
+            word_list = line.split(args.delimiter)
             try:
                 tmp = float(word_list[y_axis_seq_arr[0]])
             except:
