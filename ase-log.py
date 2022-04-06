@@ -44,15 +44,18 @@ if __name__ == '__main__':
     anum = len(alist[0])
 
     #
+    anum = []
     vol = []
     ke = []
     pe = []
     T = []
     for atoms in alist:
+        anum.append(len(atoms))
         vol.append(atoms.get_volume())
         ke.append(atoms.get_kinetic_energy())
         pe.append(atoms.get_potential_energy())
         T.append(atoms.get_temperature())
+    anum = np.array(anum)
     den = anum /np.array(vol)
     kepa = np.array(ke) /anum
     pepa = np.array(pe) /anum

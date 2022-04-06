@@ -6,8 +6,8 @@ iter_range   = range( 0, 1,1)
 temp         = 300
 dt           = 0.001
 sample_intvl = 1
-corr_len     = 1000000
-simul_len    = 1000000
+corr_len     = 10000
+simul_len    = 10000
 
 # > MAIN
 from subprocess import call
@@ -50,15 +50,16 @@ for i in iter_range:
         'timestep     0.01\n',
         'thermo_style custom step temp etotal ke pe press pxx pyy pzz pyz pxz pxy vol\n',
         'thermo_modify   format float %.15g\n',
-        'thermo       1000\n',
+        'thermo       100\n',
         'log          pre-log.lammps\n',
         '\n',
         '# equilibration and thermalization\n',
         '\n',
         'velocity     all create ${T2}'+' {} mom yes dist gaussian\n'.format(i+1),
-        'fix          NPT all npt temp ${T} ${T} 1. aniso 0 0 100.0\n',
+        # 'fix          NPT all npt temp ${T} ${T} 1. aniso 0 0 100.0\n',
+        'fix          NVT all nvt temp ${T} ${T} 1.\n',
         'compute      pe all pe/atom\n',
-        'dump         0 all custom 1000 pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
+        'dump         0 all custom 100 pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
         'dump_modify  0 element Ge Sb Te\n',
         'run          5000\n',
         'undump       0\n',
@@ -69,9 +70,9 @@ for i in iter_range:
         '\n',
         '# thermal conductivity calculation, switch to NVE if desired\n',
         '\n',
-        'unfix       NPT\n',
+        # 'unfix       NPT\n',
         # 'fix         NPT all npt temp ${T} ${T} 100. aniso 0 0 100.0\n',
-        'fix         NVE all nve\n',
+        # 'fix         NVE all nve\n',
         # '\n',
         'reset_timestep 0\n',
         'timestep     ${dt}\n',
@@ -83,9 +84,9 @@ for i in iter_range:
         '             c_flux[1] c_flux[2] c_flux[3] type auto file J0Jt.dat ave running\n',
         'thermo_style custom step temp etotal ke pe press pxx pyy pzz pyz pxz pxy vol c_flux[1] c_flux[2] c_flux[3]\n',
         'thermo_modify   format float %.15g\n',
-        'thermo       1000\n',
+        'thermo       50\n',
         'log          log.lammps\n',
-        'dump         1 all custom 1000 out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
+        'dump         1 all custom 50 out.dump id element mass type x y z fx fy fz vx vy vz c_pe\n',
         'dump_modify  1 element Ge Sb Te\n',
         'run          $d\n',
         ]
