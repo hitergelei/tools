@@ -704,6 +704,7 @@ def plot_gruneisen_band(
     ):
     import matplotlib.pyplot as plt
     fig, axarr = plt.subplots(2, 1)
+    # axarr = [plt.subplot(211), plt.subplot(212)]
     for ax in axarr:
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_ticks_position('both')
