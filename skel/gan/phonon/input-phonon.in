@@ -9,12 +9,11 @@ newton          off
 box             tilt large
 read_data		structure.in
 
-mass			1 72.64
-mass            2 121.76
-mass			3 127.60
+mass			1 69.723
+mass			2 14.0067
 
 pair_style	    nequip
-pair_coeff      * * ../../../../../frozen_model.pb Ge Sb Te
+pair_coeff      * * ../../../../frozen_model.pb Ga N
 #pair_style		deepmd ../../../frozen_model.pb
 #pair_coeff		* *
 #pair_style		tersoff
@@ -36,7 +35,7 @@ thermo			1
 
 #dump			myDump all atom 100 atom.dump
 dump			1 all custom 1 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
-dump_modify		1 element Ge Sb Te
+dump_modify		1 element Ga N
 
 #minimize        1e-7 1e-3 1000 10000
 #timestep		0.0001
