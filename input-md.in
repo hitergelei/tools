@@ -3,6 +3,8 @@ units           metal
 atom_style      atomic
 boundary        p p p
 
+newton          off
+
 #box             tilt large
 read_data       structure.in
 
@@ -10,8 +12,12 @@ mass            1 72.64
 mass            2 121.76
 mass            3 127.60
 
-pair_style      deepmd frozen_model.pb
-pair_coeff      * *
+pair_style	    nequip
+pair_coeff      * * ../../../../../frozen_model.pb Ge Sb Te
+#pair_style      deepmd frozen_model.pb
+#pair_coeff      * *
+#pair_style		tersoff
+#pair_coeff		* * Si.tersoff Si
 
 velocity        all create 1000.0 1031
 compute         pe all pe/atom
@@ -24,7 +30,7 @@ compute         2 all pressure thermo_temp
 #fix             1 all nvt temp 600 600 1.00
 fix             1 all npt temp 100 100 1.0 iso 0 0 10.0
 
-thermo_style    custom step temp etotal ke pe press pxx pyy pzz pyz pxz pxy vol
+thermo_style    custom step temp etotal pe ke press pxx pyy pzz pyz pxz pxy vol
 thermo_modify   format float %.15g
 thermo          1000
 log             pre-log.lammps
