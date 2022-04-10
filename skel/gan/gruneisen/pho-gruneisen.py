@@ -39,7 +39,7 @@ legend_bool        = False
 plot_bool          = True
 #
 g_max = 1.8
-g_min = -0.8
+g_min = -0.95
 # g_max = None
 # g_min = None
 f_max = 23.0
