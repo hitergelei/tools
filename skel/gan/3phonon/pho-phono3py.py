@@ -21,12 +21,11 @@ run_mode   = 'ltc-rta'
 # store_detail = True
 store_detail = False
 # temp       = (10, 50, 100, 200, 300, 500, 700,) # (K)
-temp       = np.arange(0,400,50, dtype=float)
-# temp       = np.concatenate([
-    # np.arange( 0,11,1, dtype=float),
-    # np.arange(12,60,3, dtype=float),
-    # np.arange(60,400,10, dtype=float),
-    # ]).tolist() # (K)
+# temp       = np.arange(0,400,50, dtype=float)
+temp       = np.concatenate([
+    [30],
+    np.arange(50, 400, 50, dtype=float),
+    ]).tolist() # (K)
 
 #
 sym_fc     = True
