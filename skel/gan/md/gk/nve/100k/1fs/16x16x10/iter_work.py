@@ -3,8 +3,8 @@
 # > PARAMS
 inp_file     = 'input-md.in'
 iter_range   = range( 0, 1,1)
-temp         = 300
-dt           = 0.01
+temp         = 100
+dt           = 0.001
 sample_intvl = 1
 corr_len     = 10000
 simul_len    = 10000
@@ -47,7 +47,7 @@ for i in iter_range:
         'mass         2 14.0067\n',
         'pair_style	  nequip\n',
         'pair_coeff   * * ../../../../../../../frozen_model.pb Ga N\n',
-        'timestep     0.01\n',
+        'timestep     0.001\n',
         'thermo_style custom step temp etotal pe ke press pxx pyy pzz pyz pxz pxy vol\n',
         'thermo_modify   format float %.15g\n',
         'thermo       100\n',

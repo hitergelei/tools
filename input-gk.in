@@ -26,12 +26,12 @@ box          tilt large
 read_data    structure.in
 mass         1 72.64
 mass         2 127.60
-pair_style	    nequip
-pair_coeff      * * ../../../../../frozen_model.pb Ge Te
-#pair_style      deepmd frozen_model.pb
-#pair_coeff      * *
-#pair_style		tersoff
-#pair_coeff		* * Si.tersoff Si
+pair_style   nequip
+pair_coeff   * * ../../../../../frozen_model.pb Ge Te
+#pair_style   deepmd frozen_model.pb
+#pair_coeff   * *
+#pair_style   tersoff
+#pair_coeff   * * Si.tersoff Si
 timestep     ${dt}
 thermo_style custom step etotal ke temp pe press vol
 thermo_modify   format float %.15g

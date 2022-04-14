@@ -49,19 +49,15 @@ if __name__ == '__main__':
     elif args.target == 'f':
         vector_type = True
         from ss_util import F_fromAlist
-        data = F_fromAlist(alist).reshape((-1,3))
+        data = np.concatenate(F_fromAlist(alist), 0)
     elif args.target == 'v':
         vector_type = True
         from ss_util import v_fromAlist 
-        data = v_fromAlist(alist).reshape((-1,3))
-    elif args.target == 'v2':
-        vector_type = False
-        from ss_util import v_fromAlist
-        data = (v_fromAlist(alist)**2).reshape((-1))
+        data = np.concatenate(v_fromAlist(alist), 0)
     elif args.target == 'p':
         vector_type = True
         from ss_util import P_fromAlist 
-        data = P_fromAlist(alist).reshape((-1,3))
+        data = np.concatenate(P_fromAlist(alist), 0)
     elif args.target == 's':
         vector_type = False
         from ss_util import S_fromAlist 
