@@ -2,4 +2,4 @@
 from subprocess import call
 
 for i in range(1):
-    call('plot-j0jt.py 100 0.01 &', shell=True, cwd='job-{}'.format(i))
+    call('plot-j0jt.py 100 0.001 &', shell=True, cwd='job-{}'.format(i))
