@@ -2,5 +2,5 @@
 import numpy as np
 from subprocess import call
 call('mkdir best', shell=True)
-call('nequip-deploy build results/train/ best/frozen_model.pb', shell=True)
+call('nequip-deploy build ./ best/frozen_model.pb', shell=True)
 

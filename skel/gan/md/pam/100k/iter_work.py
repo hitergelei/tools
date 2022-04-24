@@ -3,9 +3,9 @@
 # > PARAMS
 inp_file   = 'input-md.in'
 iter_range = range( 0, 1,1)
-T          = 30
+T          = 100
 dt         = 0.001
-steps      = 10000
+steps      = 100000
 
 # > MAIN
 from subprocess import call
