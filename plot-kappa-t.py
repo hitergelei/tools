@@ -9,6 +9,7 @@ def argparse():
     # Positional arguments
     parser.add_argument('hdf5_file', type=str, help='HDF5 file of phono3py rta/bte calculation.')
     # Optional arguments
+    parser.add_argument('-p', '--partial', action='store_true', help='Plot partial LTC (xx, yy, zz, yz, xz, xy).')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -43,13 +44,14 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     for inst in insts:
         plt.figure()
-        plt.plot(T, data[inst][:,0], label='$\kappa_{xx}$', c='r')
-        plt.plot(T, data[inst][:,1], label='$\kappa_{yy}$', c='g')
-        plt.plot(T, data[inst][:,2], label='$\kappa_{yy}$', c='b')
+        if args.partial:
+            plt.plot(T, data[inst][:,0], label='$\kappa_{xx}$', c='r')
+            plt.plot(T, data[inst][:,1], label='$\kappa_{yy}$', c='g')
+            plt.plot(T, data[inst][:,2], label='$\kappa_{zz}$', c='b')
+            plt.plot(T, data[inst][:,3], label='$\kappa_{yz}$')
+            plt.plot(T, data[inst][:,4], label='$\kappa_{xz}$')
+            plt.plot(T, data[inst][:,5], label='$\kappa_{xy}$')
         plt.plot(T, np.mean(data[inst][:,0:3], axis=-1), label='$\kappa$', c='k')
-        plt.plot(T, data[inst][:,3], label='$\kappa_{yz}$')
-        plt.plot(T, data[inst][:,4], label='$\kappa_{xz}$')
-        plt.plot(T, data[inst][:,5], label='$\kappa_{xy}$')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.xlabel('Temperature (K)', fontsize='x-large')
         plt.ylabel('LTC (W/mK)', fontsize='x-large')

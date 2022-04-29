@@ -38,14 +38,14 @@ unit               = 'THz'
 legend_bool        = False
 plot_bool          = True
 #
-# g_max = 1.8
-# g_min = -0.95
-g_max = None
-g_min = None
-# f_max = 23.0
-# f_min = 0.00
-f_max = None
-f_min = None
+g_max = 56
+g_min = -3
+# g_max = None
+# g_min = None
+f_max = 5.5
+f_min = 0.0
+# f_max = None
+# f_min = None
 
 #
 if n_snapshots:
