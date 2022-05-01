@@ -61,23 +61,22 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, dt):
         
 
 def plot_total_DOS(
+    plt,
     f,
-    DOS,
+    ADOS,
     unit='THz',
     freqlim_low=None,
     freqlim_up=None,
     DOS_low=None,
     DOS_up=None,
-    flip_xy=True,
-    lcolor_list=None
+    legend_bool=True,
     ):
     """
     f (arr)
-    DOS (arr)
+    ADOS (arr)
     unit (str) : 'THz' and 'meV' are implimented.
     freqlim_low (float or None) : 
     freqlim_up  (float or None) : 
-    flip_xy (bool)              :
     """
     ## Preprocess
     # Frequency scaling
@@ -86,36 +85,70 @@ def plot_total_DOS(
     elif unit is 'meV':
         from phonopy import units
         f *= units.THztoEv * 1e3
-    if not lcolor_list:
-        lcolor_list = [None]
-    elif len(lcolor_list) != 1:
-        raise ValueError('len(lcolor_list) must be 1. Now: lcolor_list=={}'.format(lcolor_list))
+
+    DOS = np.sum(np.sum(ADOS, axis=0), axis=0)
 
     ## Plot
-    from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
-    plt.rc('font', **font)
     fig, ax = plt.subplots()
-    if flip_xy:
-        ax.plot(DOS, f, c=lcolor_list[0])
-        ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_xticklabels([])
-        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.set_xlim((DOS_low,DOS_up))
-    else:
-        ax.plot(f, DOS, c=lcolor_list[0])
-        ax.set_xlim((freqlim_low, freqlim_up))
-        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_yticklabels([])
-        ax.set_ylim((DOS_low,DOS_up))
-    plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.grid(alpha=0.5)
+    ax.plot(DOS, f, c='k')
+    ax.set_ylim((freqlim_low, freqlim_up))
+    ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+    ax.set_xticklabels([])
+    ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+    ax.set_xlim((DOS_low,DOS_up))
     plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
-    plt.show()
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.grid(alpha=0.4)
 
-def plot_partial_DOS(
+def plot_direc_DOS(
+    plt,
+    f,
+    ADOS,
+    unit='THz',
+    freqlim_low=None,
+    freqlim_up=None,
+    DOS_low=None,
+    DOS_up=None,
+    legend_bool=True,
+    ):
+    """
+    f (arr)
+    ADOS (arr)
+    unit (str) : 'THz' and 'meV' are implimented.
+    freqlim_low (float or None) : 
+    freqlim_up  (float or None) : 
+    """
+    ## Preprocess
+    # Frequency scaling
+    if unit is 'THz':
+        pass
+    elif unit is 'meV':
+        from phonopy import units
+        f *= units.THztoEv * 1e3
+
+    DOS = np.sum(ADOS, axis=0)
+
+    ## Plot
+    fig, ax = plt.subplots()
+    ax.plot(DOS[0], f, c='r', label='x')
+    ax.plot(DOS[1], f, c='g', label='y')
+    ax.plot(DOS[2], f, c='b', label='z')
+    ax.plot(np.sum(DOS, axis=0), f, c='k', label='total')
+    ax.set_ylim((freqlim_low, freqlim_up))
+    ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+    ax.set_xticklabels([])
+    ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+    ax.set_xlim((DOS_low,DOS_up))
+    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.grid(alpha=0.4)
+    if legend_bool:
+        plt.legend(fontsize='large').set_draggable(True)
+    else:
+        plt.legend().set_visible(False)
+
+def plot_chem_DOS(
+    plt,
     f,
     ADOS,
     species_arr,
@@ -124,7 +157,6 @@ def plot_partial_DOS(
     freqlim_up=None,
     DOS_low=None,
     DOS_up=None,
-    flip_xy=True,
     lcolor_list=None,
     legend_bool=True,
     ):
@@ -135,7 +167,6 @@ def plot_partial_DOS(
     unit (str) : 'THz' and 'meV' are implimented.
     freqlim_low (float or None) : 
     freqlim_up  (float or None) : 
-    flip_xy (bool)              :
     """
     ## Preprocess
     species_arr = np.array(species_arr)
@@ -151,49 +182,81 @@ def plot_partial_DOS(
     pdos_indices = []
     for spec in unique_spec:
         pdos_indices.append(atomic_index[species_arr==spec])
-    # Gather along species
+    # Gather along species PDOS_list.shape=(len(unique_spec), 3, len(f))
     PDOS_list = []
     for spec_i in range(len(unique_spec)):
-        PDOS_list.append(np.sum(np.sum(ADOS[pdos_indices[spec_i]],axis=0), axis=0))
+        PDOS_list.append(np.sum(ADOS[pdos_indices[spec_i]], axis=0))
     if not lcolor_list:
         lcolor_list = [None]*len(unique_spec)
     elif len(lcolor_list) != len(unique_spec):
         raise ValueError('len of    lcolor_list=={}   and    unique_spec=={}    must be same.'.format(lcolor_list, unique_spec))
+    PDOS_list = np.array(PDOS_list)
 
 
-    ## Plot
-    from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
-    plt.rc('font', **font)
+    ## Chem plot
     fig, ax = plt.subplots()
-    if flip_xy:
-        for spec_i in range(len(unique_spec)):
-            ax.plot(PDOS_list[spec_i], f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
+    #
+    for spec_i in range(len(unique_spec)):
+        ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
+    ax.plot(np.sum(np.sum(PDOS_list, axis=0), axis=0), f, color='k', label='Total')
+    ax.set_ylim((freqlim_low, freqlim_up))
+    ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+    ax.set_xticklabels([])
+    ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+    # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
+    ax.set_xlim((DOS_low, DOS_up))
+    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+    plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.grid(alpha=0.4)
+    if legend_bool:
+        plt.legend(fontsize='large').set_draggable(True)
+    else:
+        plt.legend().set_visible(False)
+
+    ## Chemical-directional plot
+    for spec_i in range(len(unique_spec)):
+        fig, ax = plt.subplots()
+        ax.plot(PDOS_list[spec_i, 0], f, label='x', c='r')
+        ax.plot(PDOS_list[spec_i, 1], f, label='y', c='g')
+        ax.plot(PDOS_list[spec_i, 2], f, label='z', c='b')
+        ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, label='total', c='k')
         ax.set_ylim((freqlim_low, freqlim_up))
         ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
         ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.plot(np.sum(PDOS_list,axis=0), f, color='k', label='Total')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((DOS_low, DOS_up))
-    else:
+        plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.grid(alpha=0.4)
+        if legend_bool:
+            plt.legend(fontsize='large').set_draggable(True)
+        else:
+            plt.legend().set_visible(False)
+        plt.title(unique_spec[spec_i])
+
+    ## Directional-chemical plot
+    direcs = ['x', 'y', 'z']
+    for direc_i in range(len(direcs)):
+        fig, ax = plt.subplots()
+        #
         for spec_i in range(len(unique_spec)):
-            ax.plot(f, PDOS_list[spec_i], label=unique_spec[spec_i], c=lcolor_list[spec_i])
-        ax.set_xlim((freqlim_low, freqlim_up))
-        ax.set_xlabel('Frequency ({})'.format(unit), fontsize='x-large')
-        ax.set_ylabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_yticklabels([])
-        ax.plot(f, np.sum(PDOS_list,axis=0), color='k', label='Total')
-        # ax.fill_betweenx(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
-        ax.set_ylim((DOS_low, DOS_up))
-    plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.grid(alpha=0.5)
-    if legend_bool:
-        plt.legend(fontsize='large')
-    else:
-        plt.legend().set_visible(False)
-    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
-    plt.show()
+            ax.plot(PDOS_list[spec_i, direc_i], f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
+        ax.plot(np.sum(PDOS_list[:, direc_i], axis=0), f, label='Total', c='k')
+        ax.set_ylim((freqlim_low, freqlim_up))
+        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
+        ax.set_xticklabels([])
+        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+        # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
+        ax.set_xlim((DOS_low, DOS_up))
+        plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.grid(alpha=0.4)
+        if legend_bool:
+            plt.legend(fontsize='large').set_draggable(True)
+        else:
+            plt.legend().set_visible(False)
+        plt.title(direcs[direc_i])
 
 def argparse():
     import argparse
@@ -205,7 +268,7 @@ def argparse():
     parser.add_argument('dt', type=float, help='Time interval between images selected in unit of picosec.')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
-    parser.add_argument('-p', '--partial_DOS', action='store_true', help='If activated, return partial DOS. (If not, total DOS as default)')
+    parser.add_argument('-p', '--chemical_DOS', action='store_true', help='Plot species-wise partial DOS.')
     parser.add_argument('-l', '--freqlim_low', type=float, default=0.02, help='Set frequency lower limit for plot. [default: 0.02]')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
     parser.add_argument('-m', '--DOS_low', type=float, default=0., help='Set DOS lower limit for plot. Zero as default.')
@@ -215,7 +278,7 @@ def argparse():
     parser.add_argument('-t', '--dont_plot', dest='plot_bool', action='store_false', help='Do not plot, if provided. [default: Plot].')
     parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
     parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
-    parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lcolor_list) == len(np.unique(chem)). For total DOS, len(lcolor_list) == 1  [default: automatic].')
+    parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lcolor_list) == len(np.unique(chem)) [default: automatic].')
     parser.add_argument('-k', '--boson_peak', action='store_true', help='Plot g(f)/f**2 to seek boson peak. [default: False].')
     return parser.parse_args()
 
@@ -236,7 +299,7 @@ if __name__ == '__main__':
 
     ## Read input params
     dt          = args.dt
-    pdos_bool   = args.partial_DOS
+    cdos_bool   = args.chemical_DOS
     freqlim_low = args.freqlim_low
     freqlim_up  = args.freqlim_up
     DOS_low     = args.DOS_low
@@ -300,15 +363,41 @@ if __name__ == '__main__':
     # print(np.sum(ADOS) * d_f)
 
     if plot_bool:
-        ## Averaging ADOS
+        ## Averaging ADOS shape=(len(atoms), 3, len(f))
         ADOS = np.mean(ADOS_list, axis=0) * args.DOS_factor
         ## Boson peak
         if args.boson_peak:
             ADOS /= f**2
         ## Plot
-        if pdos_bool:
+        from matplotlib import pyplot as plt
+        font = {'family':'Arial'}
+        plt.rc('font', **font)
+        plot_total_DOS(
+            plt,
+            f,
+            ADOS,
+            unit='THz',
+            freqlim_low=freqlim_low,
+            freqlim_up=freqlim_up,
+            DOS_low=DOS_low,
+            DOS_up=DOS_up,
+            legend_bool=args.legend_bool,
+            )
+        plot_direc_DOS(
+            plt,
+            f,
+            ADOS,
+            unit='THz',
+            freqlim_low=freqlim_low,
+            freqlim_up=freqlim_up,
+            DOS_low=DOS_low,
+            DOS_up=DOS_up,
+            legend_bool=args.legend_bool,
+            )
+        if cdos_bool:
             atoms = read(args.inp_file_list[i], 0)
-            plot_partial_DOS(
+            plot_chem_DOS(
+                plt,
                 f,
                 ADOS,
                 atoms.get_chemical_symbols(),
@@ -317,19 +406,7 @@ if __name__ == '__main__':
                 freqlim_up=freqlim_up,
                 DOS_low=DOS_low,
                 DOS_up=DOS_up,
-                flip_xy=True,
                 lcolor_list=args.lcolor_list,
                 legend_bool=args.legend_bool,
                 )
-        else:
-            plot_total_DOS(
-                f,
-                np.sum(np.sum(ADOS, axis=0), axis=0),
-                unit='THz',
-                freqlim_low=freqlim_low,
-                freqlim_up=freqlim_up,
-                DOS_low=DOS_low,
-                DOS_up=DOS_up,
-                flip_xy=True,
-                lcolor_list=args.lcolor_list,
-                )
+        plt.show()
