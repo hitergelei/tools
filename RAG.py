@@ -66,7 +66,7 @@ def random_atoms_gen(
     strain_ratio  = [1.,1.,1.],
     vacuum        = None,
     vacuum_ratio  = None,
-    sort_atoms    = False,
+    sort_atoms    = True,
     max_trial_sec = 5,
     log           = True,
     ):

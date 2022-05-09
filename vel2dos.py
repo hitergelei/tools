@@ -70,6 +70,7 @@ def plot_total_DOS(
     DOS_low=None,
     DOS_up=None,
     legend_bool=True,
+    boson_peak=False,
     ):
     """
     f (arr)
@@ -92,11 +93,14 @@ def plot_total_DOS(
     fig, ax = plt.subplots()
     ax.plot(DOS, f, c='k')
     ax.set_ylim((freqlim_low, freqlim_up))
-    ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-    ax.set_xticklabels([])
+    if boson_peak:
+        ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+    else:
+        ax.set_xlabel('PhDOS', fontsize='x-large')
+    # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     ax.set_xlim((DOS_low,DOS_up))
-    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.4)
 
@@ -110,6 +114,7 @@ def plot_direc_DOS(
     DOS_low=None,
     DOS_up=None,
     legend_bool=True,
+    boson_peak=False,
     ):
     """
     f (arr)
@@ -133,17 +138,20 @@ def plot_direc_DOS(
     ax.plot(DOS[0], f, c='r', label='x')
     ax.plot(DOS[1], f, c='g', label='y')
     ax.plot(DOS[2], f, c='b', label='z')
-    ax.plot(np.sum(DOS, axis=0), f, c='k', label='total')
+    ax.plot(np.sum(DOS, axis=0), f, c='k')
     ax.set_ylim((freqlim_low, freqlim_up))
-    ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-    ax.set_xticklabels([])
+    if boson_peak:
+        ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+    else:
+        ax.set_xlabel('PhDOS', fontsize='x-large')
+    # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     ax.set_xlim((DOS_low,DOS_up))
-    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.4)
     if legend_bool:
-        plt.legend(fontsize='large').set_draggable(True)
+        plt.legend(fontsize='large', handlelength=1).set_draggable(True)
     else:
         plt.legend().set_visible(False)
 
@@ -159,6 +167,7 @@ def plot_chem_DOS(
     DOS_up=None,
     lcolor_list=None,
     legend_bool=True,
+    boson_peak=False,
     ):
     """
     f (arr)
@@ -198,18 +207,21 @@ def plot_chem_DOS(
     #
     for spec_i in range(len(unique_spec)):
         ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
-    ax.plot(np.sum(np.sum(PDOS_list, axis=0), axis=0), f, color='k', label='Total')
+    ax.plot(np.sum(np.sum(PDOS_list, axis=0), axis=0), f, color='k')
     ax.set_ylim((freqlim_low, freqlim_up))
-    ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-    ax.set_xticklabels([])
+    if boson_peak:
+        ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+    else:
+        ax.set_xlabel('PhDOS', fontsize='x-large')
+    # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
     ax.set_xlim((DOS_low, DOS_up))
-    plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.grid(alpha=0.4)
     if legend_bool:
-        plt.legend(fontsize='large').set_draggable(True)
+        plt.legend(fontsize='large', handlelength=1).set_draggable(True)
     else:
         plt.legend().set_visible(False)
 
@@ -219,18 +231,21 @@ def plot_chem_DOS(
         ax.plot(PDOS_list[spec_i, 0], f, label='x', c='r')
         ax.plot(PDOS_list[spec_i, 1], f, label='y', c='g')
         ax.plot(PDOS_list[spec_i, 2], f, label='z', c='b')
-        ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, label='total', c='k')
+        ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, c='k')
         ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_xticklabels([])
+        if boson_peak:
+            ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+        else:
+            ax.set_xlabel('PhDOS', fontsize='x-large')
+        # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((DOS_low, DOS_up))
-        plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.grid(alpha=0.4)
         if legend_bool:
-            plt.legend(fontsize='large').set_draggable(True)
+            plt.legend(fontsize='large', handlelength=1).set_draggable(True)
         else:
             plt.legend().set_visible(False)
         plt.title(unique_spec[spec_i])
@@ -242,18 +257,21 @@ def plot_chem_DOS(
         #
         for spec_i in range(len(unique_spec)):
             ax.plot(PDOS_list[spec_i, direc_i], f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
-        ax.plot(np.sum(PDOS_list[:, direc_i], axis=0), f, label='Total', c='k')
+        ax.plot(np.sum(PDOS_list[:, direc_i], axis=0), f, c='k')
         ax.set_ylim((freqlim_low, freqlim_up))
-        ax.set_xlabel('DOS (arb. units)', fontsize='x-large')
-        ax.set_xticklabels([])
+        if boson_peak:
+            ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+        else:
+            ax.set_xlabel('PhDOS', fontsize='x-large')
+        # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((DOS_low, DOS_up))
-        plt.subplots_adjust(left=0.45, bottom=0.25, right=0.55, top=0.752, wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.grid(alpha=0.4)
         if legend_bool:
-            plt.legend(fontsize='large').set_draggable(True)
+            plt.legend(fontsize='large', handlelength=1).set_draggable(True)
         else:
             plt.legend().set_visible(False)
         plt.title(direcs[direc_i])
@@ -382,6 +400,7 @@ if __name__ == '__main__':
             DOS_low=DOS_low,
             DOS_up=DOS_up,
             legend_bool=args.legend_bool,
+            boson_peak=args.boson_peak,
             )
         plot_direc_DOS(
             plt,
@@ -393,6 +412,7 @@ if __name__ == '__main__':
             DOS_low=DOS_low,
             DOS_up=DOS_up,
             legend_bool=args.legend_bool,
+            boson_peak=args.boson_peak,
             )
         if cdos_bool:
             atoms = read(args.inp_file_list[i], 0)
@@ -408,5 +428,6 @@ if __name__ == '__main__':
                 DOS_up=DOS_up,
                 lcolor_list=args.lcolor_list,
                 legend_bool=args.legend_bool,
+                boson_peak=args.boson_peak,
                 )
         plt.show()

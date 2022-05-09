@@ -1,0 +1,86 @@
+# Si 4nd
+
+units			metal
+atom_style		atomic
+newton          off
+boundary		p p p
+
+#box             tilt large
+read_data		structure.in
+
+mass			1 72.64
+mass            2 121.76
+mass			3 127.60
+
+pair_style		nequip
+pair_coeff		* * ../../../../../frozen_model.pb Ge Sb Te
+
+compute         pe all pe/atom
+compute         2 all pressure thermo_temp
+region          kooi block INF INF 0 28.7 INF INF
+group           kooi region kooi
+region          notkooi block INF INF 28.7 INF INF INF
+group           notkooi region notkooi
+
+#read_dump       init.dump 100 x y z vx vy vz box yes replace yes
+#fix				1 all nve
+fix				1 all nvt temp 1100 1100 1.00
+#fix				1 all npt temp 1100 1100 1.0 aniso 0 0 100.0
+velocity		notkooi create 1100.0 1031
+velocity        kooi set 0 0 0
+fix             2 kooi setforce 0 0 0 
+
+thermo_style    custom step etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press pxx pyy pzz pyz pxz pxy vol
+thermo_modify   format float %.15g
+thermo			1000
+log             melt-log.lammps
+
+#dump			myDump all atom 100 atom.dump
+dump			1 all custom 1000 melt-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify		1 element Ge Sb Te
+
+timestep		0.01
+run				10000
+
+####### Quench
+undump          1
+dump			1 all custom 1000 quench-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify		1 element Ge Sb Te
+log             quench-log.lammps
+
+unfix           1
+unfix           2
+fix				1 all nvt temp 1100 300 1.00
+#fix				1 all npt temp 1100 300 1.0 aniso 0 0 100.0
+fix             2 kooi setforce 0 0 0 
+run				10000
+
+####### Heat
+velocity        kooi create 300.0 1031
+velocity        all zero linear
+velocity        all zero angular
+
+undump          1
+dump			1 all custom 1000 heat-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify		1 element Ge Sb Te
+log             heat-log.lammps
+
+unfix           1
+unfix           2
+fix				1 all nvt temp 300 700 1.00
+#fix				1 all npt temp 300 700 1.0 aniso 0 0 100.0
+run				10000
+
+####### Anneal
+velocity        all zero linear
+velocity        all zero angular
+
+undump          1
+dump			1 all custom 1000 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify		1 element Ge Sb Te
+log             log.lammps
+
+unfix           1
+fix				1 all nvt temp 700 700 1.00
+#fix				1 all npt temp 700 700 1.0 aniso 0 0 100.0
+run				10000
