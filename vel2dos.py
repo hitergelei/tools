@@ -287,6 +287,7 @@ def argparse():
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-p', '--chemical_DOS', action='store_true', help='Plot species-wise partial DOS.')
+    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in frequency unit. Zero means no smearing. [default: 0]')
     parser.add_argument('-l', '--freqlim_low', type=float, default=0.02, help='Set frequency lower limit for plot. [default: 0.02]')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
     parser.add_argument('-m', '--DOS_low', type=float, default=0., help='Set DOS lower limit for plot. Zero as default.')
@@ -318,6 +319,7 @@ if __name__ == '__main__':
     ## Read input params
     dt          = args.dt
     cdos_bool   = args.chemical_DOS
+    gsmear_std  = args.gsmear
     freqlim_low = args.freqlim_low
     freqlim_up  = args.freqlim_up
     DOS_low     = args.DOS_low
@@ -379,6 +381,14 @@ if __name__ == '__main__':
     # # Print area (Normalization test)
     # d_f = 1. / (dt * (len(f)-1)*2)
     # print(np.sum(ADOS) * d_f)
+    #
+    d_f = f[1] - f[0]
+    ADOS_list = np.array(ADOS_list)
+
+    if not gsmear_std == 0:
+        print(' Gaussian smearing...')
+        from scipy.ndimage.filters import gaussian_filter1d
+        ADOS_list = gaussian_filter1d(ADOS_list, gsmear_std /d_f)
 
     if plot_bool:
         ## Averaging ADOS shape=(len(atoms), 3, len(f))
