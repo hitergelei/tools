@@ -67,8 +67,8 @@ def plot_total_DOS(
     unit='THz',
     freqlim_low=None,
     freqlim_up=None,
-    DOS_low=None,
-    DOS_up=None,
+    doslim_low=None,
+    doslim_up=None,
     legend_bool=True,
     boson_peak=False,
     ):
@@ -80,13 +80,6 @@ def plot_total_DOS(
     freqlim_up  (float or None) : 
     """
     ## Preprocess
-    # Frequency scaling
-    if unit is 'THz':
-        pass
-    elif unit is 'meV':
-        from phonopy import units
-        f *= units.THztoEv * 1e3
-
     DOS = np.sum(np.sum(ADOS, axis=0), axis=0)
 
     ## Plot
@@ -99,7 +92,7 @@ def plot_total_DOS(
         ax.set_xlabel('PhDOS', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
-    ax.set_xlim((DOS_low,DOS_up))
+    ax.set_xlim((doslim_low,doslim_up))
     plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     ax.xaxis.set_major_locator(plt.MaxNLocator(1))
@@ -112,8 +105,8 @@ def plot_direc_DOS(
     unit='THz',
     freqlim_low=None,
     freqlim_up=None,
-    DOS_low=None,
-    DOS_up=None,
+    doslim_low=None,
+    doslim_up=None,
     legend_bool=True,
     boson_peak=False,
     ):
@@ -125,13 +118,6 @@ def plot_direc_DOS(
     freqlim_up  (float or None) : 
     """
     ## Preprocess
-    # Frequency scaling
-    if unit is 'THz':
-        pass
-    elif unit is 'meV':
-        from phonopy import units
-        f *= units.THztoEv * 1e3
-
     DOS = np.sum(ADOS, axis=0)
 
     ## Plot
@@ -147,7 +133,7 @@ def plot_direc_DOS(
         ax.set_xlabel('PhDOS', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
-    ax.set_xlim((DOS_low,DOS_up))
+    ax.set_xlim((doslim_low,doslim_up))
     plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     ax.xaxis.set_major_locator(plt.MaxNLocator(1))
@@ -165,9 +151,9 @@ def plot_chem_DOS(
     unit='THz',
     freqlim_low=None,
     freqlim_up=None,
-    DOS_low=None,
-    DOS_up=None,
-    lcolor_list=None,
+    doslim_low=None,
+    doslim_up=None,
+    lc_list=None,
     legend_bool=True,
     boson_peak=False,
     ):
@@ -181,12 +167,6 @@ def plot_chem_DOS(
     """
     ## Preprocess
     species_arr = np.array(species_arr)
-    # Frequency scaling
-    if unit is 'THz':
-        pass
-    elif unit is 'meV':
-        from phonopy import units
-        f *= units.THztoEv * 1e3
     # Species
     unique_spec = np.unique(species_arr)
     atomic_index = np.arange(len(species_arr))
@@ -197,10 +177,10 @@ def plot_chem_DOS(
     PDOS_list = []
     for spec_i in range(len(unique_spec)):
         PDOS_list.append(np.sum(ADOS[pdos_indices[spec_i]], axis=0))
-    if not lcolor_list:
-        lcolor_list = [None]*len(unique_spec)
-    elif len(lcolor_list) != len(unique_spec):
-        raise ValueError('len of    lcolor_list=={}   and    unique_spec=={}    must be same.'.format(lcolor_list, unique_spec))
+    if not lc_list:
+        lc_list = [None]*len(unique_spec)
+    elif len(lc_list) != len(unique_spec):
+        raise ValueError('len of    lc_list=={}   and    unique_spec=={}    must be same.'.format(lc_list, unique_spec))
     PDOS_list = np.array(PDOS_list)
 
 
@@ -208,7 +188,7 @@ def plot_chem_DOS(
     fig, ax = plt.subplots()
     #
     for spec_i in range(len(unique_spec)):
-        ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
+        ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, label=unique_spec[spec_i], c=lc_list[spec_i])
     ax.plot(np.sum(np.sum(PDOS_list, axis=0), axis=0), f, color='k')
     ax.set_ylim((freqlim_low, freqlim_up))
     if boson_peak:
@@ -218,7 +198,7 @@ def plot_chem_DOS(
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
-    ax.set_xlim((DOS_low, DOS_up))
+    ax.set_xlim((doslim_low, doslim_up))
     plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     ax.xaxis.set_major_locator(plt.MaxNLocator(1))
@@ -243,7 +223,7 @@ def plot_chem_DOS(
         # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
-        ax.set_xlim((DOS_low, DOS_up))
+        ax.set_xlim((doslim_low, doslim_up))
         plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         ax.xaxis.set_major_locator(plt.MaxNLocator(1))
@@ -260,7 +240,7 @@ def plot_chem_DOS(
         fig, ax = plt.subplots()
         #
         for spec_i in range(len(unique_spec)):
-            ax.plot(PDOS_list[spec_i, direc_i], f, label=unique_spec[spec_i], c=lcolor_list[spec_i])
+            ax.plot(PDOS_list[spec_i, direc_i], f, label=unique_spec[spec_i], c=lc_list[spec_i])
         ax.plot(np.sum(PDOS_list[:, direc_i], axis=0), f, c='k')
         ax.set_ylim((freqlim_low, freqlim_up))
         if boson_peak:
@@ -270,7 +250,7 @@ def plot_chem_DOS(
         # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
-        ax.set_xlim((DOS_low, DOS_up))
+        ax.set_xlim((doslim_low, doslim_up))
         plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         ax.xaxis.set_major_locator(plt.MaxNLocator(1))
@@ -295,15 +275,16 @@ def argparse():
     parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in frequency unit. Zero means no smearing. [default: 0]')
     parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. [default: 0]')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
-    parser.add_argument('-m', '--DOS_low', type=float, default=1e-5, help='Set DOS lower limit for plot. [default: 1e-5]')
-    parser.add_argument('-v', '--DOS_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
+    parser.add_argument('-m', '--doslim_low', type=float, default=1e-5, help='Set DOS lower limit for plot. [default: 1e-5]')
+    parser.add_argument('-v', '--doslim_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
     parser.add_argument('-t', '--dont_plot', dest='plot_bool', action='store_false', help='Do not plot, if provided. [default: Plot].')
     parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
     parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
-    parser.add_argument('-c', '--lcolor_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lcolor_list) == len(np.unique(chem)) [default: automatic].')
+    parser.add_argument('-c', '--lc_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lc_list) == len(np.unique(chem)) [default: automatic].')
     parser.add_argument('-k', '--boson_peak', action='store_true', help='Plot g(f)/f**2 to seek boson peak. [default: False].')
+    parser.add_argument('-e', '--meV_unit', action='store_true', help='Use meV unit [default: THz]')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -327,14 +308,18 @@ if __name__ == '__main__':
     gsmear_std  = args.gsmear
     freqlim_low = args.freqlim_low
     freqlim_up  = args.freqlim_up
-    DOS_low     = args.DOS_low
-    DOS_up      = args.DOS_up
+    doslim_low     = args.doslim_low
+    doslim_up      = args.doslim_up
     plot_bool   = args.plot_bool
+    if args.meV_unit:
+        unit = 'meV'
+    else:
+        unit = 'THz'
     from ss_util import str_slice_to_list
     slice_list = str_slice_to_list(args.image_slice)
-    # inp_file_list
-    from ase.io import read
+
     ## Main loop
+    from ase.io import read
     ADOS_list = []
     for i in range(len(args.inp_file_list)):
         f_name = args.inp_file_list[i].split('/')[-1]
@@ -387,6 +372,12 @@ if __name__ == '__main__':
     # d_f = 1. / (dt * (len(f)-1)*2)
     # print(np.sum(ADOS) * d_f)
     #
+    # Frequency scaling
+    if unit is 'THz':
+        pass
+    elif unit is 'meV':
+        from phonopy import units
+        f *= units.THztoEv * 1e3
     d_f = f[1] - f[0]
     ADOS_list = np.array(ADOS_list)
 
@@ -412,8 +403,8 @@ if __name__ == '__main__':
             unit='THz',
             freqlim_low=freqlim_low,
             freqlim_up=freqlim_up,
-            DOS_low=DOS_low,
-            DOS_up=DOS_up,
+            doslim_low=doslim_low,
+            doslim_up=doslim_up,
             legend_bool=args.legend_bool,
             boson_peak=args.boson_peak,
             )
@@ -424,8 +415,8 @@ if __name__ == '__main__':
             unit='THz',
             freqlim_low=freqlim_low,
             freqlim_up=freqlim_up,
-            DOS_low=DOS_low,
-            DOS_up=DOS_up,
+            doslim_low=doslim_low,
+            doslim_up=doslim_up,
             legend_bool=args.legend_bool,
             boson_peak=args.boson_peak,
             )
@@ -439,9 +430,9 @@ if __name__ == '__main__':
                 unit='THz',
                 freqlim_low=freqlim_low,
                 freqlim_up=freqlim_up,
-                DOS_low=DOS_low,
-                DOS_up=DOS_up,
-                lcolor_list=args.lcolor_list,
+                doslim_low=doslim_low,
+                doslim_up=doslim_up,
+                lc_list=args.lc_list,
                 legend_bool=args.legend_bool,
                 boson_peak=args.boson_peak,
                 )

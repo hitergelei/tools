@@ -554,7 +554,7 @@ def two_dos_plot(
 def calc_dos(
     phonon,
     mode_projection,
-    pdos_precision,
+    pdos_mesh,
     dos_tetrahedron,
     ):
     ## Get name
@@ -568,9 +568,7 @@ def calc_dos(
         )
     dir_name = job_name + '.pdos/'
     call('mkdir {}'.format(dir_name), shell=True)
-    from kpoints_gen import get_grid_num
-    k_grids = get_grid_num(phonon.get_supercell().cell, precision=pdos_precision)
-    pckl_name = dir_name + 'p-{:d}_k-{:d}-{:d}-{:d}_tetra-{}.bin'.format(pdos_precision, k_grids[0],k_grids[1],k_grids[2], dos_tetrahedron)
+    pckl_name = dir_name + 'k-{:d}-{:d}-{:d}_tetra-{}.bin'.format(pdos_mesh[0], pdos_mesh[1], pdos_mesh[2], dos_tetrahedron)
     ## 
     import pickle as pckl
     try:
@@ -579,13 +577,14 @@ def calc_dos(
         print('Failed to load PDOS pickle file. Expected file name: {}'.format(pckl_name).center(120))
         print('PDOS calculation will be carried out'.center(120))
         phonon.run_mesh(
-            [k_grids[0], k_grids[1], k_grids[2]],
+            pdos_mesh,
             is_mesh_symmetry=False,
             with_eigenvectors=True,
             is_gamma_center=True,
             )
         phonon.run_projected_dos(
             use_tetrahedron_method=dos_tetrahedron,
+            xyz_projection=True,
             )
         pckl.dump(phonon._pdos, open(pckl_name, 'wb'), protocol=2)
     else:
@@ -615,82 +614,130 @@ def calc_dos(
 
 def plot_pdos(
     phonon,
-    chemical_pdos,
-    pdos_colors,
-    total_dos_bool,
-    mode_projection,
-    proj_multiple_coef,
-    proj_colors,
-    unit,
-    freqlim_low,
-    freqlim_up,
-    doslim_low,
-    doslim_up,
-    flip_pdos_xy,
-    legend_bool,
-    save_svg,
+    mode_projection = None,
+    chemical_DOS    = False,
+    boson_peak      = False,
+    gsmear_std      = 0.,
+    DOS_factor      = 1.,
+    freqlim_low     = None,
+    freqlim_up      = None,
+    doslim_low      = None,
+    doslim_up       = None,
+    lc_list         = None,
+    legend_bool     = True,
+    unit            = 'THz',
     ):
-    if chemical_pdos:
-        atoms = phonon._unitcell
-        from ss_util import get_chem_ind_arr
-        unique_chem, pdos_indices = get_chem_ind_arr(atoms.get_chemical_symbols())
-    else:
-        (unique_chem, pdos_indices) = (None, None)
-    plt, ax = phonon.plot_projected_dos(
-        pdos_indices,
-        pdos_colors,
-        unique_chem,
-        total_dos_bool,
-        flip_xy=flip_pdos_xy,
-        )
-    if mode_projection:
-        if proj_colors:
-            proj_colors.reverse()
-        else:
-            proj_colors = [None]*len(mode_projections.keys())
+    """
+    lc_list (list): Line color list. For partial DOS, len(lc_list) == len(np.unique(chem)).
+    """
 
+    if mode_projection:
         from phonopy.phonon.dos import get_pdos
         mode_pdos_list = []
         for mode in list(mode_projection.keys()):
             mode_pdos_list.append(get_pdos(
-                ax,
+                None,
                 phonon._pdos_mode[mode]._partial_dos,
-                pdos_indices,
+                None,
                 ))
-        mode_pdos = proj_multiple_coef *np.sum(mode_pdos_list, axis=1)
-        for pdos, mode in zip(mode_pdos, list(mode_projection.keys())):
-            if flip_pdos_xy:
-                ax.plot(-pdos, phonon._pdos._frequency_points, linewidth=2, label=mode, c=proj_colors.pop())
-            else:
-                ax.plot(phonon._pdos._frequency_points, -pdos, linewidth=2, label=mode, c=proj_colors.pop())
-        # mode_pdos_sum = np.sum(mode_pdos, axis=0)
-        # if flip_pdos_xy:
-            # ax.fill_between(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
-        # else:
-            # ax.fill_betweenx(-mode_pdos_sum, phonon._pdos._frequency_points, color='k', alpha=0.15)
+        mode_pdos = np.sum(mode_pdos_list, axis=1) /len(phonon._unitcell) # ?????????? why? /len(~~)? Solve the normalization problem.
 
-    if flip_pdos_xy:
-        plt.xlabel('PDOS (arb. units)',fontsize='x-large')
-        plt.ylabel('Frequency ({})'.format(unit), fontsize='x-large')
-        plt.subplots_adjust(left=0.30, bottom=0.15, right=0.75, top=0.97, wspace=0.2, hspace=0.2)
-        plt.ylim(freqlim_low, freqlim_up)
-        plt.xlim(doslim_low, doslim_up)
+    f = phonon._pdos._frequency_points
+    # Frequency scaling
+    if unit is 'THz':
+        pass
+    elif unit is 'meV':
+        from phonopy import units
+        f *= units.THztoEv * 1e3
+    d_f = f[1] - f[0]
+    ## ADOS.shape=(len(atoms), 3, len(f))
+    ADOS = np.reshape(phonon._pdos._partial_dos, (-1, 3, len(f))) *DOS_factor /len(phonon._unitcell) /3.
+
+    if not gsmear_std == 0:
+        print(' Gaussian smearing...')
+        from scipy.ndimage.filters import gaussian_filter1d
+        ADOS = gaussian_filter1d(ADOS, gsmear_std /d_f)
+        if mode_projection:
+            mode_pdos = gaussian_filter1d(mode_pdos, gsmear_std /d_f)
+
+    ## Boson peak
+    if boson_peak:
+        ADOS /= f**2
+        if mode_projection:
+            mode_pdos /= f**2
+
+    ## Plot
+    from matplotlib import pyplot as plt
+    font = {'family':'Arial'}
+    plt.rc('font', **font)
+    if mode_projection:
+        fig, ax = plt.subplots()
+
+        if not lc_list:
+            lc_list = [None]*len(mode_pdos)
+        for i in range(len(mode_pdos)):
+            plt.plot(mode_pdos[i], phonon._pdos._frequency_points, label=list(mode_projection.keys())[i], c=lc_list[i])
+
+        DOS = np.sum(np.sum(ADOS, axis=0), axis=0)
+        ax.plot(DOS, f, c='k')
+
+        ax.set_ylim((freqlim_low, freqlim_up))
+        if boson_peak:
+            ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+        else:
+            ax.set_xlabel('PhDOS', fontsize='x-large')
+        # ax.set_xticklabels([])
+        ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
+        ax.set_xlim((doslim_low,doslim_up))
+        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        ax.xaxis.set_major_locator(plt.MaxNLocator(1))
+        plt.grid(alpha=0.4)
+        plt.show()
+
     else:
-        plt.xlabel('Frequency ({})'.format(unit), fontsize='x-large')
-        plt.ylabel('PDOS (arb. units)',fontsize='x-large')
-        plt.subplots_adjust(left=0.12, bottom=0.30, right=0.99, top=0.70, wspace=0.2, hspace=0.2)
-        plt.xlim(freqlim_low, freqlim_up)
-        plt.ylim(doslim_low, doslim_up)
-    from math import ceil, floor
-    ax.set_yticks(range(int(ceil(freqlim_low)),int(floor(freqlim_up)+1),1))
-    ax.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.legend(fontsize='x-large')
-    if not legend_bool:
-        plt.legend().remove()
-    plt.grid(alpha=0.4)
-    if save_svg:
-        plt.savefig('figure.svg', format='svg')
-    plt.show()
+        from vel2dos import plot_total_DOS, plot_direc_DOS, plot_chem_DOS
+        plot_total_DOS(
+            plt,
+            f,
+            ADOS,
+            unit='THz',
+            freqlim_low=freqlim_low,
+            freqlim_up=freqlim_up,
+            doslim_low=doslim_low,
+            doslim_up=doslim_up,
+            legend_bool=legend_bool,
+            boson_peak=boson_peak,
+            )
+        plot_direc_DOS(
+            plt,
+            f,
+            ADOS,
+            unit='THz',
+            freqlim_low=freqlim_low,
+            freqlim_up=freqlim_up,
+            doslim_low=doslim_low,
+            doslim_up=doslim_up,
+            legend_bool=legend_bool,
+            boson_peak=boson_peak,
+            )
+        if chemical_DOS:
+            atoms = phonon._unitcell
+            plot_chem_DOS(
+                plt,
+                f,
+                ADOS,
+                atoms.get_chemical_symbols(),
+                unit='THz',
+                freqlim_low=freqlim_low,
+                freqlim_up=freqlim_up,
+                doslim_low=doslim_low,
+                doslim_up=doslim_up,
+                lc_list=lc_list,
+                legend_bool=legend_bool,
+                boson_peak=boson_peak,
+                )
+        plt.show()
 
 def plot_gruneisen_band(
     GruPho,

@@ -13,14 +13,14 @@ calc = 'vasp'
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
-# cp_files = None
+cp_files = None
 # cp_files = ['Si.tersoff',]
-cp_files = ['input-phonon.in',]
+# cp_files = ['frozen_model.pb',]
 acou_sum_rule = True
 # acou_sum_rule = False
 # rot_sum_rule = True
 rot_sum_rule = False
-# r_cut = 4.5
+# r_cut = 11.0
 r_cut = None
 # masses = [1., 1.2]
 masses = None
@@ -29,9 +29,9 @@ masses = None
 from os import environ
 environ['CUDA_VISIBLE_DEVICES'] = ''
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('gete-alpha-prim.vasp')
+atoms = vasp.read_vasp('POSCAR_1_Kooi')
 N                  = 4
-NNN                = [[N,0,0],[0,N,0],[0,0,N]]
+NNN                = [[N,0,0],[0,N,0],[0,0,1]]
 delta              = 0.010
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
@@ -41,8 +41,8 @@ symmetry           = True
 # symmetry           = False
 # nac                = True
 nac                = False
-run_mode           = 'phonon'
-# run_mode           = 'pdos'
+# run_mode           = 'phonon'
+run_mode           = 'pdos'
 # run_mode           = 'jdos'
 # num_freq_points    = 500
 # temp               = np.concatenate([
@@ -50,33 +50,36 @@ run_mode           = 'phonon'
     # np.arange(12,60,3, dtype=float),
     # np.arange(60,400,10, dtype=float),
     # ]).tolist() # (K)
-# freqlim_up         = 24.17989
-freqlim_up         = None
-# freqlim_low        = 0
-freqlim_low        = None
+freqlim_up         = 5.5
+# freqlim_up         = None
+freqlim_low        = 0.0
+# freqlim_low        = None
 unit               = 'THz'
 # unit               = 'meV'
-legend_bool        = False
+legend_bool        = True
+# legend_bool        = False
 plot_bool          = True
 # mode_projection    = {'g1':np.load('g1.npy'), 'g2':np.load('g2.npy'), 'g3':np.load('g3.npy')}
-mode_projection    = None
-# mode_projection    = {'Eu-A':np.load('eu1.npy'), 'Eu-B':np.load('eu2.npy')}
-scatter_max_size   = 200
-proj_alpha         = 0.5
-save_svg           = True
+# mode_projection    = {'Eu-A':np.load('eu2.npy'), 'Eu-B':np.load('eu1.npy')}
+mode_projection    = {'a-1':np.load('a0.npy'), 'a-2':np.load('a1.npy'), 'a-3':np.load('a2.npy')}
+# mode_projection    = None
+scatter_max_size   = 100
+proj_alpha         = 0.2
 scatter_interval   = 1
 proj_facecolors    = ['g', 'r', 'b']
 proj_edgecolors    = ['g', 'r', 'b']
     ## PDOS arguments
-pdos_mesh          = [60,60,60]
-chemical_pdos      = True
-proj_multiple_coef = 8.
-pdos_colors        = ['teal','firebrick','olive']
-flip_pdos_xy       = True
+pdos_mesh          = [20,20,20]
+chemical_DOS       = True
+boson_peak         = False
+pdos_smear_std     = 0.025
+DOS_factor         = 1.
+doslim_up          = None
+doslim_low         = 1e-5
+pdos_colors        = None
+# pdos_colors        = ['teal','firebrick','olive']
 dos_tetrahedron    = True
 total_dos_bool     = True
-doslim_up          = None
-doslim_low         = None
     ## Phonon arguments
 # reverse_seq        = True
 reverse_seq        = False
@@ -193,8 +196,10 @@ K = points['K']
 A = points['A']
 L = points['L']
 H = points['H']
-path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
-labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
+path = [[K, G], [G, M], [M, K]]
+labels = ['K', '$\Gamma$', 'M', 'K']
+# path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A]]
+# labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
 
 # points = ibz_points['fcc']
 # G = points['Gamma']
@@ -236,7 +241,7 @@ phonon.run_mesh(
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.00000333,0.00000333,0.])
 # freq, eigvec = phonon.get_frequencies_with_eigenvectors([0.,0.000001,0.])
 freq, eigvec = phonon.get_frequencies_with_eigenvectors(G)
-eigvec = eigvec.T # Numpy convention
+eigvec = eigvec.T
 np.savez('freqNeigvec', freq=freq, eigvec=eigvec)
 
 ########## Plot ################
@@ -283,28 +288,26 @@ if run_mode == 'pdos':
     ssp.calc_dos(
         phonon,
         mode_projection,
-        250,
+        pdos_mesh,
         dos_tetrahedron,
         )
 
-    phonon.write_projected_dos('pdos-'+calc+'.in')
+    # phonon.write_projected_dos('pdos-'+calc+'.in')
     if plot_bool:
         ssp.plot_pdos(
             phonon,
-            chemical_pdos,
-            pdos_colors,
-            total_dos_bool,
-            mode_projection,
-            proj_multiple_coef,
-            proj_edgecolors,
-            unit,
-            freqlim_low,
-            freqlim_up,
-            doslim_low,
-            doslim_up,
-            flip_pdos_xy,
-            legend_bool,
-            save_svg,
+            mode_projection = mode_projection,
+            chemical_DOS    = chemical_DOS,
+            boson_peak      = boson_peak,
+            gsmear_std      = pdos_smear_std,
+            DOS_factor      = DOS_factor,
+            freqlim_low     = freqlim_low,
+            freqlim_up      = freqlim_up,
+            doslim_low      = doslim_low,
+            doslim_up       = doslim_up,
+            lc_list         = pdos_colors,
+            legend_bool     = legend_bool,
+            unit            = unit,
             )
 
 if run_mode == 'jdos':
@@ -325,3 +328,4 @@ if run_mode == 'jdos':
         grid_points=phonon.mesh.get_ir_grid_points(),
         write_jdos=True,
         )
+
