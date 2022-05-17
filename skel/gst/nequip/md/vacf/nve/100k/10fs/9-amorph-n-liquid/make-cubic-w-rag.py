@@ -24,7 +24,7 @@ atoms = RAG(
     cutoff_frac   = 0.80,
     random_radi   = 0.0,
     pin_the_fixed = True,
-    strain_ratio  = [0.988948, 0.988948, 0.988948],
+    strain_ratio  = [1.025458575, 1.025458575, 1.025458575],
     )
 
 write('amorph-w-rag.vasp', atoms)

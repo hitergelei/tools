@@ -102,6 +102,7 @@ def plot_total_DOS(
     ax.set_xlim((DOS_low,DOS_up))
     plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    ax.xaxis.set_major_locator(plt.MaxNLocator(1))
     plt.grid(alpha=0.4)
 
 def plot_direc_DOS(
@@ -135,8 +136,8 @@ def plot_direc_DOS(
 
     ## Plot
     fig, ax = plt.subplots()
-    ax.plot(DOS[0], f, c='r', label='x')
-    ax.plot(DOS[1], f, c='g', label='y')
+    ax.plot(DOS[0], f, c='g', label='x')
+    ax.plot(DOS[1], f, c='r', label='y')
     ax.plot(DOS[2], f, c='b', label='z')
     ax.plot(np.sum(DOS, axis=0), f, c='k')
     ax.set_ylim((freqlim_low, freqlim_up))
@@ -149,6 +150,7 @@ def plot_direc_DOS(
     ax.set_xlim((DOS_low,DOS_up))
     plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    ax.xaxis.set_major_locator(plt.MaxNLocator(1))
     plt.grid(alpha=0.4)
     if legend_bool:
         plt.legend(fontsize='large', handlelength=1).set_draggable(True)
@@ -219,6 +221,7 @@ def plot_chem_DOS(
     ax.set_xlim((DOS_low, DOS_up))
     plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
+    ax.xaxis.set_major_locator(plt.MaxNLocator(1))
     plt.grid(alpha=0.4)
     if legend_bool:
         plt.legend(fontsize='large', handlelength=1).set_draggable(True)
@@ -228,8 +231,8 @@ def plot_chem_DOS(
     ## Chemical-directional plot
     for spec_i in range(len(unique_spec)):
         fig, ax = plt.subplots()
-        ax.plot(PDOS_list[spec_i, 0], f, label='x', c='r')
-        ax.plot(PDOS_list[spec_i, 1], f, label='y', c='g')
+        ax.plot(PDOS_list[spec_i, 0], f, label='x', c='g')
+        ax.plot(PDOS_list[spec_i, 1], f, label='y', c='r')
         ax.plot(PDOS_list[spec_i, 2], f, label='z', c='b')
         ax.plot(np.sum(PDOS_list[spec_i], axis=0), f, c='k')
         ax.set_ylim((freqlim_low, freqlim_up))
@@ -243,6 +246,7 @@ def plot_chem_DOS(
         ax.set_xlim((DOS_low, DOS_up))
         plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        ax.xaxis.set_major_locator(plt.MaxNLocator(1))
         plt.grid(alpha=0.4)
         if legend_bool:
             plt.legend(fontsize='large', handlelength=1).set_draggable(True)
@@ -269,6 +273,7 @@ def plot_chem_DOS(
         ax.set_xlim((DOS_low, DOS_up))
         plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        ax.xaxis.set_major_locator(plt.MaxNLocator(1))
         plt.grid(alpha=0.4)
         if legend_bool:
             plt.legend(fontsize='large', handlelength=1).set_draggable(True)
@@ -288,9 +293,9 @@ def argparse():
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-p', '--chemical_DOS', action='store_true', help='Plot species-wise partial DOS.')
     parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in frequency unit. Zero means no smearing. [default: 0]')
-    parser.add_argument('-l', '--freqlim_low', type=float, default=0.02, help='Set frequency lower limit for plot. [default: 0.02]')
+    parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. [default: 0]')
     parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
-    parser.add_argument('-m', '--DOS_low', type=float, default=0., help='Set DOS lower limit for plot. Zero as default.')
+    parser.add_argument('-m', '--DOS_low', type=float, default=1e-5, help='Set DOS lower limit for plot. [default: 1e-5]')
     parser.add_argument('-v', '--DOS_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')

@@ -38,6 +38,8 @@ def read_lmp_log(
                 raise RuntimeError
             else:
                 pass
+        if len(lines[start_lines[j]]) != len(lines[end_line]):
+            end_line -= 1
         end_lines.append(end_line)
 
     print("Found end line: {}".format(end_lines))
