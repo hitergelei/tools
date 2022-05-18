@@ -605,7 +605,7 @@ def calc_dos(
                 phonon._pdos_mode[mode] = deepcopy(phonon._pdos)
                 sim = []
                 for i in range(len(phonon._pdos_mode[mode]._eigenvectors)):
-                    sim.append(np.square(np.abs(np.dot(np.transpose(phonon._pdos_mode[mode]._eigenvectors[i]), np.reshape(mode_projection[mode], (-1))))))
+                    sim.append(np.square(np.abs(np.vdot(np.transpose(phonon._pdos_mode[mode]._eigenvectors[i]), np.reshape(mode_projection[mode], (-1))))))
                 phonon._pdos_mode[mode]._weights = np.array(sim)
                 phonon._pdos_mode[mode]._run_tetrahedron_method()
                 pckl.dump(phonon._pdos_mode[mode], open(mode_pckl_name, 'wb'), protocol=2)
@@ -640,7 +640,7 @@ def plot_pdos(
                 phonon._pdos_mode[mode]._partial_dos,
                 None,
                 ))
-        mode_pdos = np.sum(mode_pdos_list, axis=1) /len(phonon._unitcell) # ?????????? why? /len(~~)? Solve the normalization problem.
+        mode_pdos = np.sum(mode_pdos_list, axis=1) /len(phonon._unitcell) /3. # ?????????? why? /len(~~)? Solve the normalization problem.
 
     f = phonon._pdos._frequency_points
     # Frequency scaling
