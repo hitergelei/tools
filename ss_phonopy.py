@@ -605,7 +605,7 @@ def calc_dos(
                 phonon._pdos_mode[mode] = deepcopy(phonon._pdos)
                 sim = []
                 for i in range(len(phonon._pdos_mode[mode]._eigenvectors)):
-                    sim.append(np.square(np.abs(np.vdot(np.transpose(phonon._pdos_mode[mode]._eigenvectors[i]), np.reshape(mode_projection[mode], (-1))))))
+                    sim.append(np.square(np.abs(np.dot(phonon._pdos_mode[mode]._eigenvectors[i].conj().T, np.reshape(mode_projection[mode], (-1))))))
                 phonon._pdos_mode[mode]._weights = np.array(sim)
                 phonon._pdos_mode[mode]._run_tetrahedron_method()
                 pckl.dump(phonon._pdos_mode[mode], open(mode_pckl_name, 'wb'), protocol=2)
