@@ -1,0 +1,47 @@
+# Si 4nd
+
+units			metal
+atom_style		atomic
+newton          off
+boundary		p p p
+
+#box             tilt large
+read_data		structure.in
+
+mass			1 72.64
+mass            2 121.76
+mass			3 127.60
+
+pair_style		nequip
+pair_coeff		* * ../../../../../frozen_model.pb Ge Sb Te
+
+#velocity		all create 2000.0 1031
+compute         pe all pe/atom
+compute         2 all pressure thermo_temp
+
+read_dump       init.dump 130000 x y z vx vy vz box yes replace yes
+
+thermo_style    custom step temp etotal pe ke press pxx pyy pzz pyz pxz pxy vol
+thermo_modify   format float %.8g
+thermo			1000
+log             pre-log.lammps
+
+#dump			myDump all atom 100 atom.dump
+dump			1 all custom 1000 pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify		1 element Ge Sb Te
+
+# VACF
+fix				1 all nvt temp 100 100 1.00
+
+timestep		0.001
+run             5000
+
+thermo          50
+log             log.lammps
+
+undump          1
+dump            1 all custom 50 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump_modify     1 element Ge Sb Te
+
+timestep		0.001
+run             100000
