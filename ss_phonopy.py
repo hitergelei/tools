@@ -420,7 +420,7 @@ def bs_plot(self, plt, ax, scatter_max_size, proj_facecolors, proj_edgecolors, p
         if reverse_seq:
             legend.reverse(); key_list.reverse()
         if legend_bool:
-            plt.legend(legend, key_list, scatterpoints = 1, fontsize='x-large', loc='upper right')
+            plt.legend(legend, key_list, scatterpoints = 1, fontsize='x-large', loc='upper right').set_draggable(True)
     else:
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
@@ -547,7 +547,7 @@ def two_dos_plot(
             phonon_dict[key]._total_dos.plot(plt, flip_xy=True, draw_grid=False, color=None, legend=key)
 
     ax.set_ylim((ylim_lower, ylim_upper))
-    plt.legend()
+    plt.legend().set_draggable(True)
 
     return plt
 
