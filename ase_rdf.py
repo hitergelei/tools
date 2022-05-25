@@ -42,18 +42,19 @@ def get_RDF(
 def get_s_factor(
     r,
     RDF,
+    rho,
     ):
     """
                               inf                sin(kr) 
     S(k) = 1 + 4 \pi \rho dr (sum) r^2 {g(r)-1} ---------
                               r=0                  kr    
-    where \rho: density
+    where \rho: Number density
           g(r): RDF
     """
     dr = r[1] - r[0]
     k = np.fft.fftfreq(len(r)) / dr
     kr_matrix = k.reshape(-1,1) *r.reshape(-1,1).T
-    S = 1. +4*np.pi *0.030 *dr *np.sum(
+    S = 1. +4*np.pi *rho *dr *np.sum(
         np.reshape(r**2 *(RDF-1), (1,-1)) *np.sinc(kr_matrix/np.pi),
         axis=1,
         )
@@ -196,6 +197,15 @@ if __name__ == '__main__':
     gsmear_std  = args.gsmear
     rectify_cut = args.rectify_cut
 
+    #
+    den_list = []
+    for file_i in range(len(args.file_list)):
+        alist = read(args.file_list[file_i], ':')
+        for j in range(len(alist)):
+            atoms = alist[j]
+            den_list.append(len(atoms) / atoms.get_volume())
+    num_den = np.mean(den_list)
+
     # In case symbol is 'x'
     chem_list = np.unique(read(args.file_list[0], 0).get_chemical_symbols()).tolist()
     if symbol1 == 'x':
@@ -241,7 +251,7 @@ if __name__ == '__main__':
     k_list = []
     S_list = []
     for curve in curve_list:
-        k, S = get_s_factor(curve[:,0], curve[:,1])
+        k, S = get_s_factor(curve[:,0], curve[:,1], num_den)
         k_list.append(k)
         S_list.append(S)
 
