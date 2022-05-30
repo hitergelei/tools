@@ -153,7 +153,7 @@ if __name__ == '__main__':
             peak_hei_dict['tot'][i] /np.amax(peak_hei_dict['tot']) *100.,
             ))
         peak_pos_prev = peak_pos_dict['tot'][i]
-    np.savez('peak_total.npyz', pos=peak_pos_dict['tot'], hei=peak_hei_dict['tot'])
+    np.savez('peak_total.npz', pos=peak_pos_dict['tot'], hei=peak_hei_dict['tot'])
     # Partial
     for c in unique_chem:
         peak_pos_dict[c], peak_hei_dict[c] = get_peaks(
@@ -174,7 +174,7 @@ if __name__ == '__main__':
                 peak_hei_dict[c][i] /np.amax(peak_hei_dict[c]) *100.,
                 ))
             peak_pos_prev = peak_pos_dict[c][i]
-        np.savez('peak_{}.npyz'.format(c), pos=peak_pos_dict[c], hei=peak_hei_dict[c])
+        np.savez('peak_{}.npz'.format(c), pos=peak_pos_dict[c], hei=peak_hei_dict[c])
 
     #
     from matplotlib import pyplot as plt
