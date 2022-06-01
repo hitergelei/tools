@@ -37,7 +37,7 @@ def get_neighbors(
     box   = []
     coord = []
     for i in range(len_alist):
-        box.append(alist[i].get_cell())
+        box.append(np.array(alist[i].get_cell()))
         coord.append(alist[i].get_scaled_positions())
     #--> shape of (len_alist, 3, 3)
     box   = np.array(box, dtype=dtype)

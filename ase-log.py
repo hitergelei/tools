@@ -81,6 +81,6 @@ if __name__ == '__main__':
             plt.subplots_adjust(left=0.20)
         else:
             plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
-        plt.grid(alpha=0.5)
+        plt.grid(alpha=0.4)
     plt.show()
 
