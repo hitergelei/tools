@@ -513,6 +513,22 @@ class Structure_analyses(object):
         plt.grid(alpha=0.4)
         plt.legend(fontsize='large').set_draggable(True)
         plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
+
+        # Normalized population
+        term_hist_norm = term_hist /np.sum(term_hist, axis=0)
+        plt.figure()
+        for type_i in range(len(self.types_unique)):
+            plt.plot(self.t, term_hist_norm[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.xlim(self.t[0], self.t[-1])
+        plt.ylim(0, None)
+        plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
+        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.ylabel('Normalized ratio', fontsize='x-large')
+        # plt.subplots_adjust(left=0.35, right=0.65)
+        plt.grid(alpha=0.4)
+        plt.legend(fontsize='large').set_draggable(True)
+        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
         plt.show()
 
     def get_chain_lengths(
