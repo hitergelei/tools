@@ -14,7 +14,7 @@ alist_file = 'out.dump'
 # alist_slice = '::100'
 # alist_slice = '5000:15000:10'
 # alist_slice = '120000:175000:100'
-# alist_slice = '5000'
+# alist_slice = '350'
 from sys import argv
 alist_slice = argv[1]
 
@@ -44,13 +44,13 @@ sa = Structure_analyses(
     # # save_bool=False,
     # )
 
-sa.plot_chain_length_histo(
-    angle_cutoff,
-    bond_cutoff,
-    bonding_rules,
-    # load_bool=False,
-    # save_bool=False,
-    )
+# sa.plot_chain_length_histo(
+    # angle_cutoff,
+    # bond_cutoff,
+    # bonding_rules,
+    # # load_bool=False,
+    # # save_bool=False,
+    # )
 
 # sa.view_chains(
     # angle_cutoff,
@@ -59,18 +59,27 @@ sa.plot_chain_length_histo(
     # chain_length=24,
     # )
 
-sa.plot_positional_deviation(
-    in_num_avg=1,
-    out_num_avg=1,
-    out_avg_dn=1,
-    # return_intvl=10,
-    )
+# sa.plot_positional_deviation(
+    # in_num_avg=1,
+    # out_num_avg=1,
+    # out_avg_dn=1,
+    # # return_intvl=10,
+    # )
 
-sa.plot_3body_pieces_stat(
+# sa.plot_3body_pieces_stat(
+    # angle_cutoff,
+    # bond_cutoff,
+    # bonding_rules,
+    # num_bins=100,
+    # # load_bool=False,
+    # # save_bool=False,
+    # )
+
+sa.plot_terminal_hist(
     angle_cutoff,
     bond_cutoff,
+    2,
     bonding_rules,
-    num_bins=100,
     # load_bool=False,
     # save_bool=False,
     )

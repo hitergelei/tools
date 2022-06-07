@@ -196,6 +196,7 @@ class Structure_analyses(object):
             slice_list[1] = slice_list[0] +slice_list[2] *self.len_alist
         self.alist_slice = '{}:{}:{}'.format(*slice_list)
         self.dt = dt *slice_list[2]
+        self.t = np.arange(self.len_alist, dtype=float) *self.dt
         # Make alist_ind_list
         self.alist_ind_list = np.arange(slice_list[1], dtype=np.int32)[slice(*slice_list)]
 
@@ -451,6 +452,61 @@ class Structure_analyses(object):
                 print('Saved chain-info pckl files at {}'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
         return ind_set, bond_direcs, bond_lengths, chain_vec
+
+    def plot_terminal_hist(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        nth_term,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        nth_term (int): Specify which n-th terminal to be counted.
+            For example, nth_term=2, in a chain of "Te-(Ge)-Te-Sb-Te-Sb-Te-(Ge)-Te", two Ge atoms in parentheses are counted.
+        """
+
+        # 
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
+            angle_cutoff,
+            bond_cutoff,
+            bond_rules,
+            load_bool,
+            save_bool,
+            )
+
+        #
+        nth_term_py = nth_term -1
+        # Iter for images
+        term_hist = np.zeros((len(self.types_unique), len(ind_set)))
+        for i in range(len(ind_set)):
+            # Iter for chains
+            terminals = []
+            for j in range(len(ind_set[i])):
+                type_chain = self.types[ind_set[i][j]]
+                terminals.append(type_chain[nth_term_py])
+                if nth_term_py < (len(type_chain) -nth_term_py -1):
+                    terminals.append(type_chain[len(type_chain) -nth_term_py -1])
+            terminals = np.array(terminals)
+
+            #
+            for j in range(len(self.types_unique)):
+                term_hist[j, i] = np.sum(terminals == self.types_unique[j])
+        
+        # Plot
+        from matplotlib import pyplot as plt
+        for type_i in range(len(self.types_unique)):
+            plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i])
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.ylim(0, None)
+        plt.title('{}-th terminal histogram'.format(nth_term))
+        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.ylabel('Population', fontsize='x-large')
+        # plt.subplots_adjust(left=0.35, right=0.65)
+        plt.grid(alpha=0.4)
+        plt.legend(fontsize='large').set_draggable(True)
+        plt.show()
 
     def get_chain_lengths(
         self,
