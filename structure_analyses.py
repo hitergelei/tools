@@ -524,7 +524,7 @@ class Structure_analyses(object):
         plt.ylim(0, None)
         plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
-        plt.ylabel('Normalized ratio', fontsize='x-large')
+        plt.ylabel('Population ratio', fontsize='x-large')
         # plt.subplots_adjust(left=0.35, right=0.65)
         plt.grid(alpha=0.4)
         plt.legend(fontsize='large').set_draggable(True)
