@@ -505,7 +505,7 @@ class Structure_analyses(object):
             plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.ylim(0, None)
-        plt.title('{}-th terminal histogram'.format(nth_term))
+        plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.ylabel('Population', fontsize='x-large')
         # plt.subplots_adjust(left=0.35, right=0.65)
