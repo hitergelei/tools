@@ -459,6 +459,7 @@ class Structure_analyses(object):
         bond_cutoff,
         nth_term,
         bond_rules=None,
+        color_list=None,
         load_bool=True,
         save_bool=True,
         ):
@@ -495,9 +496,13 @@ class Structure_analyses(object):
                 term_hist[j, i] = np.sum(terminals == self.types_unique[j])
         
         # Plot
+        if color_list is None:
+            color_list = [None] *len(self.types_unique)
+
+        #
         from matplotlib import pyplot as plt
         for type_i in range(len(self.types_unique)):
-            plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i])
+            plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.ylim(0, None)
         plt.title('{}-th terminal histogram'.format(nth_term))
@@ -506,6 +511,7 @@ class Structure_analyses(object):
         # plt.subplots_adjust(left=0.35, right=0.65)
         plt.grid(alpha=0.4)
         plt.legend(fontsize='large').set_draggable(True)
+        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
         plt.show()
 
     def get_chain_lengths(
