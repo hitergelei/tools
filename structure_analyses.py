@@ -504,6 +504,7 @@ class Structure_analyses(object):
         for type_i in range(len(self.types_unique)):
             plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.xlim(self.t[0], self.t[-1])
         plt.ylim(0, None)
         plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
