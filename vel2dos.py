@@ -169,6 +169,7 @@ def plot_chem_DOS(
     species_arr = np.array(species_arr)
     # Species
     unique_spec = np.unique(species_arr)
+    print(unique_spec)
     atomic_index = np.arange(len(species_arr))
     pdos_indices = []
     for spec in unique_spec:
