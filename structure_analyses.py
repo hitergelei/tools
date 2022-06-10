@@ -676,7 +676,7 @@ class Structure_analyses(object):
             ), fontsize='x-large', y=1.25)
         plt.xlabel('Time (ps)', fontsize='x-large')
         ax1.grid(alpha=0.5)
-        plt.subplots_adjust(left=0.10, bottom=0.12, right=0.85, top=0.77)
+        plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
         plt.show()
 
     def get_chain_length_histo(

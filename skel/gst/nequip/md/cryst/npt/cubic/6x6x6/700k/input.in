@@ -37,7 +37,7 @@ dump            1 all custom 100 pre-out.dump id element mass type x y z fx fy f
 dump_modify     1 element Ge Sb Te
 
 timestep        0.01
-run             5000
+run             1000
 
 #### Main
 velocity        all zero linear
