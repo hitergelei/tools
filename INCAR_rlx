@@ -22,6 +22,7 @@
    NSW     =       500      ! maximum number of ionic steps
    IBRION  =         2      ! how to ions are updated and moved
    EDIFFG  =      -.5E-03   ! break conditions for the ionic relaxation loop
+   #EDIFFG  =      1E-07     ! break conditions for the ionic relaxation loop
    ISIF    =         3      ! controls whether the stress tensor is alculated
    ISYM    =         2      ! switch symmetry on (1,2,3) or off (-1,0)
    #IVDW    =        12
