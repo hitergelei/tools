@@ -25,7 +25,7 @@
    #EDIFFG  =       1E-07    ! break conditions for the ionic relaxation loop
    #ISIF    =         7      ! controls whether the stress tensor is alculated
    ISYM    =        -1      ! switch symmetry on (1,2,3) or off (-1,0)
-   #KSPACING =      0.07     ! Unit of inverse Angstrom. 0.14 for rlx, 0.07 for oneshot.
+   #KSPACING =      0.114    ! Unit of inverse Angstrom. = 2*pi / |a|*N_sampling
    #KGAMMA   =    .FALSE.    ! Default: .TRUE.
    #IVDW    =        12
    #KPAR    =         1      ! 

@@ -30,7 +30,7 @@
    #NPAR    =          2     ! node number
    KPAR    =         14
    #NCORE   =        12      ! half of number of cpu per node
-   #KSPACING =      0.14
+   #KSPACING =      0.114    ! Unit of inverse Angstrom. = 2*pi / |a|*N_sampling
    #KGAMMA  =      .TRUE.
  DOS related values:
    ISMEAR  =         -5     ! for semiconductor or insulators ISMEAR=-5, SIGMA=0.05
