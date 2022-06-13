@@ -3,6 +3,12 @@
 import sys
 import numpy as np
 
+def masking_data(data, chem_mask):
+    new_data = []
+    for i in range(len(chem_mask)):
+        new_data.append(data[i][chem_mask[i]])
+    return(new_data)
+
 def argparse():
     import argparse
     parser = argparse.ArgumentParser(description = """
@@ -10,9 +16,10 @@ def argparse():
     """)
     # Positional arguments
     parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
-    parser.add_argument('target', type=str, help='Choose target property among e(:energy), eperatom(:energy/atom) f(:force), v(:velocity), p(:momentum), s(:stress), ak(:atomic kinetic energy).')
+    parser.add_argument('target', type=str, help='Choose target property among e(:energy), eperatom(:energy/atom) f(:force), v(:velocity), p(:momentum), s(:stress), ak(:atomic kinetic energy), ap(:atomic potential energy).')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
+    parser.add_argument('-c', '--chem_symbol', type=str, default=None, nargs='+', help='Plot histogram of specified chemical symbols. Only valid for (f, v, p, ak, ap) targets. Multiple input supported. default=all')
     parser.add_argument('-m', '--bin_number', type=int, default=200, help="Number of histogram's bin. default=200")
     parser.add_argument('-u', '--bin_upper', type=float, default=None, help="Upper limit of histogram's bin. default=automatic")
     parser.add_argument('-l', '--bin_lower', type=float, default=None, help="Upper limit of histogram's bin. default=automatic")
@@ -38,6 +45,19 @@ if __name__ == '__main__':
     if type(alist) is not list:
         alist = [alist]
 
+    #
+    atomic_types = ['f', 'v', 'p', 'ak', 'ap']
+    if args.chem_symbol:
+        if args.target not in atomic_types:
+            raise RuntimeError('{} is not atomic-type data ({}).'.format(args.target, atomic_types))
+        chem_mask = []
+        for atoms in alist:
+            chem_arr = np.array(atoms.get_chemical_symbols())
+            mask_tmp = np.full(len(atoms), False)
+            for chem in args.chem_symbol:
+                mask_tmp += chem_arr == chem
+            chem_mask.append(mask_tmp)
+
     if args.target == 'e':
         vector_type = False
         from ss_util import E_fromAlist
@@ -49,15 +69,24 @@ if __name__ == '__main__':
     elif args.target == 'f':
         vector_type = True
         from ss_util import F_fromAlist
-        data = np.concatenate(F_fromAlist(alist), 0)
+        data = F_fromAlist(alist)
+        if args.chem_symbol:
+            data = masking_data(data, chem_mask)
+        data = np.concatenate(data, 0)
     elif args.target == 'v':
         vector_type = True
         from ss_util import v_fromAlist 
-        data = np.concatenate(v_fromAlist(alist), 0)
+        data = v_fromAlist(alist)
+        if args.chem_symbol:
+            data = masking_data(data, chem_mask)
+        data = np.concatenate(data, 0)
     elif args.target == 'p':
         vector_type = True
         from ss_util import P_fromAlist 
-        data = np.concatenate(P_fromAlist(alist), 0)
+        data = P_fromAlist(alist)
+        if args.chem_symbol:
+            data = masking_data(data, chem_mask)
+        data = np.concatenate(data, 0)
     elif args.target == 's':
         vector_type = False
         from ss_util import S_fromAlist 
@@ -65,7 +94,17 @@ if __name__ == '__main__':
     elif args.target == 'ak':
         vector_type = False
         from ss_util import AtomicK_fromAlist
-        data = AtomicK_fromAlist(alist).reshape(-1)
+        data = AtomicK_fromAlist(alist)
+        if args.chem_symbol:
+            data = masking_data(data, chem_mask)
+        data = np.concatenate(data, 0)
+    elif args.target == 'ap':
+        vector_type = False
+        from ss_util import AtomicP_fromAlist
+        data = AtomicP_fromAlist(alist)
+        if args.chem_symbol:
+            data = masking_data(data, chem_mask)
+        data = np.concatenate(data, 0)
     else:
         raise ValueError('{} is an unknown target. Must be choosed among(e, f, v, p)'.format(args.target))
     # Set bins
@@ -90,23 +129,25 @@ if __name__ == '__main__':
     std = np.std(data)
     n, bins, patches = ax.hist(data, bins=args.bin_number, range=[bin_lower, bin_upper], facecolor='purple', alpha=0.70)
     max_height = np.amax(n)
-    ax.set_title('{} by elements'.format(args.target), fontsize='x-large')
+    ax.set_title('{} by elements (Chem.: {})'.format(args.target, args.chem_symbol), fontsize='x-large')
     ax.set_xlabel('%d data\nmean = %.3e\ndeviation = %.3e' % (len(data), mean, std), fontsize='large')
     ax.barh(max_height/8, std, height=max_height/50, left=mean, color='k')
     ax.axvline(x=mean, c='k')
-    ax.grid(alpha=0.5)
+    ax.grid(alpha=0.4)
     ax.set_ylabel('Population', fontsize='x-large')
     ax.tick_params(axis="both",direction="in", labelsize='x-large')
+    plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
     if vector_type:
         mean = np.mean(data_norm)
         std = np.std(data_norm)
         n, bins, patches = ax_norm.hist(data_norm, bins=args.bin_number, range=[norm_bin_lower, norm_bin_upper], facecolor='purple', alpha=0.70)
         max_height = np.amax(n)
-        ax_norm.set_title('{} by norms'.format(args.target), fontsize='x-large')
+        ax_norm.set_title('{} by norms (Chem.: {})'.format(args.target, args.chem_symbol), fontsize='x-large')
         ax_norm.set_xlabel('%d data\nmean = %.3e\ndeviation = %.3e' % (len(data_norm), mean, std), fontsize='large')
         ax_norm.barh(max_height/8, std, height=max_height/50, left=mean, color='k')
         ax_norm.axvline(x=mean, c='k')
-        ax_norm.grid(alpha=0.5)
+        ax_norm.grid(alpha=0.4)
         ax_norm.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
     plt.show()
 

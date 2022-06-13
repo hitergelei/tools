@@ -147,43 +147,49 @@ def E_fromAlist(alist):
     energies = []
     for atoms in alist:
         energies.append(atoms.get_potential_energy())
-    return np.array(energies)
+    return energies
 def Eperatom_fromAlist(alist):
     """ Return potential energy per atom array """
     energies = []
     for atoms in alist:
         energies.append(atoms.get_potential_energy()/len(atoms))
-    return np.array(energies)
+    return energies
 def F_fromAlist(alist):
-    """ Return force array array """
+    """ Return force array """
     forces = []
     for atoms in alist:
         forces.append(atoms.get_forces())
-    return np.array(forces)
+    return forces
 def v_fromAlist(alist):
-    """ Return velocity array array """
+    """ Return velocity array """
     velocities = []
     for atoms in alist:
         velocities.append(atoms.get_velocities())
-    return np.array(velocities)
+    return velocities
 def P_fromAlist(alist):
-    """ Return momentum array array """
+    """ Return momentum array """
     momenta = []
     for atoms in alist:
         momenta.append(atoms.get_momenta())
-    return np.array(momenta)
+    return momenta
 def S_fromAlist(alist):
     """ Return stress array (xx, yy, zz, yz, zx, xy) array """
     stresses = []
     for atoms in alist:
         stresses.append(atoms.get_stress())
-    return np.array(stresses)
+    return stresses
 def AtomicK_fromAlist(alist):
-    """ Return atomic kinetic energy array array """
+    """ Return atomic kinetic energy array """
     kinetic_e=[]
     for atoms in alist:
         kinetic_e.append(0.5 * atoms.get_masses() * np.square(np.linalg.norm(atoms.get_velocities(), axis=-1)))
-    return np.array(kinetic_e)
+    return kinetic_e
+def AtomicP_fromAlist(alist):
+    """ Return atomic potential energy array """
+    atomic_e=[]
+    for atoms in alist:
+        atomic_e.append(atoms.get_potential_energies())
+    return atomic_e
 
 def column2np(
     txtfile,
