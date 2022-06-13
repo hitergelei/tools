@@ -106,7 +106,7 @@ if __name__ == '__main__':
             data = masking_data(data, chem_mask)
         data = np.concatenate(data, 0)
     else:
-        raise ValueError('{} is an unknown target. Must be choosed among(e, f, v, p)'.format(args.target))
+        raise ValueError('{} is an unknown target.'.format(args.target))
     # Set bins
     bin_lower = data.min() if args.bin_lower is None else args.bin_lower
     bin_upper = data.max() if args.bin_upper is None else args.bin_upper
