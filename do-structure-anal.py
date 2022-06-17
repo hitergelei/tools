@@ -39,7 +39,7 @@ sa = Structure_analyses(
     # bond_cutoff,
     # bonding_rules,
     # # inf_as_zero=True,
-    # deriv_sigma=15,
+    # # deriv_sigma=15,
     # # load_bool=False,
     # # save_bool=False,
     # )
@@ -56,7 +56,7 @@ sa = Structure_analyses(
     # angle_cutoff,
     # bond_cutoff,
     # bonding_rules,
-    # chain_length=24,
+    # chain_length=8,
     # )
 
 # sa.plot_positional_deviation(
@@ -66,7 +66,7 @@ sa = Structure_analyses(
     # # return_intvl=10,
     # )
 
-# sa.plot_3body_pieces_stat(
+# sa.plot_chain_pieces_stat(
     # angle_cutoff,
     # bond_cutoff,
     # bonding_rules,
@@ -80,6 +80,7 @@ sa.plot_terminal_hist(
     bond_cutoff,
     2,
     bonding_rules,
+    ['b','r','y'],
     # load_bool=False,
     # save_bool=False,
     )

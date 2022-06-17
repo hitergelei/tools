@@ -92,7 +92,7 @@ def get_neighbors(
         directions.append(directions_i)
     return indices, lengths, directions
 
-def get_3body_chain_pieces(
+def produce_chain_pieces(
     indices,
     lengths,
     directions,
@@ -113,7 +113,7 @@ def get_3body_chain_pieces(
 
     try:
         assert load_path
-        print(' *  Trying to load 3body piece pckl files.')
+        print(' *  Trying to load chain piece pckl files.')
         piece_inds    = pckl.load(open('{}/piece_inds.pckl'   .format(load_path), 'rb'))
         piece_lengths = pckl.load(open('{}/piece_lengths.pckl'.format(load_path), 'rb'))
         piece_direcs  = pckl.load(open('{}/piece_direcs.pckl' .format(load_path), 'rb'))
@@ -121,7 +121,12 @@ def get_3body_chain_pieces(
         print('Failed to load pckl files from {}'.format(load_path))
     else:
         print('Loaded pckl files from {}'.format(load_path))
-        return piece_inds, piece_lengths, piece_direcs
+        info = {
+            'piece_inds': piece_inds,
+            'piece_lengths': piece_lengths,
+            'piece_direcs': piece_direcs,
+            }
+        return info
 
     # Main
     len_atoms = len(indices)
@@ -156,8 +161,13 @@ def get_3body_chain_pieces(
         pckl.dump(piece_inds   , open('{}/piece_inds.pckl'      .format(save_path), 'wb'))
         pckl.dump(piece_lengths, open('{}/piece_lengths.pckl'   .format(save_path), 'wb'))
         pckl.dump(piece_direcs , open('{}/piece_direcs.pckl'.format(save_path), 'wb'))
-        print('Saved 3body-piece-info pckl files at {}'.format(save_path))
-    return piece_inds, piece_lengths, piece_direcs
+        print('Saved chain-piece-info pckl files at {}'.format(save_path))
+    info = {
+        'piece_inds': piece_inds,
+        'piece_lengths': piece_lengths,
+        'piece_direcs': piece_direcs,
+        }
+    return info
 
 class Structure_analyses(object):
     """
@@ -206,13 +216,30 @@ class Structure_analyses(object):
         self.types_dict = {}
         for ty in self.types_unique:
             self.types_dict[ty] = self.types == ty
-        #
+
+        # Entries
+        self.neighbor_info = None
+        self.chain_pieces  = None
+        self.chain_sets    = None
+
+    def get_neighbor_info(
+        self,
+        bond_cutoff,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        if self.neighbor_info is None:
+            self.neighbor_info = self.produce_neighbor_info(bond_cutoff, bond_rules, load_bool, save_bool)
+        indices    = self.neighbor_info['indices']
+        lengths    = self.neighbor_info['lengths']
+        directions = self.neighbor_info['directions']
+        return indices, lengths, directions
 
     def produce_neighbor_info(
         self,
         bond_cutoff,
         bond_rules=None,
-        returns=['indices', 'lengths', 'directions'],
         load_bool=True,
         save_bool=True,
         ):
@@ -272,9 +299,41 @@ class Structure_analyses(object):
             info['indices']   .append(indices_i)
             info['lengths']   .append(lengths_i)
             info['directions'].append(directions_i)
-        return [info[ret] for ret in returns]
+        return info
 
-    def get_chain_set(
+    def get_chain_pieces(
+        self,
+        indices,
+        lengths,
+        directions,
+        angle_cutoff,
+        load_path=None,
+        save_path=None,
+        ):
+        if self.chain_pieces is None:
+            self.chain_pieces = produce_chain_pieces(indices, lengths, directions, angle_cutoff, load_path, save_path)
+        piece_inds    = self.chain_pieces['piece_inds']
+        piece_lengths = self.chain_pieces['piece_lengths']
+        piece_direcs  = self.chain_pieces['piece_direcs']
+        return piece_inds, piece_lengths, piece_direcs
+
+    def get_chain_sets(
+        self,
+        angle_cutoff,
+        bond_cutoff,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        if self.chain_sets is None:
+            self.chain_sets = self.produce_chain_sets(angle_cutoff, bond_cutoff, bond_rules, load_bool, save_bool)
+        ind_set      = self.chain_sets['ind_set']
+        bond_direcs  = self.chain_sets['bond_direcs']
+        bond_lengths = self.chain_sets['bond_lengths']
+        chain_vec    = self.chain_sets['chain_vec']
+        return ind_set, bond_direcs, bond_lengths, chain_vec
+
+    def produce_chain_sets(
         self,
         angle_cutoff,
         bond_cutoff,
@@ -290,10 +349,9 @@ class Structure_analyses(object):
         #
         cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
         #
-        indices, lengths, directions = self.produce_neighbor_info(
+        indices, lengths, directions = self.get_neighbor_info(
             bond_cutoff,
             bond_rules,
-            returns=['indices', 'lengths', 'directions'],
             load_bool=load_bool,
             save_bool=save_bool,
             )
@@ -331,7 +389,7 @@ class Structure_analyses(object):
 
             # Gather three-body chain pieces.
 
-            piece_inds, piece_lengths, piece_direcs = get_3body_chain_pieces(
+            piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
                 indices[i],
                 lengths[i],
                 directions[i],
@@ -451,7 +509,13 @@ class Structure_analyses(object):
                 pckl.dump(chain_vec_i   , open('{}/chain_vec.pckl'   .format(path), 'wb'))
                 print('Saved chain-info pckl files at {}'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
-        return ind_set, bond_direcs, bond_lengths, chain_vec
+        info = {
+            'ind_set': ind_set,
+            'bond_direcs': bond_direcs,
+            'bond_lengths': bond_lengths,
+            'chain_vec': chain_vec,
+            }
+        return info
 
     def plot_terminal_hist(
         self,
@@ -469,14 +533,13 @@ class Structure_analyses(object):
         """
 
         # 
-        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
             angle_cutoff,
             bond_cutoff,
             bond_rules,
             load_bool,
             save_bool,
             )
-
         #
         nth_term_py = nth_term -1
         # Iter for images
@@ -548,7 +611,7 @@ class Structure_analyses(object):
             - Note) Chain length of 0 means infinite chain (due to periodicity). 
                     They have a tail same as its head.
         """
-        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
             angle_cutoff,
             bond_cutoff,
             bond_rules,
@@ -773,11 +836,11 @@ class Structure_analyses(object):
         # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
         ax1.set_ylabel('Population (%)', fontsize='x-large')
         # ax2.set_ylabel('Population', fontsize='x-large')
-        plt.subplots_adjust(bottom=0.14, left=0.10, right=0.88)
+        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
         ax1.grid(alpha=0.5)
         plt.show()
 
-    def classify_3body_pieces_by_type(
+    def classify_chain_pieces_by_type(
         self,
         angle_cutoff,
         bond_cutoff,
@@ -792,10 +855,9 @@ class Structure_analyses(object):
         #
         cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
         #
-        indices, lengths, directions = self.produce_neighbor_info(
+        indices, lengths, directions = self.get_neighbor_info(
             bond_cutoff,
             bond_rules,
-            returns=['indices', 'lengths', 'directions'],
             load_bool=load_bool,
             save_bool=save_bool,
             )
@@ -813,7 +875,7 @@ class Structure_analyses(object):
                 self.alist_ind_list[i],
                 angle_cutoff,
                 )
-            piece_inds_i, piece_lengths_i, piece_direcs_i = get_3body_chain_pieces(
+            piece_inds_i, piece_lengths_i, piece_direcs_i = self.get_chain_pieces(
                 indices[i],
                 lengths[i],
                 directions[i],
@@ -852,7 +914,7 @@ class Structure_analyses(object):
         #      --> shape of (len_alist, (number of pieces of a type-kind in an image), 2)
         return length_dict #, direc_dict
         
-    def plot_3body_pieces_stat(
+    def plot_chain_pieces_stat(
         self,
         angle_cutoff,
         bond_cutoff,
@@ -865,7 +927,7 @@ class Structure_analyses(object):
         """
         Plot bond-length correlation.
         """
-        length_dict = self.classify_3body_pieces_by_type(
+        length_dict = self.classify_chain_pieces_by_type(
             angle_cutoff,
             bond_cutoff,
             bond_rules,
@@ -949,7 +1011,7 @@ class Structure_analyses(object):
         if chain_length == 'inf':
             chain_length = 0
 
-        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_set(
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
             angle_cutoff,
             bond_cutoff,
             bond_rules,
@@ -990,13 +1052,12 @@ class Structure_analyses(object):
         """
         """
 
-        indices = self.produce_neighbor_info(
+        indices, lengths, directions = self.get_neighbor_info(
             bond_cutoff,
             bond_rules,
-            returns=['indices'],
             load_bool=load_bool,
             save_bool=save_bool,
-            )[0]
+            )
 
         # Count num_bonds
         num_bonds = {}
