@@ -92,83 +92,6 @@ def get_neighbors(
         directions.append(directions_i)
     return indices, lengths, directions
 
-def produce_chain_pieces(
-    indices,
-    lengths,
-    directions,
-    angle_cutoff,
-    load_path=None,
-    save_path=None,
-    ):
-    """
-    indices (list)
-        - Ragged tensor in shape of (len_atoms, (number of bondings))
-    lengths (list)
-        - Ragged tensor in shape of (len_atoms, (number of bondings))
-    directions (list)
-        - Ragged tensor in shape of (len_atoms, (number of bondings), 3)
-    save_path (str or None)
-        - Make sure that the path already exists before this function runs.
-    """
-
-    try:
-        assert load_path
-        print(' *  Trying to load chain piece pckl files.')
-        piece_inds    = pckl.load(open('{}/piece_inds.pckl'   .format(load_path), 'rb'))
-        piece_lengths = pckl.load(open('{}/piece_lengths.pckl'.format(load_path), 'rb'))
-        piece_direcs  = pckl.load(open('{}/piece_direcs.pckl' .format(load_path), 'rb'))
-    except:
-        print('Failed to load pckl files from {}'.format(load_path))
-    else:
-        print('Loaded pckl files from {}'.format(load_path))
-        info = {
-            'piece_inds': piece_inds,
-            'piece_lengths': piece_lengths,
-            'piece_direcs': piece_direcs,
-            }
-        return info
-
-    # Main
-    len_atoms = len(indices)
-    #
-    cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
-    #
-    piece_inds    = []
-    piece_lengths = []
-    piece_direcs  = []
-    for i in range(len_atoms):
-        indices_i    = np.array(indices[i])
-        lengths_i    = np.array(lengths[i])
-        directions_i = np.array(directions[i])
-        # Gather three-body chain pieces.
-        # Get upper triangle due to the duplications
-        #--> shape of [number of bonds for atom j]*2
-        cosines = np.triu(directions_i @ directions_i.T, 1)
-        bond_inds = np.transpose(np.where(cosines < cos_cutoff))
-        for inds in bond_inds:
-            #                    --> shape of (3,)
-            piece_inds   .append(list(np.concatenate((indices_i[inds], [i]))[[0,2,1]]))
-            #                    --> shape of (2,)
-            piece_lengths.append(lengths_i[inds])
-            #                    --> shape of (2, 3)
-            piece_direcs .append(directions_i[inds])
-            piece_direcs[-1][0] *= -1.
-    piece_inds    = np.reshape(piece_inds,    [-1, 3]).tolist()
-    piece_lengths = np.reshape(piece_lengths, [-1, 2]).tolist()
-    piece_direcs  = list(np.reshape(piece_direcs,  [-1, 2, 3]))
-    if save_path is not None:
-        call('mkdir -p {}'.format(save_path), shell=True)
-        pckl.dump(piece_inds   , open('{}/piece_inds.pckl'      .format(save_path), 'wb'))
-        pckl.dump(piece_lengths, open('{}/piece_lengths.pckl'   .format(save_path), 'wb'))
-        pckl.dump(piece_direcs , open('{}/piece_direcs.pckl'.format(save_path), 'wb'))
-        print('Saved chain-piece-info pckl files at {}'.format(save_path))
-    info = {
-        'piece_inds': piece_inds,
-        'piece_lengths': piece_lengths,
-        'piece_direcs': piece_direcs,
-        }
-    return info
-
 class Structure_analyses(object):
     """
     """
@@ -303,19 +226,105 @@ class Structure_analyses(object):
 
     def get_chain_pieces(
         self,
-        indices,
-        lengths,
-        directions,
+        bond_cutoff,
+        bond_rules,
         angle_cutoff,
-        load_path=None,
-        save_path=None,
+        load_bool=True,
+        save_bool=True,
         ):
         if self.chain_pieces is None:
-            self.chain_pieces = produce_chain_pieces(indices, lengths, directions, angle_cutoff, load_path, save_path)
+            self.chain_pieces = self.produce_chain_pieces(bond_cutoff, bond_rules, angle_cutoff, load_bool, save_bool)
         piece_inds    = self.chain_pieces['piece_inds']
         piece_lengths = self.chain_pieces['piece_lengths']
         piece_direcs  = self.chain_pieces['piece_direcs']
         return piece_inds, piece_lengths, piece_direcs
+
+    def produce_chain_pieces(
+        self,
+        bond_cutoff,
+        bond_rules,
+        angle_cutoff,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        """
+        indices, lengths, directions = self.get_neighbor_info(bond_cutoff, bond_rules, load_bool, save_bool)
+
+        piece_inds    = []
+        piece_lengths = []
+        piece_direcs  = []
+        for i in range(len(self.alist_ind_list)):
+            alist_ind = self.alist_ind_list[i]
+            path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
+                self.alist_file,
+                bond_cutoff,
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
+                alist_ind,
+                angle_cutoff,
+                )
+
+            try:
+                assert load_bool
+                print(' *  Trying to load chain piece pckl files.')
+                piece_inds_i    = pckl.load(open('{}/piece_inds.pckl'   .format(path), 'rb'))
+                piece_lengths_i = pckl.load(open('{}/piece_lengths.pckl'.format(path), 'rb'))
+                piece_direcs_i  = pckl.load(open('{}/piece_direcs.pckl' .format(path), 'rb'))
+            except:
+                print('Failed to load pckl files from {}'.format(path))
+
+            else:
+                print('Loaded pckl files from {}'.format(path))
+                piece_inds.append(piece_inds_i)
+                piece_lengths.append(piece_lengths_i)
+                piece_direcs.append(piece_direcs_i)
+                continue
+
+            # Main
+            len_atoms = len(indices[i])
+            #
+            cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
+            #
+            piece_inds_i    = []
+            piece_lengths_i = []
+            piece_direcs_i  = []
+            for j in range(len_atoms):
+                indices_j    = np.array(indices[i][j])
+                lengths_j    = np.array(lengths[i][j])
+                directions_j = np.array(directions[i][j])
+                # Gather three-body chain pieces.
+                # Get upper triangle due to the duplications
+                #--> shape of [number of bonds for atom j]*2
+                cosines = np.triu(directions_j @ directions_j.T, 1)
+                bond_inds = np.transpose(np.where(cosines < cos_cutoff))
+                for inds in bond_inds:
+                    #                    --> shape of (3,)
+                    piece_inds_i   .append(list(np.concatenate((indices_j[inds], [j]))[[0,2,1]]))
+                    #                    --> shape of (2,)
+                    piece_lengths_i.append(lengths_j[inds])
+                    #                    --> shape of (2, 3)
+                    piece_direcs_i .append(directions_j[inds])
+                    piece_direcs_i[-1][0] *= -1.
+            piece_inds_i    = np.reshape(piece_inds_i,    [-1, 3]).tolist()
+            piece_lengths_i = np.reshape(piece_lengths_i, [-1, 2]).tolist()
+            piece_direcs_i  = list(np.reshape(piece_direcs_i,  [-1, 2, 3]))
+            if save_bool:
+                call('mkdir -p {}'.format(path), shell=True)
+                pckl.dump(piece_inds_i   , open('{}/piece_inds.pckl'      .format(path), 'wb'))
+                pckl.dump(piece_lengths_i, open('{}/piece_lengths.pckl'   .format(path), 'wb'))
+                pckl.dump(piece_direcs_i , open('{}/piece_direcs.pckl'.format(path), 'wb'))
+                print('Saved chain-piece-info pckl files at {}'.format(path))
+            piece_inds.append(piece_inds_i)
+            piece_lengths.append(piece_lengths_i)
+            piece_direcs.append(piece_direcs_i)
+
+        info = {
+            'piece_inds': piece_inds,
+            'piece_lengths': piece_lengths,
+            'piece_direcs': piece_direcs,
+            }
+        return info
 
     def get_chain_sets(
         self,
@@ -349,11 +358,14 @@ class Structure_analyses(object):
         #
         cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
         #
-        indices, lengths, directions = self.get_neighbor_info(
+
+        # Gather three-body chain pieces.
+        piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
             bond_cutoff,
             bond_rules,
-            load_bool=load_bool,
-            save_bool=save_bool,
+            angle_cutoff,
+            load_bool,
+            save_bool,
             )
 
         ind_set      = []
@@ -387,26 +399,20 @@ class Structure_analyses(object):
                 chain_vec   .append(chain_vec_i)
                 continue
 
-            # Gather three-body chain pieces.
-
-            piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
-                indices[i],
-                lengths[i],
-                directions[i],
-                angle_cutoff,
-                path,
-                path,
-                )
+            #
+            piece_inds_i    = piece_inds[i]
+            piece_lengths_i = piece_lengths[i]
+            piece_direcs_i  = piece_direcs[i]
             # Classify chain pieces.
             #--> Ragged tensor in shape of ((number of chains in an image), (length of a chain))
             ind_set_i      = []
             bond_direcs_i  = []
             bond_lengths_i = []
             chain_vec_i    = []
-            while piece_inds:
-                ind_set_tmp      = list(piece_inds   .pop())
-                bond_direcs_tmp  = list(piece_direcs .pop())
-                bond_lengths_tmp = list(piece_lengths.pop())
+            while piece_inds_i:
+                ind_set_tmp      = list(piece_inds_i   .pop())
+                bond_lengths_tmp = list(piece_lengths_i.pop())
+                bond_direcs_tmp  = list(piece_direcs_i .pop())
                 chain_vec_tmp    = np.sum(
                     bond_direcs_tmp * np.expand_dims(bond_lengths_tmp, axis=1),
                     axis=0,
@@ -417,70 +423,70 @@ class Structure_analyses(object):
                     chain_direc = chain_vec_tmp / np.linalg.norm(chain_vec_tmp)
                     head = ind_set_tmp[:2]
                     tail = ind_set_tmp[-2:]
-                    for p in range(len(piece_inds)):
-                        if piece_inds[p][:2] == tail and (piece_direcs[p][1] @ chain_direc) > -cos_cutoff:
+                    for p in range(len(piece_inds_i)):
+                        if piece_inds_i[p][:2] == tail and (piece_direcs_i[p][1] @ chain_direc) > -cos_cutoff:
                             #
-                            ind_set_tmp.append(piece_inds[p][2])
-                            del(piece_inds[p])
+                            ind_set_tmp.append(piece_inds_i[p][2])
+                            del(piece_inds_i[p])
                             #
-                            bond_direcs_tmp.append(piece_direcs[p][1])
-                            del(piece_direcs[p])
+                            bond_direcs_tmp.append(piece_direcs_i[p][1])
+                            del(piece_direcs_i[p])
                             #
-                            bond_lengths_tmp.append(piece_lengths[p][1])
-                            del(piece_lengths[p])
+                            bond_lengths_tmp.append(piece_lengths_i[p][1])
+                            del(piece_lengths_i[p])
                             #
                             chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
                             #
                             changed = True
                             break
-                        elif piece_inds[p][:2] == head[::-1] and (piece_direcs[p][1] @ (-chain_direc)) > -cos_cutoff:
+                        elif piece_inds_i[p][:2] == head[::-1] and (piece_direcs_i[p][1] @ (-chain_direc)) > -cos_cutoff:
                             #
                             ind_set_tmp = ind_set_tmp[::-1]
-                            ind_set_tmp.append(piece_inds[p][2])
-                            del(piece_inds[p])
+                            ind_set_tmp.append(piece_inds_i[p][2])
+                            del(piece_inds_i[p])
                             #
                             bond_direcs_tmp = bond_direcs_tmp[::-1]
-                            bond_direcs_tmp.append(piece_direcs[p][1])
-                            del(piece_direcs[p])
+                            bond_direcs_tmp.append(piece_direcs_i[p][1])
+                            del(piece_direcs_i[p])
                             #
                             bond_lengths_tmp = bond_lengths_tmp[::-1]
-                            bond_lengths_tmp.append(piece_lengths[p][1])
-                            del(piece_lengths[p])
+                            bond_lengths_tmp.append(piece_lengths_i[p][1])
+                            del(piece_lengths_i[p])
                             #
                             chain_vec_tmp *= -1.
                             chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
                             #
                             changed = True
                             break
-                        elif piece_inds[p][-2:] == head and (piece_direcs[p][0] @ chain_direc) > -cos_cutoff:
+                        elif piece_inds_i[p][-2:] == head and (piece_direcs_i[p][0] @ chain_direc) > -cos_cutoff:
                             #
                             ind_set_tmp = ind_set_tmp[::-1]
-                            ind_set_tmp.append(piece_inds[p][0])
-                            del(piece_inds[p])
+                            ind_set_tmp.append(piece_inds_i[p][0])
+                            del(piece_inds_i[p])
                             #
                             bond_direcs_tmp = bond_direcs_tmp[::-1]
-                            bond_direcs_tmp.append(-piece_direcs[p][0])
-                            del(piece_direcs[p])
+                            bond_direcs_tmp.append(-piece_direcs_i[p][0])
+                            del(piece_direcs_i[p])
                             #
                             bond_lengths_tmp = bond_lengths_tmp[::-1]
-                            bond_lengths_tmp.append(piece_lengths[p][0])
-                            del(piece_lengths[p])
+                            bond_lengths_tmp.append(piece_lengths_i[p][0])
+                            del(piece_lengths_i[p])
                             #
                             chain_vec_tmp *= -1.
                             chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
                             #
                             changed = True
                             break
-                        elif piece_inds[p][-2:] == tail[::-1] and (-piece_direcs[p][0] @ chain_direc) > -cos_cutoff:
+                        elif piece_inds_i[p][-2:] == tail[::-1] and (-piece_direcs_i[p][0] @ chain_direc) > -cos_cutoff:
                             #
-                            ind_set_tmp.append(piece_inds[p][0])
-                            del(piece_inds[p])
+                            ind_set_tmp.append(piece_inds_i[p][0])
+                            del(piece_inds_i[p])
                             #
-                            bond_direcs_tmp.append(-piece_direcs[p][0])
-                            del(piece_direcs[p])
+                            bond_direcs_tmp.append(-piece_direcs_i[p][0])
+                            del(piece_direcs_i[p])
                             #
-                            bond_lengths_tmp.append(piece_lengths[p][0])
-                            del(piece_lengths[p])
+                            bond_lengths_tmp.append(piece_lengths_i[p][0])
+                            del(piece_lengths_i[p])
                             #
                             chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
                             changed = True
@@ -855,38 +861,13 @@ class Structure_analyses(object):
         #
         cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
         #
-        indices, lengths, directions = self.get_neighbor_info(
+        piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
             bond_cutoff,
             bond_rules,
-            load_bool=load_bool,
-            save_bool=save_bool,
+            angle_cutoff,
+            load_bool,
+            save_bool,
             )
-        #
-        piece_inds    = []
-        piece_lengths = []
-        # piece_direcs  = []
-        for i in range(len(indices)):
-            #
-            path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
-                self.alist_file,
-                bond_cutoff,
-                self.bond_rules_str[0],
-                self.bond_rules_str[1],
-                self.alist_ind_list[i],
-                angle_cutoff,
-                )
-            piece_inds_i, piece_lengths_i, piece_direcs_i = self.get_chain_pieces(
-                indices[i],
-                lengths[i],
-                directions[i],
-                angle_cutoff,
-                path,
-                path,
-                )
-            piece_inds   .append(piece_inds_i)
-            piece_lengths.append(piece_lengths_i)
-            # piece_direcs .append(piece_direcs_i)
-        del(indices, lengths, directions)
 
         # Classify by species.
         length_dict = {}
