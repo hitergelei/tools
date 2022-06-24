@@ -141,9 +141,12 @@ class Structure_analyses(object):
             self.types_dict[ty] = self.types == ty
 
         # Entries
-        self.neighbor_info = None
-        self.chain_pieces  = None
-        self.chain_sets    = None
+        self.neighbor_info      = None
+        self.chain_pieces       = None
+        self.chain_sets         = None
+        self.terminal_pieces    = None
+        self.all_pieces         = None
+        self.potential_energies = None
 
     def get_neighbor_info(
         self,
@@ -153,7 +156,7 @@ class Structure_analyses(object):
         save_bool=True,
         ):
         if self.neighbor_info is None:
-            self.neighbor_info = self.produce_neighbor_info(bond_cutoff, bond_rules, load_bool, save_bool)
+            self.produce_neighbor_info(bond_cutoff, bond_rules, load_bool, save_bool)
         indices    = self.neighbor_info['indices']
         lengths    = self.neighbor_info['lengths']
         directions = self.neighbor_info['directions']
@@ -222,18 +225,18 @@ class Structure_analyses(object):
             info['indices']   .append(indices_i)
             info['lengths']   .append(lengths_i)
             info['directions'].append(directions_i)
-        return info
+        self.neighbor_info = info
 
     def get_chain_pieces(
         self,
         bond_cutoff,
-        bond_rules,
         angle_cutoff,
+        bond_rules,
         load_bool=True,
         save_bool=True,
         ):
         if self.chain_pieces is None:
-            self.chain_pieces = self.produce_chain_pieces(bond_cutoff, bond_rules, angle_cutoff, load_bool, save_bool)
+            self.produce_chain_pieces(bond_cutoff, angle_cutoff, bond_rules, load_bool, save_bool)
         piece_inds    = self.chain_pieces['piece_inds']
         piece_lengths = self.chain_pieces['piece_lengths']
         piece_direcs  = self.chain_pieces['piece_direcs']
@@ -242,8 +245,8 @@ class Structure_analyses(object):
     def produce_chain_pieces(
         self,
         bond_cutoff,
-        bond_rules,
         angle_cutoff,
+        bond_rules,
         load_bool=True,
         save_bool=True,
         ):
@@ -319,23 +322,22 @@ class Structure_analyses(object):
             piece_lengths.append(piece_lengths_i)
             piece_direcs.append(piece_direcs_i)
 
-        info = {
+        self.chain_pieces = {
             'piece_inds': piece_inds,
             'piece_lengths': piece_lengths,
             'piece_direcs': piece_direcs,
             }
-        return info
 
     def get_chain_sets(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         load_bool=True,
         save_bool=True,
         ):
         if self.chain_sets is None:
-            self.chain_sets = self.produce_chain_sets(angle_cutoff, bond_cutoff, bond_rules, load_bool, save_bool)
+            self.produce_chain_sets(bond_cutoff, angle_cutoff, bond_rules, load_bool, save_bool)
         ind_set      = self.chain_sets['ind_set']
         bond_direcs  = self.chain_sets['bond_direcs']
         bond_lengths = self.chain_sets['bond_lengths']
@@ -344,8 +346,8 @@ class Structure_analyses(object):
 
     def produce_chain_sets(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         load_bool=True,
         save_bool=True,
@@ -362,8 +364,8 @@ class Structure_analyses(object):
         # Gather three-body chain pieces.
         piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
             bond_cutoff,
-            bond_rules,
             angle_cutoff,
+            bond_rules,
             load_bool,
             save_bool,
             )
@@ -498,7 +500,7 @@ class Structure_analyses(object):
                         chain_vec_i   .append(chain_vec_tmp)
                         break
 
-            #--> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
+            #--> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain)+1)
             ind_set     .append(ind_set_i)
             #--> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain), 3)
             bond_direcs .append(bond_direcs_i)
@@ -515,95 +517,228 @@ class Structure_analyses(object):
                 pckl.dump(chain_vec_i   , open('{}/chain_vec.pckl'   .format(path), 'wb'))
                 print('Saved chain-info pckl files at {}'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
-        info = {
+        self.chain_sets = {
             'ind_set': ind_set,
             'bond_direcs': bond_direcs,
             'bond_lengths': bond_lengths,
             'chain_vec': chain_vec,
             }
-        return info
 
-    def plot_terminal_hist(
+    def get_terminal_pieces(
         self,
-        angle_cutoff,
         bond_cutoff,
-        nth_term,
+        angle_cutoff,
         bond_rules=None,
-        color_list=None,
         load_bool=True,
         save_bool=True,
         ):
         """
-        nth_term (int): Specify which n-th terminal to be counted.
-            For example, nth_term=2, in a chain of "Te-(Ge)-Te-Sb-Te-Sb-Te-(Ge)-Te", two Ge atoms in parentheses are counted.
+        """
+        if self.terminal_pieces is None:
+            self.produce_terminal_pieces(bond_cutoff, angle_cutoff, bond_rules, load_bool, save_bool)
+        term_piece_inds    = self.terminal_pieces['term_piece_inds']
+        term_piece_lengths = self.terminal_pieces['term_piece_lengths']
+        term_piece_direcs  = self.terminal_pieces['term_piece_direcs']
+        return term_piece_inds, term_piece_lengths, term_piece_direcs
+
+    def produce_terminal_pieces(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
         """
 
-        # 
         ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
-            angle_cutoff,
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             load_bool,
             save_bool,
             )
-        #
-        nth_term_py = nth_term -1
-        # Iter for images
-        term_hist = np.zeros((len(self.types_unique), len(ind_set)))
-        for i in range(len(ind_set)):
-            # Iter for chains
-            terminals = []
+
+        term_piece_inds    = []
+        term_piece_direcs  = []
+        term_piece_lengths = []
+        for i in range(len(self.alist_ind_list)):
+            alist_ind = self.alist_ind_list[i]
+            path = 'neigh_saved/{}.d/{}-{}-{}/{}/{}'.format(
+                self.alist_file,
+                bond_cutoff,
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
+                alist_ind,
+                angle_cutoff,
+                )
+
+            try:
+                assert load_bool
+                print(' *  Trying to load terminal piece pckl files.')
+                term_piece_inds_i    = pckl.load(open('{}/terminal_piece_inds.pckl'   .format(path), 'rb'))
+                term_piece_direcs_i  = pckl.load(open('{}/terminal_piece_direcs.pckl' .format(path), 'rb'))
+                term_piece_lengths_i = pckl.load(open('{}/terminal_piece_lengths.pckl'.format(path), 'rb'))
+            except:
+                print('Failed to load pckl files from {}'.format(path))
+
+            else:
+                print('Loaded pckl files from {}'.format(path))
+                term_piece_inds.append(term_piece_inds_i)
+                term_piece_direcs.append(term_piece_direcs_i)
+                term_piece_lengths.append(term_piece_lengths_i)
+                continue
+            
+            term_piece_inds_i    = []
+            term_piece_lengths_i = []
+            term_piece_direcs_i  = []
             for j in range(len(ind_set[i])):
-                type_chain = self.types[ind_set[i][j]]
-                terminals.append(type_chain[nth_term_py])
-                if nth_term_py < (len(type_chain) -nth_term_py -1):
-                    terminals.append(type_chain[len(type_chain) -nth_term_py -1])
-            terminals = np.array(terminals)
+                term_piece_inds_i.append([-1, ind_set[i][j][0], ind_set[i][j][1]])
+                term_piece_direcs_i.append(np.array([np.zeros(3, dtype=float), bond_direcs[i][j][0]]))
+                term_piece_lengths_i.append([0., bond_lengths[i][j][0]])
 
-            #
-            for j in range(len(self.types_unique)):
-                term_hist[j, i] = np.sum(terminals == self.types_unique[j])
-        
-        # Plot
-        if color_list is None:
-            color_list = [None] *len(self.types_unique)
+                term_piece_inds_i.append([ind_set[i][j][-2], ind_set[i][j][-1], -1])
+                term_piece_direcs_i.append(np.array([bond_direcs[i][j][-1], np.zeros(3, dtype=float)]))
+                term_piece_lengths_i.append([bond_lengths[i][j][-1], 0.])
 
-        #
-        from matplotlib import pyplot as plt
-        for type_i in range(len(self.types_unique)):
-            plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
-        plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.xlim(self.t[0], self.t[-1])
-        plt.ylim(0, None)
-        plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
-        plt.xlabel('Time (ps)', fontsize='x-large')
-        plt.ylabel('Population', fontsize='x-large')
-        # plt.subplots_adjust(left=0.35, right=0.65)
-        plt.grid(alpha=0.4)
-        plt.legend(fontsize='large').set_draggable(True)
-        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
+            if save_bool:
+                call('mkdir -p {}'.format(path), shell=True)
+                pckl.dump(term_piece_inds_i   , open('{}/terminal_piece_inds.pckl'      .format(path), 'wb'))
+                pckl.dump(term_piece_lengths_i, open('{}/terminal_piece_lengths.pckl'   .format(path), 'wb'))
+                pckl.dump(term_piece_direcs_i , open('{}/terminal_piece_direcs.pckl'.format(path), 'wb'))
+                print('Saved terminal-piece-info pckl files at {}'.format(path))
+            term_piece_inds.append(term_piece_inds_i)
+            term_piece_lengths.append(term_piece_lengths_i)
+            term_piece_direcs.append(term_piece_direcs_i)
 
-        # Normalized population
-        term_hist_norm = term_hist /np.sum(term_hist, axis=0)
-        plt.figure()
-        for type_i in range(len(self.types_unique)):
-            plt.plot(self.t, term_hist_norm[type_i], label=self.types_unique[type_i], c=color_list[type_i])
-        plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.xlim(self.t[0], self.t[-1])
-        plt.ylim(0, None)
-        plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
-        plt.xlabel('Time (ps)', fontsize='x-large')
-        plt.ylabel('Population ratio', fontsize='x-large')
-        # plt.subplots_adjust(left=0.35, right=0.65)
-        plt.grid(alpha=0.4)
-        plt.legend(fontsize='large').set_draggable(True)
-        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
-        plt.show()
+        self.terminal_pieces = {
+            'term_piece_inds': term_piece_inds,
+            'term_piece_lengths': term_piece_lengths,
+            'term_piece_direcs': term_piece_direcs,
+            }
+
+    def get_all_pieces(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        """
+
+        if self.all_pieces is None:
+            piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
+                bond_cutoff,
+                angle_cutoff,
+                bond_rules,
+                load_bool,
+                save_bool,
+                )
+
+            term_piece_inds, term_piece_lengths, term_piece_direcs = self.get_terminal_pieces(
+                bond_cutoff,
+                angle_cutoff,
+                bond_rules,
+                load_bool,
+                save_bool,
+                )
+
+            all_piece_inds    = []
+            all_piece_lengths = []
+            all_piece_direcs  = []
+            for i in range(len(self.alist_ind_list)):
+                all_piece_inds   .append(piece_inds   [i] + term_piece_inds   [i])
+                all_piece_lengths.append(piece_lengths[i] + term_piece_lengths[i])
+                all_piece_direcs .append(piece_direcs [i] + term_piece_direcs [i])
+
+            self.all_pieces = {
+                'all_piece_inds': all_piece_inds,
+                'all_piece_lengths': all_piece_lengths,
+                'all_piece_direcs': all_piece_direcs,
+                }
+
+        else:
+            all_piece_inds    = self.all_pieces['all_piece_inds']
+            all_piece_lengths = self.all_pieces['all_piece_lengths']
+            all_piece_direcs  = self.all_pieces['all_piece_direcs']
+
+        return all_piece_inds, all_piece_lengths, all_piece_direcs
+
+    def classify_chain_pieces(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        bond_rules=None,
+        unique_seq=None,
+        include_terminal=True,
+        merge_mirror=True,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        unique_seq (dict)
+            - You can specify it. If None, automatic.
+        include_terminal (bool)
+            - Include terminal pieces (including vacancy) for classification.
+        merge_mirror (bool)
+            - Merge mirror-image pieces in to a same set. e.g., A-B-C and C-B-A.
+        """
+
+        if include_terminal:
+            piece_inds, piece_lengths, piece_direcs = self.get_all_pieces(
+                bond_cutoff,
+                angle_cutoff,
+                bond_rules,
+                load_bool,
+                save_bool,
+                )
+            chem = np.array(self.types.tolist() + ['V'])
+        else:
+            piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
+                bond_cutoff,
+                angle_cutoff,
+                bond_rules,
+                load_bool,
+                save_bool,
+                )
+            chem = self.types
+
+        # unique_seq.shape = (len(self.type_unique), number of unique sequences)
+        # piece_addr.shape = (len(self.type_unique), number of unique sequences, number of pieces in sequence, 2)
+        if unique_seq is None:
+            unique_seq = dict()
+        piece_addr = dict()
+        for ty in self.types_unique:
+            if ty not in unique_seq:
+                unique_seq[ty] = []
+            piece_addr[ty] = []
+
+        for i in range(len(self.alist_ind_list)):
+            for j in range(len(piece_inds[i])):
+                piece_chem = chem[piece_inds[i][j]].tolist()
+                center_chem = piece_chem[1]
+                if piece_chem in unique_seq[center_chem]:
+                    seq_i = unique_seq[center_chem].index(piece_chem)
+                    piece_addr[center_chem][seq_i].append([i,j])
+                elif merge_mirror and piece_chem[::-1] in unique_seq[center_chem]:
+                    seq_i = unique_seq[center_chem].index(piece_chem[::-1])
+                    print(ty, i, j, seq_i)
+                    print(unique_seq[center_chem][seq_i])
+                    piece_addr[center_chem][seq_i].append([i,j])
+                else:
+                    unique_seq[center_chem].append(piece_chem)
+                    piece_addr[center_chem].append([])
+                    piece_addr[center_chem][-1].append([i,j])
+
+        return unique_seq, piece_addr
 
     def get_chain_lengths(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         inf_as_zero=False,
         load_bool=True,
@@ -618,8 +753,8 @@ class Structure_analyses(object):
                     They have a tail same as its head.
         """
         ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
-            angle_cutoff,
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             load_bool,
             save_bool,
@@ -639,8 +774,8 @@ class Structure_analyses(object):
 
     def plot_chain_length_stat(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         inf_as_zero=False,
         therm_corr=None,
@@ -661,8 +796,8 @@ class Structure_analyses(object):
         """
 
         lengths = self.get_chain_lengths(
-            angle_cutoff,
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             inf_as_zero,
             load_bool,
@@ -750,8 +885,8 @@ class Structure_analyses(object):
 
     def get_chain_length_histo(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         load_bool=True,
         save_bool=True,
@@ -760,8 +895,8 @@ class Structure_analyses(object):
         """
 
         lengths = self.get_chain_lengths(
-            angle_cutoff,
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             True,
             load_bool,
@@ -779,8 +914,8 @@ class Structure_analyses(object):
 
     def plot_chain_length_histo(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         load_bool=True,
         save_bool=True,
@@ -790,8 +925,8 @@ class Structure_analyses(object):
         #
 
         length_histo_list = self.get_chain_length_histo(
-            angle_cutoff,
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             load_bool,
             save_bool,
@@ -846,10 +981,10 @@ class Structure_analyses(object):
         ax1.grid(alpha=0.5)
         plt.show()
 
-    def classify_chain_pieces_by_type(
+    def classify_chain_length_by_type(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         load_bool=True,
         save_bool=True,
@@ -859,12 +994,10 @@ class Structure_analyses(object):
         """
 
         #
-        cos_cutoff = np.cos(angle_cutoff / 180 * np.pi)
-        #
         piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
             bond_cutoff,
-            bond_rules,
             angle_cutoff,
+            bond_rules,
             load_bool,
             save_bool,
             )
@@ -897,8 +1030,8 @@ class Structure_analyses(object):
         
     def plot_chain_pieces_stat(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules = None,
         num_bins   = 100,
         cmap       = 'jet',
@@ -908,9 +1041,9 @@ class Structure_analyses(object):
         """
         Plot bond-length correlation.
         """
-        length_dict = self.classify_chain_pieces_by_type(
-            angle_cutoff,
+        length_dict = self.classify_chain_length_by_type(
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             load_bool,
             save_bool,
@@ -974,8 +1107,8 @@ class Structure_analyses(object):
 
     def view_chains(
         self,
-        angle_cutoff,
         bond_cutoff,
+        angle_cutoff,
         bond_rules=None,
         chain_length=None,
         load_bool=True,
@@ -993,8 +1126,8 @@ class Structure_analyses(object):
             chain_length = 0
 
         ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
-            angle_cutoff,
             bond_cutoff,
+            angle_cutoff,
             bond_rules,
             load_bool,
             save_bool,
@@ -1002,8 +1135,8 @@ class Structure_analyses(object):
 
         if chain_length is not None:
             chain_lengths = self.get_chain_lengths(
-                angle_cutoff,
                 bond_cutoff,
+                angle_cutoff,
                 bond_rules,
                 True,
                 load_bool,
@@ -1200,5 +1333,205 @@ class Structure_analyses(object):
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.ylabel('Averaged positional deviation ($\AA$)', fontsize='x-large')
         plt.grid(alpha=0.5)
+        plt.show()
+
+    def plot_terminal_stat(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        nth_term,
+        bond_rules=None,
+        color_list=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        nth_term (int): Specify which n-th terminal to be counted.
+            For example, nth_term=2, in a chain of "Te-(Ge)-Te-Sb-Te-Sb-Te-(Ge)-Te", two Ge atoms in parentheses are counted.
+        """
+
+        # 
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
+            bond_cutoff,
+            angle_cutoff,
+            bond_rules,
+            load_bool,
+            save_bool,
+            )
+        #
+        nth_term_py = nth_term -1
+        # Iter for images
+        term_hist = np.zeros((len(self.types_unique), len(ind_set)))
+        for i in range(len(ind_set)):
+            # Iter for chains
+            terminals = []
+            for j in range(len(ind_set[i])):
+                type_chain = self.types[ind_set[i][j]]
+                terminals.append(type_chain[nth_term_py])
+                if nth_term_py < (len(type_chain) -nth_term_py -1):
+                    terminals.append(type_chain[len(type_chain) -nth_term_py -1])
+            terminals = np.array(terminals)
+
+            #
+            for j in range(len(self.types_unique)):
+                term_hist[j, i] = np.sum(terminals == self.types_unique[j])
+        
+        # Plot
+        if color_list is None:
+            color_list = [None] *len(self.types_unique)
+
+        #
+        from matplotlib import pyplot as plt
+        for type_i in range(len(self.types_unique)):
+            plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.xlim(self.t[0], self.t[-1])
+        plt.ylim(0, None)
+        plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
+        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.ylabel('Population', fontsize='x-large')
+        # plt.subplots_adjust(left=0.35, right=0.65)
+        plt.grid(alpha=0.4)
+        plt.legend(fontsize='large').set_draggable(True)
+        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
+
+        # Normalized population
+        term_hist_norm = term_hist /np.sum(term_hist, axis=0)
+        plt.figure()
+        for type_i in range(len(self.types_unique)):
+            plt.plot(self.t, term_hist_norm[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.xlim(self.t[0], self.t[-1])
+        plt.ylim(0, None)
+        plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
+        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.ylabel('Population ratio', fontsize='x-large')
+        # plt.subplots_adjust(left=0.35, right=0.65)
+        plt.grid(alpha=0.4)
+        plt.legend(fontsize='large').set_draggable(True)
+        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
+        plt.show()
+
+    def get_potential_energies(
+        self,
+        ):
+        """
+        """
+        if self.potential_energies is None:
+            ae = []
+            for i in range(len(self.alist)):
+                ae.append(self.alist[i].get_potential_energies())
+            self.potential_energies = np.array(ae, dtype=float)
+        return self.potential_energies
+            
+    def plot_atomic_energy_histo(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        bond_rules=None,
+        unique_seq=None,
+        include_terminal=True,
+        num_bins=50,
+        color_list=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        """
+
+        if include_terminal:
+            piece_inds, piece_lengths, piece_direcs = self.get_all_pieces(
+                bond_cutoff,
+                angle_cutoff,
+                bond_rules,
+                load_bool,
+                save_bool,
+                )
+            chem = np.array(self.types.tolist() + ['V'])
+        else:
+            piece_inds, piece_lengths, piece_direcs = self.get_chain_pieces(
+                bond_cutoff,
+                angle_cutoff,
+                bond_rules,
+                load_bool,
+                save_bool,
+                )
+            chem = self.types
+
+        unique_seq, piece_addr = self.classify_chain_pieces(
+            bond_cutoff,
+            angle_cutoff,
+            bond_rules,
+            unique_seq,
+            include_terminal,
+            load_bool,
+            save_bool,
+            )
+
+        pe = self.get_potential_energies()
+
+        # pe_cls.shape = (len(self.types_unique), number of unique sequences, number of pieces in sequence)
+        pe_cls = dict()
+        for ty in self.types_unique:
+            pe_cls[ty] = []
+            for i in range(len(unique_seq[ty])):
+                pe_cls[ty].append([])
+                for j in range(len(piece_addr[ty][i])):
+                    pa = piece_addr[ty][i][j]
+                    pe_cls[ty][i].append(pe[pa[0], piece_inds[pa[0]][pa[1]][1]])
+
+        pe_hist = dict()
+        pe_bins = dict()
+        for ty in self.types_unique:
+            pe_hist[ty] = []
+            amin = np.amin(np.concatenate(pe_cls[ty]))
+            amax = np.amax(np.concatenate(pe_cls[ty]))
+            for i in range(len(pe_cls[ty])):
+                hist, bin_edges = np.histogram(pe_cls[ty][i], bins=num_bins, range=(amin, amax))
+                pe_hist[ty].append(hist)
+            pe_bins[ty] = (bin_edges[:-1] + bin_edges[1:])/2.
+
+        # Plot energy hierarchy
+        if color_list is None:
+            cl = ['b', 'g', 'r', 'c', 'm', 'y'] *10
+        else:
+            cl = color_list
+        from matplotlib import pyplot as plt
+        pe_means = {}
+        for ty in self.types_unique:
+            pe_means[ty] = []
+            print(' > Center atom: {}'.format(ty))
+            plt.figure()
+            for i in range(len(unique_seq[ty])):
+                pe_means[ty].append(np.mean(pe_cls[ty][i]))
+                print('   > Average atomic energy of {} : {:.4f} eV  {:.4f} meV'.format(
+                    unique_seq[ty][i],
+                    pe_means[ty][i],
+                    (pe_means[ty][i] -np.mean(np.concatenate(pe_cls[ty]))) *1000,
+                    ))
+                plt.plot([0,1], [pe_means[ty][i]]*2, c=cl[i])
+            plt.title('Atomic energy hierarchy of {} atoms'.format(ty), fontsize='x-large')
+            plt.xticks([])
+            plt.yticks(pe_means[ty],
+                labels = ['{}-{}-{} {:.3f} eV'.format(*unique_seq[ty][i], pe_means[ty][i]) for i in range(len(unique_seq[ty]))])
+            plt.tick_params(axis="both",direction="in", labelsize='large')
+            plt.subplots_adjust(left=0.48, bottom=0.10, right=0.52, top=0.90, wspace=0.2, hspace=0.2)
+            plt.grid(alpha=0.4)
+
+        # Plot histogram
+        for ty in self.types_unique:
+            plt.figure()
+            for i in range(len(pe_hist[ty])):
+                plt.plot(pe_bins[ty], pe_hist[ty][i], label='{}-{}-{}'.format(*unique_seq[ty][i]), c=cl[i])
+                plt.axvline(pe_means[ty][i], c=cl[i], lw=1)
+            plt.xlim((pe_bins[ty][0], pe_bins[ty][-1]))
+            plt.ylim((0, None))
+            plt.title('Atomic energy histogram of {} atoms'.format(ty), fontsize='x-large')
+            plt.xlabel('Atomic energy (eV)', fontsize='x-large')
+            plt.ylabel('Population', fontsize='x-large')
+            plt.legend(fontsize='large').set_draggable(True)
+            plt.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
+            plt.grid(alpha=0.4)
         plt.show()
 
