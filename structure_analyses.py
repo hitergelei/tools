@@ -1526,7 +1526,7 @@ class Structure_analyses(object):
                 plt.axvline(pe_means[ty][i], c=cl[i], lw=1)
             plt.xlim((pe_bins[ty][0], pe_bins[ty][-1]))
             plt.ylim((0, None))
-            plt.title('Atomic energy histogram of {} atoms'.format(ty), fontsize='x-large')
+            plt.title('Atomic energies of {} atoms'.format(ty), fontsize='x-large')
             plt.xlabel('Atomic energy (eV)', fontsize='x-large')
             plt.ylabel('Population', fontsize='x-large')
             plt.legend(fontsize='large').set_draggable(True)
