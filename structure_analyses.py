@@ -712,9 +712,11 @@ class Structure_analyses(object):
             unique_seq = dict()
         piece_addr = dict()
         for ty in self.types_unique:
-            if ty not in unique_seq:
+            if ty in unique_seq:
+                piece_addr[ty] = [[] for _ in range(len(unique_seq[ty]))]
+            else:
                 unique_seq[ty] = []
-            piece_addr[ty] = []
+                piece_addr[ty] = []
 
         for i in range(len(self.alist_ind_list)):
             for j in range(len(piece_inds[i])):
@@ -725,8 +727,6 @@ class Structure_analyses(object):
                     piece_addr[center_chem][seq_i].append([i,j])
                 elif merge_mirror and piece_chem[::-1] in unique_seq[center_chem]:
                     seq_i = unique_seq[center_chem].index(piece_chem[::-1])
-                    print(ty, i, j, seq_i)
-                    print(unique_seq[center_chem][seq_i])
                     piece_addr[center_chem][seq_i].append([i,j])
                 else:
                     unique_seq[center_chem].append(piece_chem)
