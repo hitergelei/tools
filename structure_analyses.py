@@ -1335,6 +1335,42 @@ class Structure_analyses(object):
         plt.grid(alpha=0.5)
         plt.show()
 
+    def get_terminal_list(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        nth_term,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        nth_term (int): Specify which n-th terminal to be counted.
+            For example, nth_term=2, in a chain of "Te-(Ge)-Te-Sb-Te-Sb-Te-(Ge)-Te", two Ge atoms in parentheses are counted.
+        """
+
+        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
+            bond_cutoff,
+            angle_cutoff,
+            bond_rules,
+            load_bool,
+            save_bool,
+            )
+
+        nth_term_py = nth_term -1
+
+        terminals = dict()
+        for ty in self.types_unique:
+            terminals[ty] = [[] for i in range(len(ind_set))]
+        for i in range(len(ind_set)):
+            # Iter for chains
+            for j in range(len(ind_set[i])):
+                type_chain = self.types[ind_set[i][j]]
+                terminals[type_chain[nth_term_py]][i].append(ind_set[i][j][nth_term_py])
+                if nth_term_py < (len(type_chain) -nth_term_py -1):
+                    terminals[type_chain[len(type_chain) -nth_term_py -1]][i].append(ind_set[i][j][len(type_chain) -nth_term_py -1])
+        return terminals
+
     def plot_terminal_stat(
         self,
         bond_cutoff,
@@ -1346,35 +1382,15 @@ class Structure_analyses(object):
         save_bool=True,
         ):
         """
-        nth_term (int): Specify which n-th terminal to be counted.
-            For example, nth_term=2, in a chain of "Te-(Ge)-Te-Sb-Te-Sb-Te-(Ge)-Te", two Ge atoms in parentheses are counted.
         """
 
-        # 
-        ind_set, bond_direcs, bond_lengths, chain_vec = self.get_chain_sets(
-            bond_cutoff,
-            angle_cutoff,
-            bond_rules,
-            load_bool,
-            save_bool,
-            )
-        #
-        nth_term_py = nth_term -1
-        # Iter for images
-        term_hist = np.zeros((len(self.types_unique), len(ind_set)))
-        for i in range(len(ind_set)):
-            # Iter for chains
-            terminals = []
-            for j in range(len(ind_set[i])):
-                type_chain = self.types[ind_set[i][j]]
-                terminals.append(type_chain[nth_term_py])
-                if nth_term_py < (len(type_chain) -nth_term_py -1):
-                    terminals.append(type_chain[len(type_chain) -nth_term_py -1])
-            terminals = np.array(terminals)
+        terminals = self.get_terminal_list(bond_cutoff, angle_cutoff, nth_term, bond_rules, load_bool, save_bool)
 
-            #
+        # Iter for images
+        term_hist = np.zeros((len(self.types_unique), self.len_alist))
+        for i in range(self.len_alist):
             for j in range(len(self.types_unique)):
-                term_hist[j, i] = np.sum(terminals == self.types_unique[j])
+                term_hist[j, i] = len(terminals[self.types_unique[j]][i])
         
         # Plot
         if color_list is None:
@@ -1411,6 +1427,39 @@ class Structure_analyses(object):
         plt.legend(fontsize='large').set_draggable(True)
         plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
         plt.show()
+
+    def view_terminal_atoms(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        nth_term,
+        plot_chem=None,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        plot_chem (list of str or None)
+            Specify chemical symbols to view. e.g., ['Ge', 'Sb']
+        """
+
+        #
+        if plot_chem is None:
+            plot_chem = self.types_unique
+        else:
+            plot_chem = np.array(plot_chem)
+
+        #
+        terminals = self.get_terminal_list(bond_cutoff, angle_cutoff, nth_term, bond_rules, load_bool, save_bool)
+
+        new_alist=[]
+        for i in range(self.len_alist):
+            mask = []
+            for ty in plot_chem:
+                mask = mask + terminals[ty][i]
+            new_alist.append(self.alist[i][mask])
+        from ase.visualize import view
+        view(new_alist)
 
     def get_potential_energies(
         self,
