@@ -52,6 +52,15 @@ if __name__ == '__main__':
     f = data[:,:,0]
     ka = data[:,:,1:4]
     dka_df = data[:,:,7:10]
+    if args.xmax is not None:
+        xmax = args.xmax
+    else:
+        xmax = f[0,-1]
+    if args.ymax is not None:
+        ymax = args.ymax
+    else:
+        ymax = None
+
 
     # Plot
     from matplotlib import pyplot as plt
@@ -76,23 +85,23 @@ if __name__ == '__main__':
         else:
             plt.plot(
                 f[j], np.mean(ka[j], axis=1),
-                label='$\kappa(f)$ (W/mK)',
+                label='$\kappa(f)$\n(W/mK)',
                 c='k',
                 ls='--',
                 )
             plt.plot(
                 f[j], np.mean(dka_df[j], axis=1),
-                label='$d\kappa(f)$/$df$ (fsW/mK)',
+                label='$d\kappa(f)$/$df$\n(fsW/mK)',
                 c='k',
                 )
 
         #
         plt.xlabel('Frequency (THz)', fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        # plt.subplots_adjust(left=0.19, bottom=0.15, right=0.96, top=0.92)
-        plt.legend(fontsize='large')
+        plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
+        plt.legend(fontsize='large').set_draggable(True)
         plt.title('{}K'.format(T[j]), fontsize='x-large')
         plt.grid(alpha=0.5)
-        plt.xlim(0, args.xmax)
-        plt.ylim(0, args.ymax)
+        plt.xlim(0, xmax)
+        plt.ylim(0, ymax)
     plt.show()
