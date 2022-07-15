@@ -86,6 +86,7 @@ if __name__ == '__main__':
         for i in range(len(avail_info)):
             plt.figure()
             plt.plot(t, info[j][avail_info[i]], c='k')
+            plt.xlim((t[0], t[-1]))
             plt.title(avail_info[i], fontsize='x-large')
             plt.ylabel(avail_info[i], fontsize='x-large')
             plt.xlabel('Time (ps)', fontsize='x-large')
