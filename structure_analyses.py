@@ -441,56 +441,49 @@ class Structure_analyses(object):
                             #
                             changed = True
                             break
-                        elif piece_inds_i[p][:2] == head[::-1] and (piece_direcs_i[p][1] @ (-chain_direc)) > -cos_cutoff:
+                        elif piece_inds_i[p][-2:][::-1] == tail and (-piece_direcs_i[p][0] @ chain_direc) > -cos_cutoff:
                             #
-                            ind_set_tmp = ind_set_tmp[::-1]
-                            ind_set_tmp.append(piece_inds_i[p][2])
+                            ind_set_tmp.append(piece_inds_i[p][0])
                             del(piece_inds_i[p])
                             #
-                            bond_direcs_tmp = bond_direcs_tmp[::-1]
-                            bond_direcs_tmp.append(piece_direcs_i[p][1])
+                            bond_direcs_tmp.append(-piece_direcs_i[p][0])
                             del(piece_direcs_i[p])
                             #
-                            bond_lengths_tmp = bond_lengths_tmp[::-1]
-                            bond_lengths_tmp.append(piece_lengths_i[p][1])
+                            bond_lengths_tmp.append(piece_lengths_i[p][0])
                             del(piece_lengths_i[p])
                             #
-                            chain_vec_tmp *= -1.
                             chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
+                            #
+                            changed = True
+                            break
+                        elif piece_inds_i[p][:2][::-1] == head and (piece_direcs_i[p][1] @ (-chain_direc)) > -cos_cutoff:
+                            #
+                            ind_set_tmp.insert(0, piece_inds_i[p][2])
+                            del(piece_inds_i[p])
+                            #
+                            bond_direcs_tmp.insert(0, -piece_direcs_i[p][1])
+                            del(piece_direcs_i[p])
+                            #
+                            bond_lengths_tmp.insert(0, piece_lengths_i[p][1])
+                            del(piece_lengths_i[p])
+                            #
+                            chain_vec_tmp += bond_direcs_tmp[0] * bond_lengths_tmp[0]
                             #
                             changed = True
                             break
                         elif piece_inds_i[p][-2:] == head and (piece_direcs_i[p][0] @ chain_direc) > -cos_cutoff:
                             #
-                            ind_set_tmp = ind_set_tmp[::-1]
-                            ind_set_tmp.append(piece_inds_i[p][0])
+                            ind_set_tmp.insert(0, piece_inds_i[p][0])
                             del(piece_inds_i[p])
                             #
-                            bond_direcs_tmp = bond_direcs_tmp[::-1]
-                            bond_direcs_tmp.append(-piece_direcs_i[p][0])
+                            bond_direcs_tmp.insert(0, piece_direcs_i[p][0])
                             del(piece_direcs_i[p])
                             #
-                            bond_lengths_tmp = bond_lengths_tmp[::-1]
-                            bond_lengths_tmp.append(piece_lengths_i[p][0])
+                            bond_lengths_tmp.insert(0, piece_lengths_i[p][0])
                             del(piece_lengths_i[p])
                             #
-                            chain_vec_tmp *= -1.
-                            chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
+                            chain_vec_tmp += bond_direcs_tmp[0] * bond_lengths_tmp[0]
                             #
-                            changed = True
-                            break
-                        elif piece_inds_i[p][-2:] == tail[::-1] and (-piece_direcs_i[p][0] @ chain_direc) > -cos_cutoff:
-                            #
-                            ind_set_tmp.append(piece_inds_i[p][0])
-                            del(piece_inds_i[p])
-                            #
-                            bond_direcs_tmp.append(-piece_direcs_i[p][0])
-                            del(piece_direcs_i[p])
-                            #
-                            bond_lengths_tmp.append(piece_lengths_i[p][0])
-                            del(piece_lengths_i[p])
-                            #
-                            chain_vec_tmp += bond_direcs_tmp[-1] * bond_lengths_tmp[-1]
                             changed = True
                             break
                     if not changed:
@@ -594,6 +587,9 @@ class Structure_analyses(object):
             term_piece_lengths_i = []
             term_piece_direcs_i  = []
             for j in range(len(ind_set[i])):
+                # Exclude infinitely long chain
+                if ind_set[i][j][0] == ind_set[i][j][-2]:
+                    continue
                 term_piece_inds_i.append([-1, ind_set[i][j][0], ind_set[i][j][1]])
                 term_piece_direcs_i.append(np.array([np.zeros(3, dtype=float), bond_direcs[i][j][0]]))
                 term_piece_lengths_i.append([0., bond_lengths[i][j][0]])
