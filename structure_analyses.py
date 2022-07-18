@@ -977,7 +977,7 @@ class Structure_analyses(object):
         # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
         ax1.set_ylabel('Population (%)', fontsize='x-large')
         # ax2.set_ylabel('Population', fontsize='x-large')
-        plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
+        plt.subplots_adjust(left=0.28, right=0.72, bottom=0.25, top=0.75)
         ax1.grid(alpha=0.5)
         plt.show()
 
@@ -1335,7 +1335,7 @@ class Structure_analyses(object):
         plt.grid(alpha=0.5)
         plt.show()
 
-    def get_terminal_list(
+    def get_terminal_dict(
         self,
         bond_cutoff,
         angle_cutoff,
@@ -1384,7 +1384,7 @@ class Structure_analyses(object):
         """
         """
 
-        terminals = self.get_terminal_list(bond_cutoff, angle_cutoff, nth_term, bond_rules, load_bool, save_bool)
+        terminals = self.get_terminal_dict(bond_cutoff, angle_cutoff, nth_term, bond_rules, load_bool, save_bool)
 
         # Iter for images
         term_hist = np.zeros((len(self.types_unique), self.len_alist))
@@ -1398,16 +1398,17 @@ class Structure_analyses(object):
 
         #
         from matplotlib import pyplot as plt
+        t = self.t / 1000.
         for type_i in range(len(self.types_unique)):
-            plt.plot(self.t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+            plt.plot(t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.xlim(self.t[0], self.t[-1])
+        # plt.xlim(t[0], t[-1])
         plt.ylim(0, None)
         plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
-        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.xlabel('Time (ns)', fontsize='x-large')
         plt.ylabel('Population', fontsize='x-large')
         # plt.subplots_adjust(left=0.35, right=0.65)
-        plt.grid(alpha=0.4)
+        plt.grid(alpha=0.5)
         plt.legend(fontsize='large').set_draggable(True)
         plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
 
@@ -1415,15 +1416,15 @@ class Structure_analyses(object):
         term_hist_norm = term_hist /np.sum(term_hist, axis=0)
         plt.figure()
         for type_i in range(len(self.types_unique)):
-            plt.plot(self.t, term_hist_norm[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+            plt.plot(t, term_hist_norm[type_i], label=self.types_unique[type_i], c=color_list[type_i])
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.xlim(self.t[0], self.t[-1])
+        # plt.xlim(t[0], t[-1])
         plt.ylim(0, None)
         plt.title('{}-th terminal histogram'.format(nth_term), fontsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.ylabel('Population ratio', fontsize='x-large')
         # plt.subplots_adjust(left=0.35, right=0.65)
-        plt.grid(alpha=0.4)
+        plt.grid(alpha=0.5)
         plt.legend(fontsize='large').set_draggable(True)
         plt.subplots_adjust(left=0.25, right=0.75, bottom=0.25, top=0.75)
         plt.show()
@@ -1450,7 +1451,7 @@ class Structure_analyses(object):
             plot_chem = np.array(plot_chem)
 
         #
-        terminals = self.get_terminal_list(bond_cutoff, angle_cutoff, nth_term, bond_rules, load_bool, save_bool)
+        terminals = self.get_terminal_dict(bond_cutoff, angle_cutoff, nth_term, bond_rules, load_bool, save_bool)
 
         new_alist=[]
         for i in range(self.len_alist):
@@ -1565,7 +1566,7 @@ class Structure_analyses(object):
                 labels = ['{}-{}-{} {:.3f} eV'.format(*unique_seq[ty][i], pe_means[ty][i]) for i in range(len(unique_seq[ty]))])
             plt.tick_params(axis="both",direction="in", labelsize='large')
             plt.subplots_adjust(left=0.48, bottom=0.10, right=0.52, top=0.90, wspace=0.2, hspace=0.2)
-            plt.grid(alpha=0.4)
+            plt.grid(alpha=0.5)
 
         # Plot histogram
         for ty in self.types_unique:
@@ -1581,6 +1582,103 @@ class Structure_analyses(object):
             plt.legend(fontsize='large').set_draggable(True)
             plt.tick_params(axis="both",direction="in", labelsize='x-large')
             plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
-            plt.grid(alpha=0.4)
+            plt.grid(alpha=0.5)
         plt.show()
 
+    def find_vacancy_pos(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        vac_dist,
+        dup_cutoff=1.,
+        next_to=None,
+        bond_rules=None,
+        load_bool=True,
+        save_bool=True,
+        ):
+        """
+        Find vacancy positions.
+        It guesses the position of the vacancy by terminal pieces. Direction is either x, y, or z, and distance should be provided.
+
+        vac_dist (float): Distance to the vacancy from the center atom in Angstrom unit
+        dup_cutoff (float): Cutoff radius for a vacancy-duplication elimination.
+        next_to (list of str): Find vacancies only next to provided species.
+        """
+
+        term_piece_inds, term_piece_lengths, term_piece_direcs = self.get_terminal_pieces(
+            bond_cutoff,
+            angle_cutoff,
+            bond_rules,
+            load_bool,
+            save_bool,
+            )
+        
+        vac_pos = []
+        for i in range(self.len_alist):
+            all_pos_i = self.alist[i].get_positions()
+            vac_pos_i = []
+            for j in range(len(term_piece_inds[i])):
+                if next_to:
+                    if self.types[term_piece_inds[i][j][1]] not in next_to:
+                        continue
+                if term_piece_inds[i][j][0] == -1:
+                    direc = np.round(-term_piece_direcs[i][j][1])
+                    if np.linalg.norm(direc) != 1.:
+                        continue
+                    vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
+                elif term_piece_inds[i][j][2] == -1:
+                    direc = np.round(term_piece_direcs[i][j][0])
+                    if np.linalg.norm(direc) != 1.:
+                        continue
+                    vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
+                else:
+                    raise RuntimeError('Error should not happen. Something is wrong.')
+            vac_pos.append(vac_pos_i)
+            
+        return vac_pos
+
+    def replace_vacancies_w_X(
+        self,
+        bond_cutoff,
+        angle_cutoff,
+        vac_dist,
+        bond_rules=None,
+        dup_cutoff=1.,
+        next_to=None,
+        wrap=True,
+        view_X=False,
+        load_bool=True,
+        save_bool=True,
+        file_name=None,
+        ):
+        """
+        file_name (str)
+            - File name to save alist with X added.
+        wrap (bool)
+            - Wrap atoms into boundaries
+        view_X (bool)
+            - View X atoms after save
+        """
+
+        vac_pos = self.find_vacancy_pos(bond_cutoff, angle_cutoff, vac_dist, dup_cutoff, next_to, bond_rules, load_bool, save_bool)
+
+        from ase.atom import Atom
+        new_alist = []
+        for i in range(self.len_alist):
+            atoms = self.alist[i].copy()
+            for j in range(len(vac_pos[i])):
+                atoms.extend(Atom('X', vac_pos[i][j]))
+            if wrap:
+                atoms.wrap(eps=0.)
+            new_alist.append(atoms)
+
+        if file_name is None:
+            file_name = 'vac-{}-{}.traj'.format(self.alist_file, self.alist_slice)
+        from ase.io import write
+        write(file_name, new_alist)
+        if view_X:
+            from ss_util import screen_species
+            alist_X = screen_species(new_alist, ['X'])
+            from ase.visualize import view
+            view(alist_X)
+                
