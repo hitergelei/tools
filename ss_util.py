@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 ##### CODE BY YOUNG JAE CHOI #####
-
-from ase import Atoms, Atom
-import random
-from ase.build import make_supercell
 import numpy as np
 
 def screen_species(alist, symbols):

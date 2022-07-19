@@ -92,6 +92,70 @@ def get_neighbors(
         directions.append(directions_i)
     return indices, lengths, directions
 
+def unite_nearby_vacancies(
+    atoms,
+    unite_cutoff,
+    dtype='float64',
+    ):
+    """
+    Please be careful about the change of atomic indices.
+
+    atoms (ASE Atoms object)
+        - ASE Atoms object
+    unite_cutoff (float)
+        - Cutoff radius for unite. Vacancies closer than this value will be united.
+    """
+
+    chem = np.array(atoms.get_chemical_symbols())
+    if 'X' not in chem:
+        print('Warning) no a vacancy in the Atoms object.')
+        return atoms
+
+    mask = (chem == 'X')
+    
+    vac = atoms[mask]
+    indices, lengths, directions = get_neighbors([vac], unite_cutoff, dtype=dtype)
+    indices = indices[0]
+    
+    sets = []
+    for i in range(len(indices)):
+        sets.append(set(indices[i].tolist() + [i]))
+
+    while True:
+        changed = False
+        new_sets = [sets[0]]
+        for i in range(1, len(sets)):
+            for j in range(len(new_sets)):
+                if len(sets[i] & new_sets[j]) == 0:
+                    if j == len(new_sets)-1:
+                        new_sets.append(sets[i])
+                    else:
+                        continue
+                else:
+                    new_sets[j] = new_sets[j] | sets[i]
+                    changed = True
+                    break
+        sets = new_sets[:]
+        if not changed:
+            break
+    del(new_sets)
+    
+    new_atoms = atoms[~mask]
+    box = np.array(atoms.get_cell())
+    pos = atoms[mask].get_positions()
+    scaled_pos = atoms[mask].get_scaled_positions()
+    from ase.atom import Atom
+    for i in range(len(sets)):
+        if len(sets[i]) == 1:
+            new_pos = pos[list(sets[i])][0]
+        else:
+            sp = scaled_pos[list(sets[i])]
+            shift = np.mean((((sp[1:] - sp[0]) + [0.5, 0.5, 0.5]) %1.0 -[0.5, 0.5, 0.5]) @box, axis=0)
+            new_pos = pos[list(sets[i])[0]] + shift
+        new_atoms.extend(Atom('X', new_pos))
+
+    return new_atoms
+
 class Structure_analyses(object):
     """
     """
@@ -1586,7 +1650,6 @@ class Structure_analyses(object):
         bond_cutoff,
         angle_cutoff,
         vac_dist,
-        dup_cutoff=1.,
         next_to=None,
         bond_rules=None,
         load_bool=True,
@@ -1597,7 +1660,6 @@ class Structure_analyses(object):
         It guesses the position of the vacancy by terminal pieces. Direction is either x, y, or z, and distance should be provided.
 
         vac_dist (float): Distance to the vacancy from the center atom in Angstrom unit
-        dup_cutoff (float): Cutoff radius for a vacancy-duplication elimination.
         next_to (list of str): Find vacancies only next to provided species.
         """
 
@@ -1639,7 +1701,7 @@ class Structure_analyses(object):
         angle_cutoff,
         vac_dist,
         bond_rules=None,
-        dup_cutoff=1.,
+        unite_cutoff=None,
         next_to=None,
         wrap=True,
         view_X=False,
@@ -1648,15 +1710,17 @@ class Structure_analyses(object):
         file_name=None,
         ):
         """
-        file_name (str)
-            - File name to save alist with X added.
+        unite_cutoff (float)
+            - Cutoff radius for a vacancy unification.
         wrap (bool)
             - Wrap atoms into boundaries
         view_X (bool)
             - View X atoms after save
+        file_name (str)
+            - File name to save alist with X added.
         """
 
-        vac_pos = self.find_vacancy_pos(bond_cutoff, angle_cutoff, vac_dist, dup_cutoff, next_to, bond_rules, load_bool, save_bool)
+        vac_pos = self.find_vacancy_pos(bond_cutoff, angle_cutoff, vac_dist, next_to, bond_rules, load_bool, save_bool)
 
         from ase.atom import Atom
         new_alist = []
@@ -1666,15 +1730,18 @@ class Structure_analyses(object):
                 atoms.extend(Atom('X', vac_pos[i][j]))
             if wrap:
                 atoms.wrap(eps=0.)
+            if unite_cutoff is not None:
+                atoms = unite_nearby_vacancies(atoms, unite_cutoff, dtype='float32')
             new_alist.append(atoms)
 
         if file_name is None:
             file_name = 'vac-{}-{}.traj'.format(self.alist_file, self.alist_slice)
         from ase.io import write
         write(file_name, new_alist)
+
         if view_X:
             from ss_util import screen_species
             alist_X = screen_species(new_alist, ['X'])
             from ase.visualize import view
             view(alist_X)
-                
+
