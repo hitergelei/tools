@@ -64,8 +64,9 @@ def get_s_factor(
     return k[realpart], S[realpart]
 
 def get_curve(
+    alist,
     image_slice,
-    file_list,
+    alist_file,
     symb1,
     symb2,
     nBin,
@@ -81,43 +82,30 @@ def get_curve(
     slice_list = str_slice_to_list(image_slice)
     # out file
     out_fname  = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
-        file_list[0], slice_list[0], slice_list[1], slice_list[2], symb1, symb2, nBin, rcut)
+        alist_file, *slice_list, symb1, symb2, nBin, rcut)
     out_fname2 = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
-        file_list[0], slice_list[0], slice_list[1], slice_list[2], symb2, symb1, nBin, rcut)
+        alist_file, *slice_list, symb2, symb1, nBin, rcut)
 
     ## Main
     try:
         assert load_bool == True
-        assert len(file_list) == 1
         curve = np.load(out_fname)
     except:
         try:
             assert load_bool == True
-            assert len(file_list) == 1
             curve = np.load(out_fname2)
         except:
             do_calc = True
             if load_bool:
                 print('Failed to load saved npy file. Calculation will be carried out')
-                print('Case 1) Number of input file must be 1 to load npy. len(file_list)=={}'.format(len(file_list)))
-                print('Case 2) Failed to load npy file "{}"'.format(out_fname))
-                print('             or equivalent data "{}"'.format(out_fname2))
+                print(' Failed to load npy file "{}"'.format(out_fname))
+                print('      or equivalent data "{}"'.format(out_fname2))
         else:
             print('File "{}" has been loaded.'.format(out_fname2))
             do_calc = False
         if do_calc:
-            ## Read inputs
-            alist = []
-            for infname in file_list:
-                read_obj = read(infname, image_slice)
-                if isinstance(read_obj, list):
-                    alist.extend(read_obj)
-                else:
-                    alist.append(read_obj)
-            if len(alist) == 0:
-                raise ValueError('No an image provided.')
             curve = get_RDF(alist, rcut, nBin, (symb1, symb2), log=True)
-            if save_bool and len(file_list) == 1:
+            if save_bool:
                 from ss_util import pick_folder_from_path as pffp
                 folder = pffp(out_fname)
                 call('mkdir -p {}'.format(folder), shell=True)
@@ -153,7 +141,7 @@ def argparse():
     # Positional arguments
     parser.add_argument('symbol1', type=str, help='symbol1,2, are chemical symbols consisting bonds.')
     parser.add_argument('symbol2', type=str, help='e.g. Ge Te | "a": any symbols, "x": do all partial.')
-    parser.add_argument('file_list', type=str, nargs='+', help='ASE readable atoms list file name. Multiple files can be read.')
+    parser.add_argument('alist_file', type=str, help='ASE readable atoms list file name.')
     # Optional arguments
     parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-r', '--rcut', type = float, default=8.5, help='Maximum radius for RDF. Default: 8.5')
@@ -201,17 +189,18 @@ if __name__ == '__main__':
 
     #
     den_list = []
-    for file_i in range(len(args.file_list)):
-        alist = read(args.file_list[file_i], args.image_slice)
-        if not isinstance(alist, list):
-            alist = [alist]
-        for j in range(len(alist)):
-            atoms = alist[j]
-            den_list.append(len(atoms) / atoms.get_volume())
+    ## Read inputs
+    alist = read(args.alist_file, args.image_slice)
+    if not isinstance(alist, list):
+        alist = [alist]
+
+    den_list = []
+    for atoms in alist:
+        den_list.append(len(atoms) / atoms.get_volume())
     num_den = np.mean(den_list)
 
     # In case symbol is 'x'
-    chem_list = np.unique(read(args.file_list[0], 0).get_chemical_symbols()).tolist()
+    chem_list = np.unique(alist[0].get_chemical_symbols()).tolist()
     if symbol1 == 'x':
         symb1_list = chem_list[:]
     else:
@@ -236,8 +225,9 @@ if __name__ == '__main__':
     curve_list = []
     for symb_set in symbol_sets:
         cv = get_curve(
+            alist,
             args.image_slice,
-            args.file_list,
+            args.alist_file,
             symb_set[0],
             symb_set[1],
             nBin,
@@ -261,7 +251,7 @@ if __name__ == '__main__':
 
     # @ Plot
     title  = '{} slice-{} symb-{},{} nBin-{} rcut-{}'.format(
-        args.file_list[0], args.image_slice, symbol1, symbol2, nBin, rcut)
+        args.alist_file, args.image_slice, symbol1, symbol2, nBin, rcut)
     import matplotlib.pyplot as plt
     if args.dont_share_y:
         fig, axs = plt.subplots(len(curve_list), sharex=True)

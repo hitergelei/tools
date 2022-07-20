@@ -42,7 +42,7 @@ sa = Structure_analyses(
     # angle_cutoff,
     # bonding_rules,
     # # inf_as_zero=True,
-    # deriv_sigma=5,
+    # # deriv_sigma=5,
     # # load_bool=False,
     # # save_bool=False,
     # )
@@ -115,18 +115,18 @@ sa = Structure_analyses(
     # # save_bool = False,
     # )
 
-sa.replace_vacancies_w_X(
-    bond_cutoff,
-    angle_cutoff,
-    bond_rules   = bonding_rules,
-    vac_dist     = 3.007,
-    # vac_dist     = 1.500,
-    unite_cutoff = 2.2,
-    vac_radius   = 2.0,
-    next_to      = ['Te'],
-    # wrap         = False,
-    # view_X       = True,
-    # load_bool    = False,
-    # save_bool    = False,
-    # file_name    = None,
-    )
+# sa.replace_vacancies_w_X(
+    # bond_cutoff,
+    # angle_cutoff,
+    # bond_rules   = bonding_rules,
+    # vac_dist     = 3.007,
+    # # vac_dist     = 1.500,
+    # unite_cutoff = 2.2,
+    # vac_radius   = 2.0,
+    # next_to      = ['Te'],
+    # # wrap         = False,
+    # # view_X       = True,
+    # # load_bool    = False,
+    # # save_bool    = False,
+    # # file_name    = None,
+    # )
