@@ -2,6 +2,16 @@
 ##### CODE BY YOUNG JAE CHOI #####
 import numpy as np
 
+def pick_folder_from_path(path):
+    """
+    path (str)
+    """
+    path_split = path.split('/')[:-1]
+    folder = ''
+    for p in path_split:
+        folder += p + '/'
+    return folder
+
 def screen_species(alist, symbols):
     new_alist = []
     for i in range(len(alist)):

@@ -121,8 +121,10 @@ if __name__ == '__main__':
             print('Totally {} atoms in {} images have been calculated'.format(nsum, len(alist)))
 
             if args.save_bool and len(file_list) == 1:
+                from ss_util import pick_folder_from_path as pffp
+                folder = pffp(out_fname)
                 from subprocess import call
-                call('mkdir adf-saved', shell=True)
+                call('mkdir -p {}'.format(folder), shell=True)
                 np.savez(out_fname, angd=angd, agr=agr)
                 print('=================================================================================================='.center(120))
                 print('ADF saved! ----------> {}'.format(out_fname).center(120))

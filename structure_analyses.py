@@ -887,7 +887,7 @@ class Structure_analyses(object):
                 dCdt = gaussian_filter(dCdt, sigma=deriv_sigma)
 
         # Plot
-        time_arr = np.arange(len(lengths)) * self.dt
+        time_arr = np.arange(len(lengths)) *self.dt /1000.
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
@@ -906,7 +906,7 @@ class Structure_analyses(object):
             # # )
         ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='k')
         ax1.tick_params(axis="x",direction="in", labelsize='x-large')
-        ax1.set_xlabel('Time (ps)', fontsize='x-large')
+        ax1.set_xlabel('Time (ns)', fontsize='x-large')
         ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
         if deriv_sigma is not None and not False:
             ax2 = ax1.twinx()
@@ -917,7 +917,7 @@ class Structure_analyses(object):
                 c='r',
                 )
             ax2.tick_params(axis="y",direction="in", labelsize='x-large', colors='r', labelcolor='r')
-            ax2.set_ylabel('$\Delta C$/$\Delta t$ (ns$^{-1}$)', fontsize='x-large', c='r')
+            ax2.set_ylabel('$\Delta C$/$\Delta t$', fontsize='x-large', c='r')
             plt.legend(loc=(0.00, 1.02), fontsize='x-large')
         # # ax2.plot(
             # # time_arr,
@@ -1683,11 +1683,13 @@ class Structure_analyses(object):
                     direc = np.round(-term_piece_direcs[i][j][1])
                     if np.linalg.norm(direc) != 1.:
                         continue
+                        # raise RuntimeError('{} {}'.format(-term_piece_direcs[i][j][1], direc))
                     vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
                 elif term_piece_inds[i][j][2] == -1:
                     direc = np.round(term_piece_direcs[i][j][0])
                     if np.linalg.norm(direc) != 1.:
                         continue
+                        # raise RuntimeError('{} {}'.format(term_piece_direcs[i][j][0], direc))
                     vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
                 else:
                     raise RuntimeError('Error should not happen. Something is wrong.')
@@ -1702,6 +1704,7 @@ class Structure_analyses(object):
         vac_dist,
         bond_rules=None,
         unite_cutoff=None,
+        vac_radius=None,
         next_to=None,
         wrap=True,
         view_X=False,
@@ -1712,6 +1715,10 @@ class Structure_analyses(object):
         """
         unite_cutoff (float)
             - Cutoff radius for a vacancy unification.
+        vac_radius (float)
+            - Radius of vacancy.
+            - If vacancy found is closer than this value to other real atoms,
+                then, remove vacancy.
         wrap (bool)
             - Wrap atoms into boundaries
         view_X (bool)
@@ -1726,7 +1733,18 @@ class Structure_analyses(object):
         new_alist = []
         for i in range(self.len_alist):
             atoms = self.alist[i].copy()
+            box = np.array(atoms.get_cell())
+            scaled_pos = atoms.get_scaled_positions()
+            #
             for j in range(len(vac_pos[i])):
+                vac_scaled_pos = vac_pos[i][j] @np.linalg.inv(box)
+                if vac_radius is not None and np.amin(
+                    np.linalg.norm(
+                        (((scaled_pos -vac_scaled_pos) + [0.5, 0.5, 0.5]) %1.0 - [0.5, 0.5, 0.5]) @box,
+                        axis=-1,
+                        ),
+                    ) < vac_radius:
+                    continue
                 atoms.extend(Atom('X', vac_pos[i][j]))
             if wrap:
                 atoms.wrap(eps=0.)
@@ -1734,8 +1752,26 @@ class Structure_analyses(object):
                 atoms = unite_nearby_vacancies(atoms, unite_cutoff, dtype='float32')
             new_alist.append(atoms)
 
+        next_to_concat = ''
+        for s in next_to:
+            next_to_concat += s
         if file_name is None:
-            file_name = 'vac-{}-{}.traj'.format(self.alist_file, self.alist_slice)
+            folder = 'vacancy/{}/{}-{}-{}/{}/dv{}-ru-{}-rv-{}-nt-{}'.format(
+                self.alist_file,
+                bond_cutoff,
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
+                angle_cutoff,
+                vac_dist,
+                unite_cutoff,
+                vac_radius,
+                next_to_concat,
+                )
+            call('mkdir -p {}'.format(folder), shell=True)
+            file_name = '{}/vac-{}.traj'.format(
+                folder,
+                self.alist_slice,
+                )
         from ase.io import write
         write(file_name, new_alist)
 

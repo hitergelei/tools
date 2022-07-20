@@ -118,7 +118,9 @@ def get_curve(
                 raise ValueError('No an image provided.')
             curve = get_RDF(alist, rcut, nBin, (symb1, symb2), log=True)
             if save_bool and len(file_list) == 1:
-                call('mkdir rdf-saved', shell=True)
+                from ss_util import pick_folder_from_path as pffp
+                folder = pffp(out_fname)
+                call('mkdir -p {}'.format(folder), shell=True)
                 np.save(out_fname, curve)
                 print('=================================================================================================='.center(120))
                 print('RDF saved! ----------> {}'.format(out_fname).center(120))
@@ -200,7 +202,9 @@ if __name__ == '__main__':
     #
     den_list = []
     for file_i in range(len(args.file_list)):
-        alist = read(args.file_list[file_i], ':')
+        alist = read(args.file_list[file_i], args.image_slice)
+        if not isinstance(alist, list):
+            alist = [alist]
         for j in range(len(alist)):
             atoms = alist[j]
             den_list.append(len(atoms) / atoms.get_volume())
@@ -289,8 +293,8 @@ if __name__ == '__main__':
         if args.ytick_list is not None:
             axs[i].set_yticks(args.ytick_list)
         else:
-            intvl = int(np.max(np.array(curve_list)[:,:,1]) * 1.10 // 4 + 1)
-            axs[i].set_yticks(range(0, int(np.max(np.array(curve_list)[:,:,1]) * 1.10)+1, intvl))
+            intvl = int(rdf_upper // 4 + 1)
+            axs[i].set_yticks(range(0, int(rdf_upper)+1, intvl))
         #
         axs[i].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=False)
         axs[i].set_xlim(0., rcut)
@@ -332,8 +336,8 @@ if __name__ == '__main__':
         if args.s_ytick_list is not None:
             axs[i].set_yticks(args.s_ytick_list)
         else:
-            intvl = int(np.max(S_list[i]) * 1.10 // 4 + 1)
-            axs[i].set_yticks(range(0, int(np.max(S_list[i]) * 1.10)+1, intvl))
+            intvl = int(s_upper // 4 + 1)
+            axs[i].set_yticks(range(0, int(s_upper)+1, intvl))
         #
         axs[i].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=False)
         axs[i].set_xlim(0., np.max(k_list[i]))
