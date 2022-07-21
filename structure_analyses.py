@@ -1750,6 +1750,15 @@ class Structure_analyses(object):
                 atoms.wrap(eps=0.)
             if unite_cutoff is not None:
                 atoms = unite_nearby_vacancies(atoms, unite_cutoff, dtype='float32')
+            # implant calc
+            len_X = np.sum(np.array(atoms.get_chemical_symbols()) == 'X')
+            calc_atoms = atoms.copy()
+            from copy import deepcopy
+            atoms._calc = deepcopy(self.alist[i]._calc)
+            atoms._calc.atoms = calc_atoms
+            atoms._calc.results['energies'] = np.array(atoms.get_potential_energies().tolist() + [0.] *len_X)
+            atoms._calc.results['forces'] = np.array(atoms.get_forces().tolist() + [[0.,0.,0.] for j in range(len_X)])
+            #
             new_alist.append(atoms)
 
         next_to_concat = ''

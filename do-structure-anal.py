@@ -8,8 +8,10 @@ import numpy as np
 angle_cutoff = 135.
 bond_cutoff = 4.0
 bonding_rules = [['Ge','Sb'], ['Te']]
+# bonding_rules = [['Ge','Sb','X'], ['Te']]
 alist_file = 'out.dump'
 # alist_file = 'pre-out.dump'
+# alist_file = 'vacancy/out.dump/4.0-GeSb-Te/135.0/dv3.007-ru-2.2-rv-2.0-nt-Te/vac-8000:8001:1.traj'
 # alist_file = 'gst-cubic-md-last50.traj'
 # alist_file = 'test.traj'
 # alist_slice = ':'
@@ -98,7 +100,9 @@ sa = Structure_analyses(
         # ['Sb', 'Te', 'Sb'],
         # ['Ge', 'Te', 'V'],
         # ['Sb', 'Te', 'V'],
-        # ]}
+        # # ['Ge', 'Te', 'X'],
+        # # ['Sb', 'Te', 'X'],
+        # ]},
     # # include_terminal=False,
     # # num_bins=200,
     # # load_bool=False,
@@ -115,18 +119,18 @@ sa = Structure_analyses(
     # # save_bool = False,
     # )
 
-# sa.replace_vacancies_w_X(
-    # bond_cutoff,
-    # angle_cutoff,
-    # bond_rules   = bonding_rules,
-    # vac_dist     = 3.007,
-    # # vac_dist     = 1.500,
-    # unite_cutoff = 2.2,
-    # vac_radius   = 2.0,
-    # next_to      = ['Te'],
-    # # wrap         = False,
-    # # view_X       = True,
-    # # load_bool    = False,
-    # # save_bool    = False,
-    # # file_name    = None,
-    # )
+sa.replace_vacancies_w_X(
+    bond_cutoff,
+    angle_cutoff,
+    bond_rules   = bonding_rules,
+    vac_dist     = 3.007,
+    # vac_dist     = 1.500,
+    unite_cutoff = 2.2,
+    vac_radius   = 2.0,
+    next_to      = ['Te'],
+    # wrap         = False,
+    # view_X       = True,
+    # load_bool    = False,
+    # save_bool    = False,
+    # file_name    = None,
+    )
