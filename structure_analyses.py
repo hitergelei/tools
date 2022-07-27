@@ -164,6 +164,7 @@ class Structure_analyses(object):
         alist_file,
         alist_slice=':',
         dt=0.01,
+        log=False,
         ):
         """
         alist_file (str)
@@ -186,6 +187,7 @@ class Structure_analyses(object):
             self.alist = [self.alist]
         self.len_alist = len(self.alist)
         self.len_atoms = len(self.alist[0])
+        self.log = log
         # Get slice
         from ss_util import str_slice_to_list
         slice_list = str_slice_to_list(alist_slice)
@@ -266,12 +268,14 @@ class Structure_analyses(object):
                 )
             try:
                 assert load_bool == True
-                print(' *  Trying to load neighbor-info pckl files.')
+                if self.log:
+                    print(' *  Trying to load neighbor-info pckl files.')
                 indices_i    = pckl.load(open('{}/indices.pckl'   .format(path), 'rb'))
                 lengths_i    = pckl.load(open('{}/lengths.pckl'   .format(path), 'rb'))
                 directions_i = pckl.load(open('{}/directions.pckl'.format(path), 'rb'))
             except:
-                print('Failed to load pckl files from {}'.format(path))
+                if self.log:
+                    print('Failed to load pckl files from {}'.format(path))
                 indices_i, lengths_i, directions_i = get_neighbors([atoms], bond_cutoff, bond_rules, dtype='float32')
                 indices_i    = indices_i[0]
                 lengths_i    = lengths_i[0]
@@ -282,9 +286,11 @@ class Structure_analyses(object):
                     pckl.dump(indices_i,    open('{}/indices.pckl'   .format(path), 'wb'))
                     pckl.dump(lengths_i,    open('{}/lengths.pckl'   .format(path), 'wb'))
                     pckl.dump(directions_i, open('{}/directions.pckl'.format(path), 'wb'))
-                    print('Saved neighbor-info pckl files at {}.'.format(path))
+                    if self.log:
+                        print('Saved neighbor-info pckl files at {}.'.format(path))
             else:
-                print('Loaded pckl files from {}'.format(path))
+                if self.log:
+                    print('Loaded pckl files from {}'.format(path))
             # Gather
             info['indices']   .append(indices_i)
             info['lengths']   .append(lengths_i)
@@ -334,15 +340,18 @@ class Structure_analyses(object):
 
             try:
                 assert load_bool
-                print(' *  Trying to load chain piece pckl files.')
+                if self.log:
+                    print(' *  Trying to load chain piece pckl files.')
                 piece_inds_i    = pckl.load(open('{}/piece_inds.pckl'   .format(path), 'rb'))
                 piece_lengths_i = pckl.load(open('{}/piece_lengths.pckl'.format(path), 'rb'))
                 piece_direcs_i  = pckl.load(open('{}/piece_direcs.pckl' .format(path), 'rb'))
             except:
-                print('Failed to load pckl files from {}'.format(path))
+                if self.log:
+                    print('Failed to load pckl files from {}'.format(path))
 
             else:
-                print('Loaded pckl files from {}'.format(path))
+                if self.log:
+                    print('Loaded pckl files from {}'.format(path))
                 piece_inds.append(piece_inds_i)
                 piece_lengths.append(piece_lengths_i)
                 piece_direcs.append(piece_direcs_i)
@@ -381,7 +390,8 @@ class Structure_analyses(object):
                 pckl.dump(piece_inds_i   , open('{}/piece_inds.pckl'      .format(path), 'wb'))
                 pckl.dump(piece_lengths_i, open('{}/piece_lengths.pckl'   .format(path), 'wb'))
                 pckl.dump(piece_direcs_i , open('{}/piece_direcs.pckl'.format(path), 'wb'))
-                print('Saved chain-piece-info pckl files at {}'.format(path))
+                if self.log:
+                    print('Saved chain-piece-info pckl files at {}'.format(path))
             piece_inds.append(piece_inds_i)
             piece_lengths.append(piece_lengths_i)
             piece_direcs.append(piece_direcs_i)
@@ -450,15 +460,18 @@ class Structure_analyses(object):
                 )
             try:
                 assert load_bool == True
-                print(' *  Trying to load chain-info pckl files.')
+                if self.log:
+                    print(' *  Trying to load chain-info pckl files.')
                 ind_set_i      = pckl.load(open('{}/ind_set.pckl'     .format(path), 'rb'))
                 bond_direcs_i  = pckl.load(open('{}/bond_direcs.pckl' .format(path), 'rb'))
                 bond_lengths_i = pckl.load(open('{}/bond_lengths.pckl'.format(path), 'rb'))
                 chain_vec_i    = pckl.load(open('{}/chain_vec.pckl'   .format(path), 'rb'))
             except:
-                print('Failed to load pckl files from {}'.format(path))
+                if self.log:
+                    print('Failed to load pckl files from {}'.format(path))
             else:
-                print('Loaded pckl files from {}'.format(path))
+                if self.log:
+                    print('Loaded pckl files from {}'.format(path))
                 ind_set     .append(ind_set_i)
                 bond_direcs .append(bond_direcs_i)
                 bond_lengths.append(bond_lengths_i)
@@ -572,7 +585,8 @@ class Structure_analyses(object):
                 pckl.dump(bond_direcs_i,  open('{}/bond_direcs.pckl' .format(path), 'wb'))
                 pckl.dump(bond_lengths_i, open('{}/bond_lengths.pckl'.format(path), 'wb'))
                 pckl.dump(chain_vec_i   , open('{}/chain_vec.pckl'   .format(path), 'wb'))
-                print('Saved chain-info pckl files at {}'.format(path))
+                if self.log:
+                    print('Saved chain-info pckl files at {}'.format(path))
         # ind_set --> Ragged tensor in shape of (len_alist, (number of chains in an image), (length of a chain))
         self.chain_sets = {
             'ind_set': ind_set,
@@ -633,15 +647,18 @@ class Structure_analyses(object):
 
             try:
                 assert load_bool
-                print(' *  Trying to load terminal piece pckl files.')
+                if self.log:
+                    print(' *  Trying to load terminal piece pckl files.')
                 term_piece_inds_i    = pckl.load(open('{}/terminal_piece_inds.pckl'   .format(path), 'rb'))
                 term_piece_direcs_i  = pckl.load(open('{}/terminal_piece_direcs.pckl' .format(path), 'rb'))
                 term_piece_lengths_i = pckl.load(open('{}/terminal_piece_lengths.pckl'.format(path), 'rb'))
             except:
-                print('Failed to load pckl files from {}'.format(path))
+                if self.log:
+                    print('Failed to load pckl files from {}'.format(path))
 
             else:
-                print('Loaded pckl files from {}'.format(path))
+                if self.log:
+                    print('Loaded pckl files from {}'.format(path))
                 term_piece_inds.append(term_piece_inds_i)
                 term_piece_direcs.append(term_piece_direcs_i)
                 term_piece_lengths.append(term_piece_lengths_i)
@@ -667,7 +684,8 @@ class Structure_analyses(object):
                 pckl.dump(term_piece_inds_i   , open('{}/terminal_piece_inds.pckl'      .format(path), 'wb'))
                 pckl.dump(term_piece_lengths_i, open('{}/terminal_piece_lengths.pckl'   .format(path), 'wb'))
                 pckl.dump(term_piece_direcs_i , open('{}/terminal_piece_direcs.pckl'.format(path), 'wb'))
-                print('Saved terminal-piece-info pckl files at {}'.format(path))
+                if self.log:
+                    print('Saved terminal-piece-info pckl files at {}'.format(path))
             term_piece_inds.append(term_piece_inds_i)
             term_piece_lengths.append(term_piece_lengths_i)
             term_piece_direcs.append(term_piece_direcs_i)
@@ -840,6 +858,7 @@ class Structure_analyses(object):
         inf_as_zero=False,
         therm_corr=None,
         deriv_sigma=None,
+        xlog=False,
         load_bool=True,
         save_bool=True,
         ):
@@ -888,6 +907,8 @@ class Structure_analyses(object):
 
         # Plot
         time_arr = np.arange(len(lengths)) *self.dt /1000.
+        if xlog:
+            time_arr += time_arr[1] - time_arr[0]
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
@@ -904,6 +925,8 @@ class Structure_analyses(object):
             # # label='Max. of lengths',
             # # c='k',
             # # )
+        if xlog:
+            plt.xscale('log')
         ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='k')
         ax1.tick_params(axis="x",direction="in", labelsize='x-large')
         ax1.set_xlabel('Time (ns)', fontsize='x-large')
@@ -938,7 +961,7 @@ class Structure_analyses(object):
             self.bond_rules_str[1],
             self.dt,
             ), fontsize='x-large', y=1.25)
-        plt.xlabel('Time (ps)', fontsize='x-large')
+        plt.xlabel('Time (ns)', fontsize='x-large')
         ax1.grid(alpha=0.5)
         plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
         plt.show()
@@ -1319,7 +1342,8 @@ class Structure_analyses(object):
         temps     = np.array(temps)
 
         # Inner average.
-        print('Getting inner average.')
+        if self.log:
+            print('Getting inner average.')
         avg_positions = []
         avg_cells     = []
         avg_temps     = []
@@ -1334,7 +1358,8 @@ class Structure_analyses(object):
         return_intvl //= out_avg_dn
 
         # Outer average.
-        print('Getting outer average.')
+        if self.log:
+            print('Getting outer average.')
         # avg_positions --> shape of (len_bin, len_atoms, 3)
         # avg_cells     --> shape of (len_bin, 3, 3)
         # avg_temps     --> shape of (len_bin)
@@ -1437,6 +1462,7 @@ class Structure_analyses(object):
         angle_cutoff,
         nth_term,
         bond_rules=None,
+        xlog=False,
         color_list=None,
         load_bool=True,
         save_bool=True,
@@ -1459,8 +1485,12 @@ class Structure_analyses(object):
         #
         from matplotlib import pyplot as plt
         t = self.t / 1000.
+        if xlog:
+            t += t[1] - t[0]
         for type_i in range(len(self.types_unique)):
             plt.plot(t, term_hist[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+        if xlog:
+            plt.xscale('log')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         # plt.xlim(t[0], t[-1])
         plt.ylim(0, None)
@@ -1477,6 +1507,8 @@ class Structure_analyses(object):
         plt.figure()
         for type_i in range(len(self.types_unique)):
             plt.plot(t, term_hist_norm[type_i], label=self.types_unique[type_i], c=color_list[type_i])
+        if xlog:
+            plt.xscale('log')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         # plt.xlim(t[0], t[-1])
         plt.ylim(0, None)

@@ -11,6 +11,10 @@ def argparse():
     parser.add_argument('-f', '--log_file', type=str, default='log.lammps', help='Specify the log file to plot. Default: log.lammps')
     parser.add_argument('-a', '--init_pos', type=str, default=None, help='Provide initial Atoms structure file to get number of atoms info. [default: None]')
     parser.add_argument('-t', '--ns_unit', action='store_true', help='Plot with time unit of ns. [default: ps]')
+    parser.add_argument('-x', '--xticks', type=float, nargs='+', default=None, help='Set x-ticks manually.')
+    parser.add_argument('-y', '--yticks', type=float, nargs='+', default=None, help='Set y-ticks manually.')
+    parser.add_argument('-l', '--xlog', action='store_true', help='Set x-axis as log-scale')
+    parser.add_argument('-m', '--ylog', action='store_true', help='Set y-axis as log-scale')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -63,6 +67,8 @@ if __name__ == '__main__':
         t = info[j]['Step'] *dt
         if args.ns_unit:
             t /= 1000.
+        if args.xlog:
+            t += t[1] - t[0]
         # t = np.arange(len(info[j][list(info[j].keys())[0]]), dtype=float) * dt
 
         # Remove dummy info.
@@ -90,12 +96,20 @@ if __name__ == '__main__':
             plt.figure()
             plt.plot(t, info[j][avail_info[i]], c='k')
             # plt.xlim((t[0], t[-1]))
+            if args.xlog:
+                plt.xscale('log')
+            if args.ylog:
+                plt.yscale('log')
             plt.title(avail_info[i], fontsize='x-large')
             plt.ylabel(avail_info[i], fontsize='x-large')
             if args.ns_unit:
                 plt.xlabel('Time (ns)', fontsize='x-large')
             else:
                 plt.xlabel('Time (ps)', fontsize='x-large')
+            if args.xticks is not None:
+                plt.xticks(args.xticks)
+            if args.yticks is not None:
+                plt.yticks(args.yticks)
             plt.tick_params(axis="both",direction="in", labelsize='x-large')
             plt.subplots_adjust(left=0.30, bottom=0.25, right=0.70, top=0.75, wspace=0.2, hspace=0.2)
             plt.grid(alpha=0.5)

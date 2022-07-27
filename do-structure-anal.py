@@ -30,6 +30,7 @@ sa = Structure_analyses(
     # dt=0.01,
     dt=10.,
     # dt=100,
+    # log=True,
     )
 
 # sa.plot_avg_coord_nums(
@@ -45,6 +46,7 @@ sa = Structure_analyses(
     # bonding_rules,
     # # inf_as_zero=True,
     # # deriv_sigma=5,
+    # # xlog=True,
     # # load_bool=False,
     # # save_bool=False,
     # )
@@ -85,7 +87,8 @@ sa = Structure_analyses(
     # angle_cutoff,
     # 2,
     # bonding_rules,
-    # ['b','r','y'],
+    # # xlog=True,
+    # color_list=['b','r','y'],
     # # load_bool=False,
     # # save_bool=False,
     # )

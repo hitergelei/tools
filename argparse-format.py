@@ -7,7 +7,7 @@ def argparse():
     DESCRIPTION
     """)
     # Positional arguments
-    parser.add_argument('alist_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
+    parser.add_argument('alist_file', type=str, help='ASE readable atoms list file name.')
     # Optional arguments
     parser.add_argument('-n', '--img_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     return parser.parse_args()

@@ -3,6 +3,36 @@ import numpy as np
 from subprocess import call
 from ase.io import read
 
+def argparse():
+    import argparse
+    parser = argparse.ArgumentParser(description = """
+    This code will give you the (Total/Partial) Raidial Distribution Function.
+    Return npy file.
+    """)
+    # Positional arguments
+    parser.add_argument('chem1', type=str, help='chem1,2, are chemical symbols consisting bonds.')
+    parser.add_argument('chem2', type=str, help='e.g. Ge Te | "a": any symbols, "x": do all partial.')
+    parser.add_argument('alist_file', type=str, help='ASE readable atoms list file name.')
+    # Optional arguments
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
+    parser.add_argument('-r', '--rcut', type = float, default=8.5, help='Maximum radius for RDF. Default: 8.5')
+    parser.add_argument('-b', '--nBin', type=int, default=500, help='Number of bins. Default: 500')
+    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in Angstrom unit. Zero means no smearing. [default: 0]')
+    parser.add_argument('-e', '--rectify_cut', type=float, default=None, help='All of drastic kink higher than this will be omitted. [Default: no rectify]')
+    parser.add_argument('-m', '--multiply', type=float, default=1., help='Multiply this value to RDF (re-scale). [default: 1.]')
+    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npy will not be saved. Default: Save array')
+    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
+    parser.add_argument('-t', '--dont_share_y', action='store_true', help='Subplots will not share y-axes if provided.')
+    parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
+    parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
+    parser.add_argument('-p', '--s_upper', type=float, default=None, help='Upper bound for S(Q) plot [Default: automatic]')
+    parser.add_argument('-q', '--s_lower', type=float, default=0, help='Lower bound for S(Q) plot [Default: 0]')
+    parser.add_argument('-x', '--xtick_list', type=float, nargs='+', default=None, help='Specify x ticks of RDF. [Default: automatic]')
+    parser.add_argument('-y', '--ytick_list', type=float, nargs='+', default=None, help='Specify y ticks of RDF. [Default: automatic]')
+    parser.add_argument('-v', '--s_xtick_list', type=float, nargs='+', default=None, help='Specify x ticks of S(Q). [Default: automatic]')
+    parser.add_argument('-w', '--s_ytick_list', type=float, nargs='+', default=None, help='Specify y ticks of S(Q). [Default: automatic]')
+    return parser.parse_args()
+
 def get_RDF(
     alist,
     rcut,
@@ -67,26 +97,26 @@ def get_curve(
     alist,
     image_slice,
     alist_file,
-    symb1,
-    symb2,
-    nBin,
-    rcut,
-    load_bool,
-    save_bool,
-    rectify_cut,
-    gsmear_std,
-    dr,
+    chem1,
+    chem2,
+    nBin        = 500,
+    rcut        = 8.5,
+    load_bool   = True,
+    save_bool   = True,
+    rectify_cut = None,
+    gsmear_std  = 0.,
     ):
     # Slice process
     from ss_util import str_slice_to_list
     slice_list = str_slice_to_list(image_slice)
     # out file
     out_fname  = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
-        alist_file, *slice_list, symb1, symb2, nBin, rcut)
+        alist_file, *slice_list, chem1, chem2, nBin, rcut)
     out_fname2 = 'rdf-saved/{}_slice-{}-{}-{}_sym-{}-{}_nBin-{}_rcut-{}_.npy'.format(
-        alist_file, *slice_list, symb2, symb1, nBin, rcut)
+        alist_file, *slice_list, chem2, chem1, nBin, rcut)
 
     ## Main
+    dr = rcut /nBin
     try:
         assert load_bool == True
         curve = np.load(out_fname)
@@ -104,7 +134,7 @@ def get_curve(
             print('File "{}" has been loaded.'.format(out_fname2))
             do_calc = False
         if do_calc:
-            curve = get_RDF(alist, rcut, nBin, (symb1, symb2), log=True)
+            curve = get_RDF(alist, rcut, nBin, (chem1, chem2), log=True)
             if save_bool:
                 from ss_util import pick_folder_from_path as pffp
                 folder = pffp(out_fname)
@@ -132,36 +162,6 @@ def get_curve(
 
     return curve
 
-def argparse():
-    import argparse
-    parser = argparse.ArgumentParser(description = """
-    This code will give you the (Total/Partial) Raidial Distribution Function.
-    Return npy file.
-    """)
-    # Positional arguments
-    parser.add_argument('symbol1', type=str, help='symbol1,2, are chemical symbols consisting bonds.')
-    parser.add_argument('symbol2', type=str, help='e.g. Ge Te | "a": any symbols, "x": do all partial.')
-    parser.add_argument('alist_file', type=str, help='ASE readable atoms list file name.')
-    # Optional arguments
-    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. default=":" (e.g.) -n :1000:10')
-    parser.add_argument('-r', '--rcut', type = float, default=8.5, help='Maximum radius for RDF. Default: 8.5')
-    parser.add_argument('-b', '--nBin', type=int, default=500, help='Number of bins. Default: 500')
-    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in Angstrom unit. Zero means no smearing. [default: 0]')
-    parser.add_argument('-e', '--rectify-cut', type=float, default=None, help='All of drastic kink higher than this will be omitted. [Default: no rectify]')
-    parser.add_argument('-m', '--multiply', type=float, default=1., help='Multiply this value to RDF (re-scale). [default: 1.]')
-    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npy will not be saved. Default: Save array')
-    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
-    parser.add_argument('-t', '--dont_share_y', action='store_true', help='Subplots will not share y-axes if provided.')
-    parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
-    parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
-    parser.add_argument('-p', '--s_upper', type=float, default=None, help='Upper bound for S(Q) plot [Default: automatic]')
-    parser.add_argument('-q', '--s_lower', type=float, default=0, help='Lower bound for S(Q) plot [Default: 0]')
-    parser.add_argument('-x', '--xtick_list', type=float, nargs='+', default=None, help='Specify x ticks of RDF. [Default: automatic]')
-    parser.add_argument('-y', '--ytick_list', type=float, nargs='+', default=None, help='Specify y ticks of RDF. [Default: automatic]')
-    parser.add_argument('-v', '--s_xtick_list', type=float, nargs='+', default=None, help='Specify x ticks of S(Q). [Default: automatic]')
-    parser.add_argument('-w', '--s_ytick_list', type=float, nargs='+', default=None, help='Specify y ticks of S(Q). [Default: automatic]')
-    return parser.parse_args()
-
 if __name__ == '__main__':
     ## Intro
     import datetime
@@ -179,11 +179,10 @@ if __name__ == '__main__':
 
     ## Read input params
     # params
-    symbol1     = args.symbol1
-    symbol2     = args.symbol2
+    chem1     = args.chem1
+    chem2     = args.chem2
     rcut        = args.rcut
     nBin        = args.nBin
-    dr          = rcut/ nBin
     gsmear_std  = args.gsmear
     rectify_cut = args.rectify_cut
 
@@ -201,20 +200,20 @@ if __name__ == '__main__':
 
     # In case symbol is 'x'
     chem_list = np.unique(alist[0].get_chemical_symbols()).tolist()
-    if symbol1 == 'x':
-        symb1_list = chem_list[:]
+    if chem1 == 'x':
+        chem1_list = chem_list[:]
     else:
-        symb1_list = [symbol1]
-    if symbol2 == 'x':
-        symb2_list = chem_list[:]
+        chem1_list = [chem1]
+    if chem2 == 'x':
+        chem2_list = chem_list[:]
     else:
-        symb2_list = [symbol2]
+        chem2_list = [chem2]
     
     # Make symbol_sets
     symbol_sets = []
-    if len(symb1_list) == 1 or len(symb2_list) == 1:
-        for s1 in symb1_list:
-            for s2 in symb2_list:
+    if len(chem1_list) == 1 or len(chem2_list) == 1:
+        for s1 in chem1_list:
+            for s2 in chem2_list:
                 symbol_sets.append([s1, s2])
     else:
         for i in range(len(chem_list)):
@@ -236,7 +235,6 @@ if __name__ == '__main__':
             args.save_bool,
             rectify_cut,
             gsmear_std,
-            dr,
             )
         cv[:,1] *= args.multiply,
         curve_list.append(cv)
@@ -251,7 +249,7 @@ if __name__ == '__main__':
 
     # @ Plot
     title  = '{} slice-{} symb-{},{} nBin-{} rcut-{}'.format(
-        args.alist_file, args.image_slice, symbol1, symbol2, nBin, rcut)
+        args.alist_file, args.image_slice, chem1, chem2, nBin, rcut)
     import matplotlib.pyplot as plt
     if args.dont_share_y:
         fig, axs = plt.subplots(len(curve_list), sharex=True)
