@@ -23,6 +23,7 @@ def argparse():
     parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, npy will not be saved. Default: Save array')
     parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, npy will not be loaded. Default: Load if possible')
     parser.add_argument('-t', '--dont_share_y', action='store_true', help='Subplots will not share y-axes if provided.')
+    parser.add_argument('-j', '--x_lower', type=float, default=0, help='Lower bound for RDF x-axis [Default: 0]')
     parser.add_argument('-u', '--rdf_upper', type=float, default=None, help='Upper bound for RDF plot [Default: automatic]')
     parser.add_argument('-l', '--rdf_lower', type=float, default=0, help='Lower bound for RDF plot [Default: 0]')
     parser.add_argument('-p', '--s_upper', type=float, default=None, help='Upper bound for S(Q) plot [Default: automatic]')
@@ -285,15 +286,16 @@ if __name__ == '__main__':
             axs[i].set_yticks(range(0, int(rdf_upper)+1, intvl))
         #
         axs[i].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=False)
-        axs[i].set_xlim(0., rcut)
+        axs[i].set_xlim(args.x_lower, rcut)
         axs[i].set_ylim(args.rdf_lower, rdf_upper)
         axs[i].axhline(1., linestyle='dashed', linewidth=1, c='k')
-        axs[i].grid(alpha=0.4)
+        axs[i].grid(alpha=0.5)
     axs[-1].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=True)
     axs[-1].set_xlabel('Distance $(\AA)$', fontsize='x-large')
     axs[0].set_title(title, pad=10)
     bottom = (1.-len(axs)*0.1) /2.
-    plt.subplots_adjust(left=0.20, bottom=bottom, right=0.80, top=1-bottom, wspace=0.20, hspace=0.20)
+    # plt.subplots_adjust(left=0.20, bottom=bottom, right=0.80, top=1-bottom, wspace=0.20, hspace=0.20)
+    plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=1-bottom, wspace=0.20, hspace=0.20)
 
     # Plot S(Q)
     if args.s_upper is not None:
@@ -331,10 +333,11 @@ if __name__ == '__main__':
         axs[i].set_xlim(0., np.max(k_list[i]))
         axs[i].set_ylim(args.s_lower, s_upper)
         axs[i].axhline(1., linestyle='dashed', linewidth=1, c='k')
-        axs[i].grid(alpha=0.4)
+        axs[i].grid(alpha=0.5)
     axs[-1].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=True)
     axs[-1].set_xlabel('Q $(\AA^{-1})$', fontsize='x-large')
     axs[0].set_title(title, pad=10)
     bottom = (1.-len(axs)*0.1) /2.
-    plt.subplots_adjust(left=0.20, bottom=bottom, right=0.80, top=1-bottom, wspace=0.20, hspace=0.20)
+    # plt.subplots_adjust(left=0.20, bottom=bottom, right=0.80, top=1-bottom, wspace=0.20, hspace=0.20)
+    plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=1-bottom, wspace=0.20, hspace=0.20)
     plt.show()

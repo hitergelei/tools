@@ -9,7 +9,8 @@ angle_cutoff = 135.
 bond_cutoff = 4.0
 bonding_rules = [['Ge','Sb'], ['Te']]
 # bonding_rules = [['Ge','Sb','X'], ['Te']]
-alist_file = 'out.dump'
+alist_file = 'lmp-results-gather.traj'
+# alist_file = 'out.dump'
 # alist_file = 'pre-out.dump'
 # alist_file = 'vacancy/out.dump/4.0-GeSb-Te/135.0/dv3.007-ru-2.2-rv-2.0-nt-Te/vac-8000:8001:1.traj'
 # alist_file = 'gst-cubic-md-last50.traj'
@@ -30,7 +31,6 @@ sa = Structure_analyses(
     # dt=0.01,
     dt=10.,
     # dt=100,
-    # log=True,
     )
 
 # sa.plot_avg_coord_nums(
@@ -46,7 +46,7 @@ sa = Structure_analyses(
     # bonding_rules,
     # # inf_as_zero=True,
     # # deriv_sigma=5,
-    # # xlog=True,
+    # xlog=True,
     # # load_bool=False,
     # # save_bool=False,
     # )
@@ -63,7 +63,7 @@ sa = Structure_analyses(
     # bond_cutoff,
     # angle_cutoff,
     # bonding_rules,
-    # chain_length=0,
+    # chain_length=34,
     # )
 
 # sa.plot_positional_deviation(
@@ -87,7 +87,7 @@ sa = Structure_analyses(
     # angle_cutoff,
     # 2,
     # bonding_rules,
-    # # xlog=True,
+    # xlog=True,
     # color_list=['b','r','y'],
     # # load_bool=False,
     # # save_bool=False,

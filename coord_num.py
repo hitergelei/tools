@@ -13,6 +13,8 @@ def argparse():
     # Optional arguments
     parser.add_argument('-n', '--img_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-t', '--dt', type=float, default=None, help='Time interval for plot in ps unit. [default: None]')
+    parser.add_argument('-f', '--lin_fit', action='store_true', help='Plot linear fit')
+    parser.add_argument('-l', '--log', action='store_true', help='See the logs')
     return parser.parse_args()
 
 def get_coord_num(rdf, bond_range, num_den):
@@ -74,10 +76,11 @@ if __name__ == '__main__':
             get_coord_num(rdf, bond_range, num_den1),
             get_coord_num(rdf, bond_range, num_den2),
             ])
-    print(' Coordination number of bonding range ({}, {}):'.format(*bond_range))
-    print('  {}    {}'.format(chem[0], chem[1]))
-    for i in range(len(coord_num)):
-        print('{:.4f}, {:.4f}'.format(*coord_num[i]))
+    if args.log:
+        print(' Coordination number of bonding range ({}, {}):'.format(*bond_range))
+        print('  {}    {}'.format(chem[0], chem[1]))
+        for i in range(len(coord_num)):
+            print('{:.4f}, {:.4f}'.format(*coord_num[i]))
     coord_num = np.array(coord_num)
     
     #
@@ -88,24 +91,28 @@ if __name__ == '__main__':
 
     from matplotlib import pyplot as plt
     for i in range(len(chem)):
-        plt.figure()
-        plt.plot(t, coord_num[:, i], c='k')
-        plt.plot(
-            t,
-            linfit[i].slope *np.log10(t) +linfit[i].intercept,
-            c='r',
-            label=r'$y=a\rm{log}(x)+b$'+'\n'+r'a={:.2f}, b={:.2f}'.format(linfit[i].slope, linfit[i].intercept),
-            )
-        plt.xscale('log')
-        # plt.yscale('log')
-        plt.title(r'chem:{}, bond:{}-{} ({}~{})$\rm \AA$'.format(chem[i], chem[0], chem[1], *bond_range), fontsize='large', pad=10.)
-        plt.ylabel('Coordination number ({})'.format(chem[i]), fontsize='x-large')
-        if dt is not None:
-            plt.xlabel('Time (ns)', fontsize='x-large')
-        else:
-            plt.xlabel('Frame index', fontsize='x-large')
-        plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.subplots_adjust(left=0.30, bottom=0.25, right=0.70, top=0.75, wspace=0.2, hspace=0.2)
-        plt.grid(alpha=0.5)
-        plt.legend(fontsize='large').set_draggable(True)
+        for j in range(2):
+            plt.figure()
+            plt.plot(t, coord_num[:, i], c='k')
+            if args.lin_fit:
+                plt.plot(
+                    t,
+                    linfit[i].slope *np.log10(t) +linfit[i].intercept,
+                    c='r',
+                    label=r'$y=a\rm{log}(x)+b$'+'\n'+r'a={:.2f}, b={:.2f}'.format(linfit[i].slope, linfit[i].intercept),
+                    )
+            if j == 0:
+                plt.xscale('log')
+            # plt.yscale('log')
+            plt.title(r'chem:{}, bond:{}-{} ({}~{})$\rm \AA$'.format(chem[i], chem[0], chem[1], *bond_range), fontsize='large', pad=10.)
+            plt.ylabel('Coordination number ({})'.format(chem[i]), fontsize='x-large')
+            if dt is not None:
+                plt.xlabel('Time (ns)', fontsize='x-large')
+            else:
+                plt.xlabel('Frame index', fontsize='x-large')
+            plt.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.subplots_adjust(left=0.12, bottom=0.25, right=0.99, top=0.75, wspace=0.2, hspace=0.2)
+            plt.grid(alpha=0.5)
+            if args.lin_fit:
+                plt.legend(fontsize='large').set_draggable(True)
     plt.show()
