@@ -37,6 +37,7 @@ def convergence_test(plt, t, T):
     plt.plot(t, T[:, halfway], c='r', label='{}-th'.format(halfway))
     plt.xlabel('Time (ps)', fontsize='x-large')
     plt.ylabel('Temperature (K)', fontsize='x-large')
+    plt.title('Convergence test', fontsize='x-large', pad=10.)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.subplots_adjust(left=0.12, bottom=0.25, right=0.99, top=0.75, wspace=0.2, hspace=0.2)
     plt.legend(fontsize='large').set_draggable(True)
@@ -51,12 +52,11 @@ def T_plot(plt, x, T):
     gradT = (fit_l.slope - fit_r.slope) /2.
 
     plt.figure()
-    plt.errorbar(x, np.mean(T, axis=0), yerr=np.std(T, axis=0), fmt='s', ecolor='k', capsize=5)
-    plt.plot(x[1:halfway], x[1:halfway] *fit_l.slope + fit_l.intercept, c='r', label=r'$\nabla T$={{{:.2f}}}'.format(fit_l.slope))
-    plt.plot(x[halfway+1:], x[halfway+1] *fit_r.slope + fit_r.intercept, c='b', label=r'$\nabla T$={{{:.2f}}}'.format(fit_r.slope))
+    plt.errorbar(x, np.mean(T, axis=0), yerr=np.std(T, axis=0), fmt='s', c='k', mfc='w', ecolor='k', capsize=3)
+    plt.plot(x[1:halfway], x[1:halfway] *fit_l.slope + fit_l.intercept, c='r', label=r'$\nabla T$={:.2f}'.format(fit_l.slope))
+    plt.plot(x[halfway+1:], x[halfway+1:] *fit_r.slope + fit_r.intercept, c='b', label=r'$\nabla T$={:.2f}'.format(fit_r.slope))
     plt.xlabel(r'Coordinate ($\rm \AA$)', fontsize='x-large')
     plt.ylabel('Temperature (K)', fontsize='x-large')
-    plt.title(r'$\kappa$={}'.format(kappa), fontsize='x-large', pad=10.)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.subplots_adjust(left=0.12, bottom=0.25, right=0.99, top=0.75, wspace=0.2, hspace=0.2)
     plt.legend(fontsize='large').set_draggable(True)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     from lmp2traj import read_lmp_log
     thermo_info = read_lmp_log(args.thermo_file, )
-    heat_trans = thermo_info['f_hf']
+    heat_trans = thermo_info[0]['f_hf'][1:]
 
     with open(args.tmp_file, 'r') as f:
         lines = f.readlines()
@@ -115,10 +115,10 @@ if __name__ == '__main__':
     gradT = T_plot(plt, x, T)
 
     # kappa in unit of ( eV / ps Angst K )
-    kappa = -J / gradT
+    kappa = J / gradT
     from ase import units
     # kappa_si in unit of ( W / m K )
     kappa_si = kappa *units._e *1e12 *1e10
 
-    plt.title(r'$\kappa$={} (W/mK)'.format(kappa_si), fontsize='x-large', pad=10.)
+    plt.title(r'$\kappa$={:.4f} (W/mK)'.format(kappa_si), fontsize='x-large', pad=10.)
     plt.show()
