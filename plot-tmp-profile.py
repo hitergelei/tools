@@ -7,10 +7,11 @@ def argparse():
     Plot tmp.profile file.
     """)
     # Positional arguments
-    parser.add_argument('thermo_file', type=str, help='LAMMPS thermo file including heat flux data labeled as f_hf')
+    parser.add_argument('thermo_file', type=str, help='LAMMPS thermo file including heat transfer data labeled as f_hf')
     parser.add_argument('tmp_file', type=str, help='LAMMPS format tmp_file.')
     parser.add_argument('dt', type=float, help='Variable dt for LAMMPS simulation (ps unit)')
     parser.add_argument('a', type=float, help='Lattice parameter along the direction of interest in Angst. unit')
+    parser.add_argument('area', type=float, help='Area of intersection perpendicular to direction of the interest in Angst^2 unit.')
     # Optional arguments
     parser.add_argument('-t', '--dump_frame', type=int, help='Dump the specified number of frames from head of the data.')
     return parser.parse_args()
@@ -36,21 +37,31 @@ def convergence_test(plt, t, T):
     plt.plot(t, T[:, halfway], c='r', label='{}-th'.format(halfway))
     plt.xlabel('Time (ps)', fontsize='x-large')
     plt.ylabel('Temperature (K)', fontsize='x-large')
-    plt.title('Convergence test', fontsize='x-large', pad=10.)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.subplots_adjust(left=0.12, bottom=0.25, right=0.99, top=0.75, wspace=0.2, hspace=0.2)
     plt.legend(fontsize='large').set_draggable(True)
     plt.grid(alpha=0.5)
 
 def T_plot(plt, x, T):
+    from scipy.stats import linregress as lr
+    halfway = len(x) //2
+    fit_l = lr(x[1:halfway], np.mean(T[:, 1:halfway], axis=0))
+    fit_r = lr(x[halfway+1:], np.mean(T[:, halfway+1:], axis=0))
+    # gradT in unit of ( K / Angst )
+    gradT = (fit_l.slope - fit_r.slope) /2.
+
     plt.figure()
-    plt.plot(x, np.mean(T, axis=0), c='k')
-    plt.xlabel(r'Coordinate ($\AA$)', fontsize='x-large')
+    plt.errorbar(x, np.mean(T, axis=0), yerr=np.std(T, axis=0), fmt='s', ecolor='k', capsize=5)
+    plt.plot(x[1:halfway], x[1:halfway] *fit_l.slope + fit_l.intercept, c='r', label=r'$\nabla T$={{{:.2f}}}'.format(fit_l.slope))
+    plt.plot(x[halfway+1:], x[halfway+1] *fit_r.slope + fit_r.intercept, c='b', label=r'$\nabla T$={{{:.2f}}}'.format(fit_r.slope))
+    plt.xlabel(r'Coordinate ($\rm \AA$)', fontsize='x-large')
     plt.ylabel('Temperature (K)', fontsize='x-large')
-    plt.title('Temperature plot', fontsize='x-large', pad=10.)
+    plt.title(r'$\kappa$={}'.format(kappa), fontsize='x-large', pad=10.)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     plt.subplots_adjust(left=0.12, bottom=0.25, right=0.99, top=0.75, wspace=0.2, hspace=0.2)
+    plt.legend(fontsize='large').set_draggable(True)
     plt.grid(alpha=0.5)
+    return gradT
     
 if __name__ == '__main__':
     ## Intro
@@ -69,6 +80,7 @@ if __name__ == '__main__':
 
     from lmp2traj import read_lmp_log
     thermo_info = read_lmp_log(args.thermo_file, )
+    heat_trans = thermo_info['f_hf']
 
     with open(args.tmp_file, 'r') as f:
         lines = f.readlines()
@@ -76,6 +88,8 @@ if __name__ == '__main__':
     _, nbins, natoms = first_line(lines[3])
 
     ndat = (len(lines)-3) // (nbins+1)
+    if ndat != len(heat_trans):
+        raise RuntimeError('{} file and {} file, the number of time point mismatch'.format(args.thermo_file, args.tmp_file))
     t = np.zeros(ndat, dtype=float)
     T = np.zeros((ndat, nbins), dtype=float)
     coord = np.zeros(nbins, dtype=float)
@@ -88,9 +102,23 @@ if __name__ == '__main__':
     # convert to Angst.
     x = coord *args.a
 
+    #
+    if args.dump_frame is not None:
+        t          = t[args.dump_frame:]
+        T          = T[args.dump_frame:]
+        heat_trans = heat_trans[args.dump_frame:]
+
+    # heat_flux in unit of ( eV / ps Angst^2 )
+    J = (heat_trans[-1] - heat_trans[0]) /(t[-1]-t[0]) /args.area /2.
+
     from matplotlib import pyplot as plt
-    # convergence_test(plt, t, T)
-    if args.init_frame is not None:
-        T = T[args.dump_frame:]
-    T_plot(plt, x, T)
+    gradT = T_plot(plt, x, T)
+
+    # kappa in unit of ( eV / ps Angst K )
+    kappa = -J / gradT
+    from ase import units
+    # kappa_si in unit of ( W / m K )
+    kappa_si = kappa *units._e *1e12 *1e10
+
+    plt.title(r'$\kappa$={} (W/mK)'.format(kappa_si), fontsize='x-large', pad=10.)
     plt.show()
