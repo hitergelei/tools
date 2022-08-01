@@ -916,7 +916,7 @@ class Structure_analyses(object):
         ax1.plot(
             time_arr,
             avg_chain,
-            # label='Mean of lengths',
+            label='Mean of lengths',
             c='k',
             )
         # # ax1.plot(
@@ -942,18 +942,24 @@ class Structure_analyses(object):
             ax2.tick_params(axis="y",direction="in", labelsize='x-large', colors='r', labelcolor='r')
             ax2.set_ylabel('$\Delta C$/$\Delta t$', fontsize='x-large', c='r')
             plt.legend(loc=(0.00, 1.02), fontsize='x-large')
-        # # ax2.plot(
-            # # time_arr,
-            # # num_chain,
-            # # label='Num. of chains',
-            # # c='b',
-            # # )
-        # ax2.plot(
-            # time_arr,
-            # sum_chain,
-            # label='Sum of lengths',
-            # c='k',
-            # )
+        else:
+            ax2 = ax1.twinx()
+            # Choice 1
+            ax2.plot(
+                time_arr,
+                num_chain,
+                c='r',
+                )
+            ax2.set_ylabel(r'$\mathcal{N}$(p-chain)', fontsize='x-large', c='r')
+            # Choice 2
+            # ax2.plot(
+                # time_arr,
+                # sum_chain,
+                # c='r',
+                # )
+            # ax2.set_ylabel('Sum of lengths', fontsize='x-large', c='r')
+            #
+            ax2.tick_params(axis="y",direction="in", labelsize='x-large', colors='r', labelcolor='r')
         plt.title('cut={} $\AA$ & {} deg, bond={}-{}, t-intvl={}'.format(
             bond_cutoff,
             angle_cutoff,
@@ -1573,7 +1579,7 @@ class Structure_analyses(object):
         bond_rules=None,
         unique_seq=None,
         include_terminal=True,
-        num_bins=50,
+        num_bins=200,
         color_list=None,
         load_bool=True,
         save_bool=True,
@@ -1656,8 +1662,8 @@ class Structure_analyses(object):
             plt.xticks([])
             plt.yticks(pe_means[ty],
                 labels = ['{}-{}-{} {:.3f} eV'.format(*unique_seq[ty][i], pe_means[ty][i]) for i in range(len(unique_seq[ty]))])
-            plt.tick_params(axis="both",direction="in", labelsize='large')
-            plt.subplots_adjust(left=0.48, bottom=0.10, right=0.52, top=0.90, wspace=0.2, hspace=0.2)
+            plt.tick_params(axis="both",direction="in", labelsize='large', labelright=True, labelleft=False)
+            plt.subplots_adjust(left=0.485, bottom=0.10, right=0.515, top=0.90, wspace=0.2, hspace=0.2)
             plt.grid(alpha=0.5)
 
         # Plot histogram
@@ -1673,7 +1679,7 @@ class Structure_analyses(object):
             plt.ylabel('Population', fontsize='x-large')
             plt.legend(fontsize='large').set_draggable(True)
             plt.tick_params(axis="both",direction="in", labelsize='x-large')
-            plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
+            plt.subplots_adjust(left=0.17, bottom=0.25, right=0.83, top=0.75, wspace=0.2, hspace=0.2)
             plt.grid(alpha=0.5)
         plt.show()
 
@@ -1712,15 +1718,17 @@ class Structure_analyses(object):
                     if self.types[term_piece_inds[i][j][1]] not in next_to:
                         continue
                 if term_piece_inds[i][j][0] == -1:
-                    direc = np.round(-term_piece_direcs[i][j][1])
-                    if np.linalg.norm(direc) != 1.:
-                        continue
+                    direc = -term_piece_direcs[i][j][1]
+                    # direc = np.round(-term_piece_direcs[i][j][1])
+                    # if np.linalg.norm(direc) != 1.:
+                        # continue
                         # raise RuntimeError('{} {}'.format(-term_piece_direcs[i][j][1], direc))
                     vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
                 elif term_piece_inds[i][j][2] == -1:
-                    direc = np.round(term_piece_direcs[i][j][0])
-                    if np.linalg.norm(direc) != 1.:
-                        continue
+                    direc = term_piece_direcs[i][j][0]
+                    # direc = np.round(term_piece_direcs[i][j][0])
+                    # if np.linalg.norm(direc) != 1.:
+                        # continue
                         # raise RuntimeError('{} {}'.format(term_piece_direcs[i][j][0], direc))
                     vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
                 else:
@@ -1783,13 +1791,14 @@ class Structure_analyses(object):
             if unite_cutoff is not None:
                 atoms = unite_nearby_vacancies(atoms, unite_cutoff, dtype='float32')
             # implant calc
-            len_X = np.sum(np.array(atoms.get_chemical_symbols()) == 'X')
-            calc_atoms = atoms.copy()
-            from copy import deepcopy
-            atoms._calc = deepcopy(self.alist[i]._calc)
-            atoms._calc.atoms = calc_atoms
-            atoms._calc.results['energies'] = np.array(atoms.get_potential_energies().tolist() + [0.] *len_X)
-            atoms._calc.results['forces'] = np.array(atoms.get_forces().tolist() + [[0.,0.,0.] for j in range(len_X)])
+            if atoms._calc is not None:
+                len_X = np.sum(np.array(atoms.get_chemical_symbols()) == 'X')
+                calc_atoms = atoms.copy()
+                from copy import deepcopy
+                atoms._calc = deepcopy(self.alist[i]._calc)
+                atoms._calc.atoms = calc_atoms
+                atoms._calc.results['energies'] = np.array(atoms.get_potential_energies().tolist() + [0.] *len_X)
+                atoms._calc.results['forces'] = np.array(atoms.get_forces().tolist() + [[0.,0.,0.] for j in range(len_X)])
             #
             new_alist.append(atoms)
 

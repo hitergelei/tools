@@ -2,6 +2,8 @@
 ##### CODE BY YOUNG JAE CHOI #####
 import numpy as np
 
+kB = 8.61733034e-5 # [eV/K] Boltzmann
+
 def pick_folder_from_path(path):
     """
     path (str)
