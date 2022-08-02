@@ -46,19 +46,19 @@ def convergence_test(plt, t, T):
 def T_plot(plt, x, T):
     from scipy.stats import linregress as lr
     halfway = len(x) //2
-    fit_l = lr(x[1:halfway], np.mean(T[:, 1:halfway], axis=0))
-    fit_r = lr(x[halfway+1:], np.mean(T[:, halfway+1:], axis=0))
+    fit_l = lr(x[3:halfway-2], np.mean(T[:, 3:halfway-2], axis=0))
+    fit_r = lr(x[halfway+3:-2], np.mean(T[:, halfway+3:-2], axis=0))
     # gradT in unit of ( K / Angst )
     gradT = (fit_l.slope - fit_r.slope) /2.
 
     plt.figure()
-    plt.errorbar(x, np.mean(T, axis=0), yerr=np.std(T, axis=0), fmt='s', c='k', mfc='w', ecolor='k', capsize=3)
-    plt.plot(x[1:halfway], x[1:halfway] *fit_l.slope + fit_l.intercept, c='r', label=r'$\nabla T$={:.2f}'.format(fit_l.slope))
-    plt.plot(x[halfway+1:], x[halfway+1:] *fit_r.slope + fit_r.intercept, c='b', label=r'$\nabla T$={:.2f}'.format(fit_r.slope))
+    plt.errorbar(x, np.mean(T, axis=0), yerr=np.std(T, axis=0), fmt='s', c='k', mfc='none', ecolor='k', capsize=3)
+    plt.plot(x[3:halfway-2], x[3:halfway-2] *fit_l.slope + fit_l.intercept, c='r', label=r'$\nabla T$={:.2f}'.format(fit_l.slope))
+    plt.plot(x[halfway+3:-2], x[halfway+3:-2] *fit_r.slope + fit_r.intercept, c='b', label=r'$\nabla T$={:.2f}'.format(fit_r.slope))
     plt.xlabel(r'Coordinate ($\rm \AA$)', fontsize='x-large')
     plt.ylabel('Temperature (K)', fontsize='x-large')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.subplots_adjust(left=0.12, bottom=0.25, right=0.99, top=0.75, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
     plt.legend(fontsize='large').set_draggable(True)
     plt.grid(alpha=0.5)
     return gradT
