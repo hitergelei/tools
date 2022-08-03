@@ -26,6 +26,7 @@ compute         pe all pe/atom
 #compute         2 all pressure thermo_temp
 
 read_dump       init.dump 1000 x y z vx vy vz box yes replace yes
+displace_atoms  all move 1.5035325 1.5035325 1.5035325
 #velocity        all zero linear
 #velocity        all zero angular
 #fix             1 all nve

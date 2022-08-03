@@ -7,7 +7,7 @@ def argparse():
     Plot tmp.profile file.
     """)
     # Positional arguments
-    parser.add_argument('thermo_file', type=str, help='LAMMPS thermo file including heat transfer data labeled as f_hf')
+    parser.add_argument('thermo_info', help='LAMMPS thermo file including heat transfer data labeled as f_hf // or heat current between sink and source in eV/ps.')
     parser.add_argument('tmp_file', type=str, help='LAMMPS format tmp_file.')
     parser.add_argument('dt', type=float, help='Variable dt for LAMMPS simulation (ps unit)')
     parser.add_argument('a', type=float, help='Lattice parameter along the direction of interest in Angst. unit')
@@ -50,6 +50,7 @@ def T_plot(plt, x, T):
     fit_r = lr(x[halfway+3:-2], np.mean(T[:, halfway+3:-2], axis=0))
     # gradT in unit of ( K / Angst )
     gradT = (fit_l.slope - fit_r.slope) /2.
+    rmse = (fit_l.rvalue - fit_r.rvalue) /2.
 
     plt.figure()
     plt.errorbar(x, np.mean(T, axis=0), yerr=np.std(T, axis=0), fmt='s', c='k', mfc='none', ecolor='k', capsize=3)
@@ -61,7 +62,7 @@ def T_plot(plt, x, T):
     plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
     plt.legend(fontsize='large').set_draggable(True)
     plt.grid(alpha=0.5)
-    return gradT
+    return gradT, rmse
     
 if __name__ == '__main__':
     ## Intro
@@ -79,8 +80,14 @@ if __name__ == '__main__':
     args = argparse()
 
     from lmp2traj import read_lmp_log
-    thermo_info = read_lmp_log(args.thermo_file, )
-    heat_trans = thermo_info[0]['f_hf'][1:]
+    try:
+        heat_trans = float(args.thermo_info)
+    except:
+        thermo_info = read_lmp_log(args.thermo_info, )
+        heat_trans = thermo_info[0]['f_hf'][1:]
+        mp = True
+    else:
+        mp = False
 
     with open(args.tmp_file, 'r') as f:
         lines = f.readlines()
@@ -88,8 +95,8 @@ if __name__ == '__main__':
     _, nbins, natoms = first_line(lines[3])
 
     ndat = (len(lines)-3) // (nbins+1)
-    if ndat != len(heat_trans):
-        raise RuntimeError('{} file and {} file, the number of time point mismatch'.format(args.thermo_file, args.tmp_file))
+    if mp and ndat != len(heat_trans):
+        raise RuntimeError('{} file and {} file, the number of time point mismatch'.format(args.thermo_info, args.tmp_file))
     t = np.zeros(ndat, dtype=float)
     T = np.zeros((ndat, nbins), dtype=float)
     coord = np.zeros(nbins, dtype=float)
@@ -106,13 +113,18 @@ if __name__ == '__main__':
     if args.dump_frame is not None:
         t          = t[args.dump_frame:]
         T          = T[args.dump_frame:]
-        heat_trans = heat_trans[args.dump_frame:]
+        if mp:
+            heat_trans = heat_trans[args.dump_frame:]
 
     # heat_flux in unit of ( eV / ps Angst^2 )
-    J = (heat_trans[-1] - heat_trans[0]) /(t[-1]-t[0]) /args.area /2.
+    if mp:
+        heat_total = heat_trans[-1] - heat_trans[0]
+    else:
+        heat_total = heat_trans *(len(t)-1)
+    J = heat_total /(t[-1]-t[0]) /args.area /2.
 
     from matplotlib import pyplot as plt
-    gradT = T_plot(plt, x, T)
+    gradT, rmse = T_plot(plt, x, T)
 
     # kappa in unit of ( eV / ps Angst K )
     kappa = J / gradT
@@ -120,5 +132,5 @@ if __name__ == '__main__':
     # kappa_si in unit of ( W / m K )
     kappa_si = kappa *units._e *1e12 *1e10
 
-    plt.title(r'$\kappa$={:.4f} (W/mK)'.format(kappa_si), fontsize='x-large', pad=10.)
+    plt.title(r'$\kappa$={:.4f} (W/mK), $\nabla T$ PCC={:.4f}'.format(kappa_si, rmse), fontsize='large', pad=10.)
     plt.show()
