@@ -1,6 +1,6 @@
 # Variables
 variable        T equal 300
-variable        dNswap equal 10
+variable        dNswap equal 5
 variable        kB equal 8.61733034e-5
 
 #### Prepare
@@ -25,7 +25,7 @@ pair_coeff      * * ../../../../../../../../../../frozen_model.pb Ge Sb Te
 compute         pe all pe/atom
 #compute         2 all pressure thermo_temp
 
-read_dump       init.dump 1000 x y z vx vy vz box yes replace yes
+read_dump       init.dump 10001000 x y z vx vy vz box yes replace yes
 displace_atoms  all move 1.5035325 1.5035325 1.5035325
 #velocity        all zero linear
 #velocity        all zero angular
@@ -38,10 +38,10 @@ fix             hf all thermal/conductivity ${dNswap} x 24
 
 thermo_style    custom step temp etotal pe ke vol f_hf
 thermo_modify   format float %.15g
-thermo          ${dNswap}
+thermo          100
 log             pre-log.lammps
 
-dump            1 all custom ${dNswap} pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump            1 all custom 100 pre-out.dump id element mass type x y z fx fy fz vx vy vz c_pe
 dump_modify     1 element Ge Sb Te
 
 timestep        0.01
@@ -52,12 +52,12 @@ reset_timestep  0
 compute         ke all ke/atom
 variable        temp atom c_ke/1.5/${kB}
 compute         layers all chunk/atom bin/1d x lower 0.04166667 units reduced
-fix             2 all ave/chunk 1 ${dNswap} ${dNswap} layers v_temp file tmp.profile
+fix             2 all ave/chunk 1 100 100 layers v_temp file tmp.profile
 
 undump          1
-dump            1 all custom ${dNswap} out.dump id element mass type x y z fx fy fz vx vy vz c_pe
+dump            1 all custom 100 out.dump id element mass type x y z fx fy fz vx vy vz c_pe
 dump_modify     1 element Ge Sb Te
-thermo          ${dNswap}
+thermo          100
 log             log.lammps
 
 timestep        0.01

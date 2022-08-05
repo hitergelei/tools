@@ -116,12 +116,13 @@ if __name__ == '__main__':
         if mp:
             heat_trans = heat_trans[args.dump_frame:]
 
-    # heat_flux in unit of ( eV / ps Angst^2 )
     if mp:
-        heat_total = heat_trans[-1] - heat_trans[0]
+        heat_ps = (heat_trans[-1] - heat_trans[0]) /(t[-1]-t[0])
     else:
-        heat_total = heat_trans *(len(t)-1)
-    J = heat_total /(t[-1]-t[0]) /args.area /2.
+        heat_ps = heat_trans
+    print('heat flux: {:.4f} eV/ps'.format(heat_ps))
+    # heat_flux in unit of ( eV / ps Angst^2 )
+    J = heat_ps /args.area /2.
 
     from matplotlib import pyplot as plt
     gradT, rmse = T_plot(plt, x, T)
