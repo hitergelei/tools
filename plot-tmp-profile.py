@@ -59,7 +59,7 @@ def T_plot(plt, x, T):
     plt.xlabel(r'Coordinate ($\rm \AA$)', fontsize='x-large')
     plt.ylabel('Temperature (K)', fontsize='x-large')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
-    plt.subplots_adjust(left=0.25, bottom=0.25, right=0.75, top=0.75, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.28, bottom=0.25, right=0.70, top=0.75, wspace=0.2, hspace=0.2)
     plt.legend(fontsize='large').set_draggable(True)
     plt.grid(alpha=0.5)
     return gradT, rmse

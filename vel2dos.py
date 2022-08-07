@@ -89,7 +89,7 @@ def plot_total_DOS(
     if boson_peak:
         ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
     else:
-        ax.set_xlabel('PhDOS', fontsize='x-large')
+        ax.set_xlabel('VDOS', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     ax.set_xlim((doslim_low,doslim_up))
@@ -130,7 +130,7 @@ def plot_direc_DOS(
     if boson_peak:
         ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
     else:
-        ax.set_xlabel('PhDOS', fontsize='x-large')
+        ax.set_xlabel('VDOS', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     ax.set_xlim((doslim_low,doslim_up))
@@ -195,7 +195,7 @@ def plot_chem_DOS(
     if boson_peak:
         ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
     else:
-        ax.set_xlabel('PhDOS', fontsize='x-large')
+        ax.set_xlabel('VDOS', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
@@ -220,7 +220,7 @@ def plot_chem_DOS(
         if boson_peak:
             ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
         else:
-            ax.set_xlabel('PhDOS', fontsize='x-large')
+            ax.set_xlabel('VDOS', fontsize='x-large')
         # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
@@ -247,7 +247,7 @@ def plot_chem_DOS(
         if boson_peak:
             ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
         else:
-            ax.set_xlabel('PhDOS', fontsize='x-large')
+            ax.set_xlabel('VDOS', fontsize='x-large')
         # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
