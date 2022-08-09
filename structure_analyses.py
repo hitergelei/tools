@@ -1005,9 +1005,11 @@ class Structure_analyses(object):
         self,
         bond_cutoff,
         angle_cutoff,
-        bond_rules=None,
-        load_bool=True,
-        save_bool=True,
+        bond_rules = None,
+        xlim_up    = None,
+        ylim_up    = None,
+        load_bool  = True,
+        save_bool  = True,
         ):
         """
         """
@@ -1035,39 +1037,55 @@ class Structure_analyses(object):
         from matplotlib import pyplot as plt
         font = {'family':'Arial'}
         plt.rc('font', **font)
-        fig, ax1 = plt.subplots()
+        for i in range(2):
+            fig, ax1 = plt.subplots()
+            
+            # plt.plot(l[1:], n[1]* (0.8)**np.arange(len(n)-1), color='r', label=r'$\propto 0.8^{l\ /2}$')
+            # plt.legend(fontsize='x-large').set_draggable(True)
 
-        ax1.bar(l, n/np.sum(n)*100., color='k', alpha=0.5)
+            if i == 0:
+                ax1.bar(l, n/np.sum(n)*100., color='k', alpha=0.7)
+            else:
+                ax1.bar(l, n, color='k', alpha=0.7)
 
-        xmax = np.max(l)
-        plt.xlim(-1, xmax+1)
-        xticks = range(0, xmax+1, 2)
-        xticklabels = list(xticks)
-        xticklabels[0] = 'inf'
-        plt.xticks(xticks, rotation=45, labels=xticklabels)
-        plt.xlabel('Length of chain', fontsize='x-large')
+            xmax = np.max(l)
+            if xlim_up is not None:
+                plt.xlim(-1, xlim_up+1)
+                xticks = range(0, xlim_up+1, 2)
+            else:
+                plt.xlim(-1, xmax+1)
+                xticks = range(0, xmax+1, 2)
+            xticklabels = list(xticks)
+            xticklabels[0] = 'inf'
+            plt.xticks(xticks, rotation=45, labels=xticklabels)
+            plt.xlabel('Length of chain', fontsize='x-large')
+            if ylim_up is not None and i == 1:
+                plt.ylim(0, ylim_up)
 
-        title = 'cut={} $\AA$ & {} deg, bond={}-{}'.format(
-            bond_cutoff,
-            angle_cutoff,
-            self.bond_rules_str[0],
-            self.bond_rules_str[1],
-            )
-        if len(self.alist_ind_list) == 1:
-            title += ', atoms_ind #{}'.format(self.alist_ind_list[0])
-        else:
-            title += ', len_alist #{}'.format(len(self.alist_ind_list))
-        plt.title(title, fontsize='x-large')
+            title = 'cut={} $\AA$ & {} deg, bond={}-{}'.format(
+                bond_cutoff,
+                angle_cutoff,
+                self.bond_rules_str[0],
+                self.bond_rules_str[1],
+                )
+            if len(self.alist_ind_list) == 1:
+                title += ', atoms_ind #{}'.format(self.alist_ind_list[0])
+            else:
+                title += ', len_alist #{}'.format(len(self.alist_ind_list))
+            plt.title(title, fontsize='x-large')
 
-        # Different scale on the right axis.
-        # ax2 = ax1.twinx()
-        # ax2.bar(l, n, color='k', alpha=0.5)
-        ax1.tick_params(axis="both",direction="in", labelsize='x-large')
-        # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
-        ax1.set_ylabel('Population (%)', fontsize='x-large')
-        # ax2.set_ylabel('Population', fontsize='x-large')
-        plt.subplots_adjust(left=0.28, right=0.72, bottom=0.25, top=0.75)
-        ax1.grid(alpha=0.5)
+            # Different scale on the right axis.
+            # ax2 = ax1.twinx()
+            # ax2.bar(l, n, color='k', alpha=0.5)
+            ax1.tick_params(axis="both",direction="in", labelsize='x-large')
+            # ax2.tick_params(axis="both",direction="in", labelsize='x-large')
+            if i == 0:
+                ax1.set_ylabel('Population (%)', fontsize='x-large')
+            else:
+                ax1.set_ylabel('Population', fontsize='x-large')
+            # ax2.set_ylabel('Population', fontsize='x-large')
+            plt.subplots_adjust(left=0.28, right=0.72, bottom=0.25, top=0.75)
+            ax1.grid(alpha=0.5)
         plt.show()
 
     def classify_chain_length_by_type(

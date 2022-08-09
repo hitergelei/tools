@@ -51,13 +51,15 @@ sa = Structure_analyses(
     # # save_bool=False,
     # )
 
-# sa.plot_chain_length_histo(
-    # bond_cutoff,
-    # angle_cutoff,
-    # bonding_rules,
-    # # load_bool=False,
-    # # save_bool=False,
-    # )
+sa.plot_chain_length_histo(
+    bond_cutoff,
+    angle_cutoff,
+    bonding_rules,
+    # xlim_up = 22,
+    # ylim_up = 860,
+    # load_bool=False,
+    # save_bool=False,
+    )
 
 # sa.view_chains(
     # bond_cutoff,
@@ -107,7 +109,7 @@ sa = Structure_analyses(
         # # ['Sb', 'Te', 'X'],
         # ]},
     # # include_terminal=False,
-    # # num_bins=200,
+    # # num_bins=500,
     # # load_bool=False,
     # # save_bool=False,
     # )
@@ -122,18 +124,18 @@ sa = Structure_analyses(
     # # save_bool = False,
     # )
 
-sa.replace_vacancies_w_X(
-    bond_cutoff,
-    angle_cutoff,
-    bond_rules   = bonding_rules,
-    vac_dist     = 3.007,
-    # vac_dist     = 1.500,
-    unite_cutoff = 2.2,
-    vac_radius   = 2.0,
-    next_to      = ['Te'],
-    # wrap         = False,
-    # view_X       = True,
-    # load_bool    = False,
-    # save_bool    = False,
-    # file_name    = None,
-    )
+# sa.replace_vacancies_w_X(
+    # bond_cutoff,
+    # angle_cutoff,
+    # bond_rules   = bonding_rules,
+    # vac_dist     = 3.007,
+    # # vac_dist     = 1.500,
+    # unite_cutoff = 2.2,
+    # vac_radius   = 2.0,
+    # next_to      = ['Te'],
+    # # wrap         = False,
+    # # view_X       = True,
+    # # load_bool    = False,
+    # # save_bool    = False,
+    # # file_name    = None,
+    # )

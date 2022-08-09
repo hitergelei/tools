@@ -15,6 +15,7 @@ def argparse():
     parser.add_argument('-y', '--yticks', type=float, nargs='+', default=None, help='Set y-ticks manually.')
     parser.add_argument('-l', '--xlog', action='store_true', help='Set x-axis as log-scale')
     parser.add_argument('-m', '--ylog', action='store_true', help='Set y-axis as log-scale')
+    parser.add_argument('-s', '--sigma', type=int, help='The half number of steps for standard deviation plot')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -93,7 +94,7 @@ if __name__ == '__main__':
         # > Plot
         from matplotlib import pyplot as plt
         for i in range(len(avail_info)):
-            plt.figure()
+            fig, ax1 = plt.subplots()
             plt.plot(t, info[j][avail_info[i]], c='k')
             # plt.xlim((t[0], t[-1]))
             if args.xlog:
@@ -111,6 +112,15 @@ if __name__ == '__main__':
             if args.yticks is not None:
                 plt.yticks(args.yticks)
             plt.tick_params(axis="both",direction="in", labelsize='x-large')
+            if args.sigma is not None:
+                if len(t) > args.sigma*2 +1:
+                    ax2 = ax1.twinx()
+                    std = np.zeros(len(t), dtype=float)
+                    for k in range(args.sigma, len(t)-args.sigma):
+                        std[k] = np.std(info[j][avail_info[i]][k-args.sigma:k+args.sigma+1])
+                    ax2.plot(t, std, c='r')
+                    ax2.set_ylabel('Standard deviation', fontsize='x-large', c='r')
+                    ax2.tick_params(axis="y",direction="in", labelsize='x-large', colors='r', labelcolor='r')
             plt.subplots_adjust(left=0.30, bottom=0.25, right=0.70, top=0.75, wspace=0.2, hspace=0.2)
             plt.grid(alpha=0.5)
     plt.show()
