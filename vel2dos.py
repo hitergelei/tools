@@ -89,11 +89,11 @@ def plot_total_DOS(
     if boson_peak:
         ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
     else:
-        ax.set_xlabel('VDOS', fontsize='x-large')
+        ax.set_xlabel('$g(\omega)$', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     ax.set_xlim((doslim_low,doslim_up))
-    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.64, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     ax.xaxis.set_major_locator(plt.MaxNLocator(1))
     plt.grid(alpha=0.4)
@@ -130,11 +130,11 @@ def plot_direc_DOS(
     if boson_peak:
         ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
     else:
-        ax.set_xlabel('VDOS', fontsize='x-large')
+        ax.set_xlabel('$g(\omega)$', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     ax.set_xlim((doslim_low,doslim_up))
-    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.64, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     ax.xaxis.set_major_locator(plt.MaxNLocator(1))
     plt.grid(alpha=0.4)
@@ -195,12 +195,12 @@ def plot_chem_DOS(
     if boson_peak:
         ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
     else:
-        ax.set_xlabel('VDOS', fontsize='x-large')
+        ax.set_xlabel('$g(\omega)$', fontsize='x-large')
     # ax.set_xticklabels([])
     ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
     # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
     ax.set_xlim((doslim_low, doslim_up))
-    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.40, bottom=0.25, right=0.64, top=0.752, wspace=0.2, hspace=0.2)
     plt.tick_params(axis="both",direction="in", labelsize='x-large')
     ax.xaxis.set_major_locator(plt.MaxNLocator(1))
     plt.grid(alpha=0.4)
@@ -220,12 +220,12 @@ def plot_chem_DOS(
         if boson_peak:
             ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
         else:
-            ax.set_xlabel('VDOS', fontsize='x-large')
+            ax.set_xlabel('$g(\omega)$', fontsize='x-large')
         # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((doslim_low, doslim_up))
-        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.64, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         ax.xaxis.set_major_locator(plt.MaxNLocator(1))
         plt.grid(alpha=0.4)
@@ -247,12 +247,12 @@ def plot_chem_DOS(
         if boson_peak:
             ax.set_xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
         else:
-            ax.set_xlabel('VDOS', fontsize='x-large')
+            ax.set_xlabel('$g(\omega)$', fontsize='x-large')
         # ax.set_xticklabels([])
         ax.set_ylabel('Frequency ({})'.format(unit), fontsize='x-large')
         # ax.fill_between(np.sum(PDOS_list,axis=0), f, color='k', alpha=0.3)
         ax.set_xlim((doslim_low, doslim_up))
-        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.40, bottom=0.25, right=0.64, top=0.752, wspace=0.2, hspace=0.2)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         ax.xaxis.set_major_locator(plt.MaxNLocator(1))
         plt.grid(alpha=0.4)

@@ -4,6 +4,16 @@ import numpy as np
 
 kB = 8.61733034e-5 # [eV/K] Boltzmann
 
+def fname_and_extension(fname):
+    words = fname.split('.')
+    fname_wo_ext = ''
+    for i in range(len(words)-1):
+        if i != 0:
+            fname_wo_ext += '.'
+        fname_wo_ext += words[i]
+    ext = words[-1]
+    return fname_wo_ext, ext
+
 def pick_folder_from_path(path):
     """
     path (str)

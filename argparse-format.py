@@ -29,3 +29,5 @@ if __name__ == '__main__':
 
     from ase.io import read
     alist = read(args.alist_file, args.img_slice)
+    if not isinstance(alist, list):
+        alist = [alist]
