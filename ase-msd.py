@@ -89,6 +89,7 @@ def plot_MSD(
     for i in range(len(chem_unique)):
         mask.append(chem == chem_unique[i])
         avg_MSD.append(np.mean(MSD[:, mask[i]], axis=1))
+    avg_MSD = np.array(avg_MSD)
     DW = avg_MSD *8 *np.pi**2 /3
 
     # Gaussian smearing for plot
@@ -96,6 +97,7 @@ def plot_MSD(
         color_list = [None] *len(chem_unique)
     from matplotlib import pyplot as plt
     for j in range(2):
+        plt.figure()
         for i in range(len(chem_unique)):
             if j==0:
                 plt.plot(np.arange(len(avg_MSD[i]))[1:] *dt, avg_MSD[i][1:], c=color_list[i], label=chem_unique[i])
