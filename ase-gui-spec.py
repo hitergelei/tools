@@ -30,6 +30,8 @@ if __name__ == '__main__':
 
     from ase.io import read
     alist = read(args.alist_file, args.img_slice)
+    if not isinstance(alist, list):
+        alist = [alist]
 
     from ss_util import screen_species
     new_alist = screen_species(alist, args.spec)
