@@ -94,9 +94,9 @@ def plot_MSD(
 
     tit_msd = ''
     tit_dw = ''
-    print('    Species       Mean-square displacement (Angst.^2)        Debye-Waller factor (Angst.^2)')
+    print('    Species       Mean-square displacement (Angst.^2)      B factor (Angst.^2)')
     for i in range(len(chem_unique)):
-        print('      {}  {:30.8f}     {:35.8f}'.format(chem_unique[i], np.mean(avg_MSD[i]), np.mean(DW[i])))
+        print('      {}  {:30.8f}     {:28.8f}'.format(chem_unique[i], np.mean(avg_MSD[i]), np.mean(DW[i])))
         tit_msd += '{}:{:.4f} '.format(chem_unique[i], np.mean(avg_MSD[i]))
         tit_dw += '{}:{:.2f} '.format(chem_unique[i], np.mean(DW[i]))
 
@@ -110,11 +110,11 @@ def plot_MSD(
             if j==0:
                 plt.plot(np.arange(len(avg_MSD[i]))[1:] *dt, avg_MSD[i][1:], c=color_list[i], label=chem_unique[i])
                 plt.ylabel('MSD ($\AA ^2$)', fontsize='x-large')
-                plt.title('NS={}, dt={}, GS={}\n{}'.format(n_sample, dt, gsmear, tit_msd), fontsize='small', pad=5)
+                plt.title('NS={}, dt={}, GS={}\n{}'.format(n_sample, dt, gsmear, tit_msd), fontsize='large', pad=5)
             if j==1:
                 plt.plot(np.arange(len(DW[i]))[1:] *dt, DW[i][1:], c=color_list[i], label=chem_unique[i])
-                plt.ylabel('Debye-Waller factor ($\AA ^2$)', fontsize='x-large')
-                plt.title('NS={}, dt={}, GS={}\n{}'.format(n_sample, dt, gsmear, tit_dw), fontsize='small', pad=5)
+                plt.ylabel(r'$B_{\rm iso}$ ($\AA ^2$)', fontsize='x-large')
+                plt.title('NS={}, dt={}, GS={}\n{}'.format(n_sample, dt, gsmear, tit_dw), fontsize='large', pad=5)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
         plt.xlabel('Time (ps)', fontsize='x-large')
         plt.subplots_adjust(left=0.30, bottom=0.25, right=0.70, top=0.75, wspace=0.2, hspace=0.2)
