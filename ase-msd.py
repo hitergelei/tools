@@ -94,11 +94,11 @@ def plot_MSD(
 
     tit_msd = ''
     tit_dw = ''
-    print('    Species       Mean-square displacement (Angst.^2)      B factor (Angst.^2)')
+    print('    Species       Mean-square displacement (standard deviation) (Angst.^2)      B factor (standard deviation) (Angst.^2)')
     for i in range(len(chem_unique)):
-        print('      {}  {:30.8f}     {:28.8f}'.format(chem_unique[i], np.mean(avg_MSD[i]), np.mean(DW[i])))
-        tit_msd += '{}:{:.4f} '.format(chem_unique[i], np.mean(avg_MSD[i]))
-        tit_dw += '{}:{:.2f} '.format(chem_unique[i], np.mean(DW[i]))
+        print('      {}  {:32.8f} ({:.8f})    {:38.8f} ({:.8f})'.format(chem_unique[i], np.mean(avg_MSD[i]), np.std(avg_MSD[i]), np.mean(DW[i]), np.std(DW[i])))
+        tit_msd += '{}:{:.4f} ({:.4f})'.format(chem_unique[i], np.mean(avg_MSD[i]), np.std(avg_MSD[i]))
+        tit_dw += '{}:{:.2f} ({:.2f})'.format(chem_unique[i], np.mean(DW[i]), np.std(DW[i]))
 
     # Gaussian smearing for plot
     if color_list in [None, False, []]:
