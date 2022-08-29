@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     ## Argparse
     args = argparse()
-    if args.scale is not 'None':
+    if args.scale != 'None':
         scale = float(args.scale)
     else:
         scale = args.scale
