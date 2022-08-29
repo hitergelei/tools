@@ -45,7 +45,7 @@ if __name__ == '__main__':
     if args.scale != 'None':
         scale = float(args.scale)
     else:
-        scale = args.scale
+        scale = None
 
     # # MAIN
     # Load phonon
