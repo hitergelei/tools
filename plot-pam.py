@@ -21,7 +21,7 @@ def argparse():
     parser.add_argument('-t', '--plot_3d', action='store_true', help='If provided, plot 3d texture of PAM.')
     parser.add_argument('-c', '--scale', default=0.01, help='Set PAM vector scale for 2d plot. None is autoscale. [Default: 0.01]')
     parser.add_argument('-z', '--plot_l_z', action='store_true', help='If provided, plot out-of-plane PAM. Works only for 2d plot.')
-    parser.add_argument('-r', '--relative', action='store_true', help='If provided, each plot will be re-scaled.')
+    parser.add_argument('-r', '--relative', action='store_true', help='If provided, each plot will be re-scaled (only for 2d plot).')
     parser.add_argument('--no_rot', action='store_true', help='Do not rotate.')
 
     return parser.parse_args()
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     ## Argparse
     args = argparse()
-    if args.scale is not None:
+    if args.scale is not 'None':
         scale = float(args.scale)
     else:
         scale = args.scale
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             ax.quiver(
                 q_cart[:, 0], q_cart[:, 1], q_cart[:, 2],
                 mode_l[:, s, 0], mode_l[:, s, 1], mode_l[:, s, 2],
-                length=0.1,
+                length=100,
                 )
             from ss_util import axisEqual3D
             axisEqual3D(ax)
@@ -144,7 +144,7 @@ if __name__ == '__main__':
             ax.quiver(
                 q_cart[:, 0], q_cart[:, 1], q_cart[:, 2],
                 mode_t[:, s, 0], mode_t[:, s, 1], mode_t[:, s, 2],
-                length=0.1,
+                length=100,
                 )
             from ss_util import axisEqual3D
             axisEqual3D(ax)
