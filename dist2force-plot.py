@@ -12,6 +12,7 @@ def argparse():
     parser.add_argument('trajfile', type=str, help='ASE readable file.')
     # parser.add_argument('dt', type=float, help='Time step of J0Jt.dat file. Becareful about unit. (Real: fs, metal: ps)')
     # Optional arguments
+    parser.add_argument('-n', '--img_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     # parser.add_argument('-u', '--lammps_unit', type=str, default='metal', help='Set unit of J0Jt.dat file between metal and real. [default: metal]')
     # parser.add_argument('-l', '--dont_load', dest='load_bool', action='store_false', help="If provided, don't load the data. [default: load]")
     # parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help="If provided, don't save the data. [default: save]")
@@ -30,21 +31,26 @@ if __name__ == '__main__':
     print('')
     print('=================================================================================================='.center(120))
     print('This code will plot distance to force magnitude plot.'.center(120))
-    print('Run this code in the folder containing "J0Jt.dat" and "out.dump" file.'.center(120))
     print('=================================================================================================='.center(120))
     print('')
     ## Argparse
     args = argparse()
 
     from ase.io import read
-    atoms = read(args.trajfile, -1)
+    alist = read(args.trajfile, args.img_slice)
+    if not isinstance(alist, list):
+        alist = [alist]
 
-    i = np.argsort(atoms.get_all_distances(mic=True)[0])
-    d = atoms.get_all_distances(mic=True)[0][i]
-    f = np.linalg.norm(atoms.get_forces(), axis=-1)[i]
+    d = []
+    f = []
+    for atoms in alist:
+        i = np.argsort(atoms.get_all_distances(mic=True)[0])
+        d.append(atoms.get_all_distances(mic=True)[0][i])
+        f.append(np.linalg.norm(atoms.get_forces(), axis=-1)[i])
+    d = np.concatenate(d, axis=0)
+    f = np.concatenate(f, axis=0)
 
     from matplotlib import pyplot as plt
-    # plt.plot(d, f, c='r')
     plt.yscale('log')
     plt.scatter(d, f, c='r')
     plt.tick_params(axis="both",direction="in", labelsize='x-large')

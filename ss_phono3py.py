@@ -27,7 +27,7 @@ def calc_lmp(
     wdir,
     ):
     call('lmp-pos2lmp.awk POSCAR > structure.in', shell=True, cwd=wdir)
-    call('lmp_mpi -in input-phonon.in > out', shell=True, cwd=wdir)
+    call('lmp_mpi -in input-phonon.in -sf intel > out', shell=True, cwd=wdir)
     return _read_atoms(wdir, 'lmp')
 
 def _calc_forces(

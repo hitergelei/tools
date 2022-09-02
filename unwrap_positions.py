@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 import numpy as np
 
+def argparse():
+    import argparse
+    from ss_util import parse_slice
+    parser = argparse.ArgumentParser(description = """
+    Young-Jae Choi, POSTECH, Korea, Rep. of.
+    This code will unwrap the wrapped ASE atoms objects in PBC.
+    """)
+    # Positional arguments
+    parser.add_argument('traj_file', type=str, help='ASE readable structure file name. (Must be in current dir)')
+    # Optional arguments
+    parser.add_argument('-r', '--ref_file', type=str, default=None,
+        help='ASE readable reference structure. unwraping refers this structure. [Default: first atoms in traj_file]')
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='ASE understanable slice in str format. [Default: all]')
+    parser.add_argument('-f', '--format', type=str, default=None, help='Specify output format following ASE conventions.')
+    return parser.parse_args()
+
 def unwrap_positions(alist, ref_atoms=None):
     """
     This code will unwrap the wrapped ASE atoms objects in PBC.
@@ -27,21 +43,6 @@ def unwrap_positions(alist, ref_atoms=None):
     for i in range(len(alist)):
         alist[i].set_scaled_positions(unwraped_r_list[i])
         alist[i]._calc.atoms.set_scaled_positions(unwraped_r_list[i])
-
-def argparse():
-    import argparse
-    from ss_util import parse_slice
-    parser = argparse.ArgumentParser(description = """
-    Young-Jae Choi, POSTECH, Korea, Rep. of.
-    This code will unwrap the wrapped ASE atoms objects in PBC.
-    """)
-    # Positional arguments
-    parser.add_argument('traj_file', type=str, help='ASE readable structure file name. (Must be in current dir)')
-    # Optional arguments
-    parser.add_argument('-r', '--ref_file', type=str, default=None,
-        help='ASE readable reference structure. unwraping refers this structure. [Default: first atoms in traj_file]')
-    parser.add_argument('-n', '--image_slice', type=str, default=':', help='ASE understanable slice in str format. [Default: all]')
-    return parser.parse_args()
 
 if __name__ == '__main__':
     ## Intro
@@ -73,4 +74,4 @@ if __name__ == '__main__':
     unwrap_positions(alist, ref_atoms)
     from ss_util import fname_and_extension as fae
     fn, ext = fae(traj_file)
-    write('unwrap_{}_{}.{}'.format(fn, image_slice, ext), alist)
+    write('unwrap_{}_{}.{}'.format(fn, image_slice, ext), alist, format=args.format)
