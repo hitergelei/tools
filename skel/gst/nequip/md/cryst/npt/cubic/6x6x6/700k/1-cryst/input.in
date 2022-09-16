@@ -12,7 +12,7 @@ mass            2 121.76
 mass            3 127.60
 
 pair_style      nequip
-pair_coeff      * * ../../../../../../frozen_model.pb Ge Sb Te
+pair_coeff      * * ../../../../../../../frozen_model.pb Ge Sb Te
 #pair_style      deepmd frozen_model.pb
 #pair_coeff      * *
 

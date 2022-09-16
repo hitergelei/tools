@@ -2,6 +2,32 @@
 
 import numpy as np
 
+def argparse():
+    import argparse
+    parser = argparse.ArgumentParser(description = """
+    This code will give you the phonon-(partial/total)DOS from MD trajectory.
+    """)
+    # Positional arguments
+    parser.add_argument('inp_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
+    parser.add_argument('dt', type=float, help='Time interval between images selected in unit of picosec.')
+    # Optional arguments
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
+    parser.add_argument('-p', '--chemical_DOS', action='store_true', help='Plot species-wise partial DOS.')
+    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in frequency unit. Zero means no smearing. [default: 0]')
+    parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. [default: 0]')
+    parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
+    parser.add_argument('-m', '--doslim_low', type=float, default=1e-5, help='Set DOS lower limit for plot. [default: 1e-5]')
+    parser.add_argument('-v', '--doslim_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
+    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
+    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
+    parser.add_argument('-t', '--dont_plot', dest='plot_bool', action='store_false', help='Do not plot, if provided. [default: Plot].')
+    parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
+    parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
+    parser.add_argument('-c', '--lc_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lc_list) == len(np.unique(chem)) [default: automatic].')
+    parser.add_argument('-k', '--boson_peak', action='store_true', help='Plot g(f)/f**2 to seek boson peak. [default: False].')
+    parser.add_argument('-e', '--meV_unit', action='store_true', help='Use meV unit [default: THz]')
+    return parser.parse_args()
+
 def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, dt):
     """
     atomic_mass_arr (array) : Array of atomic masses of all atoms in unit cell in amu (atomic mass unit).
@@ -58,7 +84,6 @@ def velocity2phononPDOS(atomic_mass_arr, average_temp, velocity_arr, dt):
     ADOS = 2. * (np.repeat(atomic_mass_arr, 3) / 3. / len(t)**2 / natoms / units.kB / average_temp / d_f * np.square(np.abs(v_f_arr)).T).T
 
     return f, np.reshape(ADOS, (natoms, 3, -1))
-        
 
 def plot_total_DOS(
     plt,
@@ -262,31 +287,6 @@ def plot_chem_DOS(
             plt.legend().set_visible(False)
         plt.title(direcs[direc_i])
 
-def argparse():
-    import argparse
-    parser = argparse.ArgumentParser(description = """
-    This code will give you the phonon-(partial/total)DOS from MD trajectory.
-    """)
-    # Positional arguments
-    parser.add_argument('inp_file_list', type=str, nargs='+', help='ASE readable atoms list file name. When multiple input files are provided, DOS will averaged.')
-    parser.add_argument('dt', type=float, help='Time interval between images selected in unit of picosec.')
-    # Optional arguments
-    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
-    parser.add_argument('-p', '--chemical_DOS', action='store_true', help='Plot species-wise partial DOS.')
-    parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in frequency unit. Zero means no smearing. [default: 0]')
-    parser.add_argument('-l', '--freqlim_low', type=float, default=0., help='Set frequency lower limit for plot. [default: 0]')
-    parser.add_argument('-u', '--freqlim_up', type=float, default=None, help='Set frequency upper limit for plot. Auto detect as default.')
-    parser.add_argument('-m', '--doslim_low', type=float, default=1e-5, help='Set DOS lower limit for plot. [default: 1e-5]')
-    parser.add_argument('-v', '--doslim_up', type=float, default=None, help='Set DOS upper limit for plot. Auto detect as default.')
-    parser.add_argument('-s', '--dont_save', dest='save_bool', action='store_false', help='If provided, ADOS arrays will not be saved. Default: Save array')
-    parser.add_argument('-o', '--dont_load', dest='load_bool', action='store_false', help='If provided, ADOS arrays will not be loaded. Default: Load if possible')
-    parser.add_argument('-t', '--dont_plot', dest='plot_bool', action='store_false', help='Do not plot, if provided. [default: Plot].')
-    parser.add_argument('-f', '--DOS_factor', type=float, default=1., help='DOS multiply factor. As default, integral of total DOS is 1. (cf. In case of phonopy, 3N, where N is number of atoms in a primitive cell.)')
-    parser.add_argument('-b', '--no_legend', dest='legend_bool', action='store_false', help='No legend plot. [default: True for partial DOS].')
-    parser.add_argument('-c', '--lc_list', type=str, nargs='+', default=None, help='Line color list. For partial DOS, len(lc_list) == len(np.unique(chem)) [default: automatic].')
-    parser.add_argument('-k', '--boson_peak', action='store_true', help='Plot g(f)/f**2 to seek boson peak. [default: False].')
-    parser.add_argument('-e', '--meV_unit', action='store_true', help='Use meV unit [default: THz]')
-    return parser.parse_args()
 
 if __name__ == '__main__':
     ## Intro

@@ -6,16 +6,14 @@ import numpy as np
 from ase import units as ase_units
 
 ## Global params
-# calc = 'lmp'
-calc = 'vasp'
+calc = 'lmp'
+# calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
 cp_files = None
-# cp_files = ['Si.tersoff',]
-# cp_files = ['frozen_model.pb',]
 # acou_sum_rule = True
 acou_sum_rule = False
 # rot_sum_rule = True
@@ -29,21 +27,23 @@ masses = None
 from os import environ
 environ['CUDA_VISIBLE_DEVICES'] = ''
 from phonopy.interface import vasp
-atoms = vasp.read_vasp('sb2te3-prim.vasp-3x3x3.vasp')
-N                  = 3
+atoms = vasp.read_vasp('Si-prim-sw.vasp')
+N                  = 6
 NNN                = [[N,0,0],[0,N,0],[0,0,N]]
 delta              = 0.010
 # primitive_matrix   = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]]
 # primitive_matrix   = [[0.25,0.25,0],[0,0.25,0.25],[0.25,0,0.25]]
 # primitive_matrix   = [[1,0,0],[0,1,0],[0,0,1]]
 primitive_matrix   = 'auto'
+symprec            = 1e-5
+# symprec            = 1e-3
 symmetry           = True
 # symmetry           = '+-'
 # symmetry           = False
 # nac                = True
 nac                = False
-run_mode           = 'phonon'
-# run_mode           = 'pdos'
+# run_mode           = 'phonon'
+run_mode           = 'pdos'
 # run_mode           = 'jdos'
 # num_freq_points    = 500
 # temp               = np.concatenate([
@@ -51,7 +51,7 @@ run_mode           = 'phonon'
     # np.arange(12,60,3, dtype=float),
     # np.arange(60,400,10, dtype=float),
     # ]).tolist() # (K)
-freqlim_up         = 5.5
+freqlim_up         = 23.
 # freqlim_up         = None
 freqlim_low        = 0.0
 # freqlim_low        = None
@@ -135,10 +135,9 @@ else:
     raise ValueError('Unit parameter, "{}" is unknown'.format(unit))
 phonon = Phonopy(
     atoms,
-    # [[N,0,0],[0,N,0],[0,0,N]],
     NNN,
-    # primitive_matrix = [[0.5,0.5,0],[0,0.5,0.5],[0.5,0,0.5]],
     primitive_matrix = primitive_matrix,
+    symprec          = symprec,
     nac_params       = nac_params,
     factor           = factor,
     is_symmetry      = is_symmetry,

@@ -86,7 +86,7 @@ def calc_lmp(phonon, disp, calc_dir, F_0_correction, ase_calc, cp_files):
         print(' >>> Starting {:d}-th image calculation <<< '.format(i).center(120))
         ndir = get_subdir_name(i, disp)
         bu_and_mkdir(calc_dir, ndir)
-        call(['cp {} '.format(cp_file_concat)+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
+        call(['cp {} input-phonon.in '.format(cp_file_concat)+calc_dir+'/poscars/POSCAR-'+str(i).zfill(3)+' '+calc_dir+'/'+ndir], shell=True)
         call(['lmp-pos2lmp.awk POSCAR-'+str(i).zfill(3)+' > structure.in'], cwd = calc_dir+'/'+ndir, shell = True)
         call(['lmp_mpi -in input-phonon.in -sf intel > out'], cwd = calc_dir+'/'+ndir, shell = True)
         atoms = read(calc_dir+'/'+ndir+'/out.dump', index=0, format='lammps-dump-text', order=True)

@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 import numpy as np
 from subprocess import call
+from ase.io import read, write       
+
+def _write_lmp(lmp_pos_path, alist, ran):
+    for i in range(len(ran)):
+        write('{}/disp-{}.lmp'.format(lmp_pos_path, ran[i]+1), alist[i], format='lammps-data')
 
 class VibSolver():
     """
@@ -31,7 +36,7 @@ class VibSolver():
         """
         self.atoms_file = atoms_file
         from ase.io import read
-        self.atoms = read(self.atoms_file, -1)
+        self.atoms = read(atoms_file, -1)
         self.calc = calc
         self.disp = displacement
         self.pm = plus_minus
@@ -90,17 +95,26 @@ class VibSolver():
 
         return np.array(forces)
 
-    def _calc_lmp(self):
+    def _calc_lmp(self, omp=True):
         """
         """
         # Produce structure files
         lmp_pos_path = '{}/poscars/lmp'.format(self.calc_path)
         call('rm -rf {}'.format(lmp_pos_path), shell=True)
         call('mkdir {}'.format(lmp_pos_path), shell=True)
-        from ase.io import read, write       
         alist = read('{}/poscars/poscars.traj'.format(self.calc_path), ':')
-        for i in range(len(alist)):
-            write('{}/disp-{}.lmp'.format(lmp_pos_path, i+1), alist[i], format='lammps-data')
+
+        if omp:
+            from multiprocessing import Pool
+            from os import getenv
+            nproc = int(getenv('OMP_NUM_THREADS'))
+            pool = Pool(nproc)
+            tasks = [pool.apply_async(_write_lmp, (lmp_pos_path, alist[i:len(alist):nproc], range(i, len(alist), nproc))) for i in range(nproc)]
+            for t in tasks:
+                t.get()
+            
+        else:
+            _write_lmp(lmp_pos_path, alist, range(len(alist)))
 
         # Calc
         call('cp {} input-vs.in {}'.format(self.cp_files_concat, self.calc_path), shell=True)
@@ -132,7 +146,7 @@ class VibSolver():
         """
         forces = self._get_forces()
         if self.pm:
-            forces = (forces[::2] - forces[1::2]) /2.
+            forces = (forces[1::2] - forces[0::2]) /2.
         forces = forces.reshape((len(self.atoms), 3, len(self.atoms), 3))
         fc = -forces /self.disp
         return fc
@@ -142,29 +156,63 @@ class VibSolver():
         m_vec = self.atoms.get_masses()
         m_mat = np.sqrt(np.outer(m_vec, m_vec))
         dm = fc /np.expand_dims(m_mat, (1,3))
-        # ASE unit to THz
-        from ase.units import fs
-        dm /= fs**2
+
         dm = dm.reshape(3*len(self.atoms), 3*len(self.atoms))
         return dm
 
-    def get_eigen_sets(self):
+    def get_eigen_sets(
+        self,
+        set_hermitian=True,
+        ):
         dm = self.get_dynamical_matrix()
-        # w2, eps = np.linalg.eigh((dm + dm.T)/ 2.)
-        w2, eps = np.linalg.eig(dm)
-        return w2, eps
+        if set_hermitian:
+            w2, eps = np.linalg.eigh((dm + dm.T)/ 2.)
+        else:
+            w2, eps = np.linalg.eig(dm)
+        return w2, eps.T
 
     def plot_VDOS(
         self,
         nbins=200,
+        nan_to_zero=True,
+        plot_imaginary=True,
+        gsmear_std=0.,
         ):
+        """
+        gsmear_std (float)
+            - Sigma (std) for Gaussian smearing.
+        """
+        
         w2, eps = self.get_eigen_sets()
-        eigval = np.sqrt(w2)
-        eigval_plot = np.real(eigval) # -np.imag(eigval)
-        # eigval_plot = -np.imag(eigval)
+        w = np.sqrt(w2)
 
-        hist, edges = np.histogram(eigval_plot, bins=nbins)
+        # ASE unit to THz (below three scalings are equivalent).
+        # from phonopy.units import VaspToTHz
+        # w *= (VaspToTHz)
+        from ase.units import fs
+        w *= (fs*1e+3/2/np.pi)
+        # from ase import units
+        # w *= np.sqrt(units._e *1e20 /units._amu /1e24 /(2*np.pi)**2)
+
+        if nan_to_zero:
+            w = np.where(np.isnan(w), 0, w)
+        eigval_plot = np.real(w)
+        if plot_imaginary:
+            eigval_plot -= np.where(np.imag(w) < 0, np.imag(w), 0)
+
+        hist, edges = np.histogram(eigval_plot, bins=nbins, density=True)
         mids = (edges[0:-1] + edges[1:]) /2.
         from matplotlib import pyplot as plt
-        plt.plot(hist, mids, c='k')
+        for i in range(2):
+            plt.figure()
+            if i==0:
+                plt.plot(hist, mids, c='k')
+                plt.xlabel('$g(\omega)$', fontsize='x-large')
+            else:
+                plt.plot(hist/mids**2, mids, c='k')
+                plt.xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+            plt.ylabel('Frequency (THz)', fontsize='x-large')
+            plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
+            plt.tick_params(axis="both",direction="in", labelsize='x-large')
+            plt.grid(alpha=0.5)
         plt.show()
