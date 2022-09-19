@@ -19,6 +19,15 @@ class Voronoi():
         atoms_file (ASE readable structure)
             - Only a single structure is read. If file include multiple images, it will load the final structure only.
         """
+        import datetime
+        now = datetime.datetime.now()
+        time = now.strftime('%Y-%m-%d %H:%M:%S')
+        print("""
+        ### Reference: 
+        ### Voronoi-volume-matrix code by Young Jae Choi @ POSTECH, Republic of Korea
+        ### Code start time: {}
+        """.format(time))
+
         self.atoms_file = atoms_file
         from ase.io import read
         self.atoms = read(atoms_file, -1)

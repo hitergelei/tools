@@ -36,10 +36,15 @@ class VibSolver():
         cp_files (list of str)
             - Files to copy into the calculation directory.
         """
+        import datetime
+        now = datetime.datetime.now()
+        time = now.strftime('%Y-%m-%d %H:%M:%S')
         print("""
         ### Reference: 
-        ### Code by Young Jae Choi @ POSTECH, Republic of Korea
-        """)
+        ### Vibrational-solver code by Young Jae Choi @ POSTECH, Republic of Korea
+        ### Code start time: {}
+        """.format(time))
+
         self.atoms_file = atoms_file
         from ase.io import read
         self.atoms = read(atoms_file, -1)
