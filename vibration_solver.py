@@ -41,7 +41,7 @@ class VibSolver():
         time = now.strftime('%Y-%m-%d %H:%M:%S')
         print("""
         ### Reference: 
-        ### Vibrational-solver code by Young Jae Choi @ POSTECH, Republic of Korea
+        ### Vibrational-solver code by Young-Jae Choi @ POSTECH, Republic of Korea
         ### Code start time: {}
         """.format(time))
 
@@ -205,6 +205,9 @@ class VibSolver():
         nan_to_zero=True,
         plot_imaginary=True,
         gsmear_std=0.,
+        xlim=(1e-5, None),
+        xlim_bp=(1e-5, None),
+        ylim=(None, None),
         ):
         """
         gsmear_std (float)
@@ -238,15 +241,19 @@ class VibSolver():
 
         from matplotlib import pyplot as plt
         for i in range(2):
-            plt.figure()
+            fig, ax = plt.subplots()
             if i==0:
                 plt.plot(hist, mids, c='k')
                 plt.xlabel('$g(\omega)$', fontsize='x-large')
+                plt.xlim(xlim)
             else:
                 plt.plot(hist/mids**2, mids, c='k')
                 plt.xlabel('$g(\omega)/\omega^2$', fontsize='x-large')
+                plt.xlim(xlim_bp)
             plt.ylabel('Frequency (THz)', fontsize='x-large')
+            plt.ylim(ylim)
             plt.subplots_adjust(left=0.40, bottom=0.25, right=0.60, top=0.752, wspace=0.2, hspace=0.2)
             plt.tick_params(axis="both",direction="in", labelsize='x-large')
+            ax.xaxis.set_major_locator(plt.MaxNLocator(1))
             plt.grid(alpha=0.5)
         plt.show()

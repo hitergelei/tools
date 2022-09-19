@@ -3,14 +3,6 @@ import numpy as np
 from subprocess import call
 
 class Voronoi():
-    """
-    ### This code is based on the Voronoi package FREUD""
-    ### References
-        1. https://github.com/glotzerlab/freud
-        2. YM Beltukov et al., Journal of Physics: Conference Series 661 (2015) 012056
-    ### Code by Young Jae Choi @ POSTECH, Republic of Korea
-    """
-
     def __init__(
         self,
         atoms_file,
@@ -24,7 +16,7 @@ class Voronoi():
         time = now.strftime('%Y-%m-%d %H:%M:%S')
         print("""
         ### Reference: 
-        ### Voronoi-volume-matrix code by Young Jae Choi @ POSTECH, Republic of Korea
+        ### Voronoi-volume-matrix code by Young-Jae Choi @ POSTECH, Republic of Korea
         ### Code start time: {}
         """.format(time))
 
