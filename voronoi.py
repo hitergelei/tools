@@ -192,8 +192,8 @@ class Voronoi():
         if plot_imaginary:
             eigval_plot -= np.where(np.imag(w) < 0, np.imag(w), 0)
 
-        hist_l, edges = np.histogram(eigval_plot, bins=nbins, weights=np.sum(self.ul**2, axis=-1))
-        hist_t, edges = np.histogram(eigval_plot, bins=nbins, weights=np.sum(self.ut**2, axis=-1))
+        hist_l, edges = np.histogram(eigval_plot, bins=nbins, weights=np.linalg.norm(self.ul, axis=-1)**2)
+        hist_t, edges = np.histogram(eigval_plot, bins=nbins, weights=np.linalg.norm(self.ut, axis=-1)**2)
         hist_tot, edges = np.histogram(eigval_plot, bins=nbins, density=True)
         mids = (edges[0:-1] + edges[1:]) /2.
         dw = mids[1] -mids[0]
