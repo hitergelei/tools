@@ -1,6 +1,24 @@
 #!/usr/bin/env python
 import numpy as np
 
+def argparse():
+    import argparse
+    parser = argparse.ArgumentParser(description = """
+    Plot atomic intensity along a direction.
+    """)
+    # Positional arguments
+    parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
+    parser.add_argument('direc', type=float, nargs=3, help='Directional vector along the axis of plot.')
+    # Optional arguments
+    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. [default=":"] e.g. -n :1000:10')
+    parser.add_argument('-b', '--num_bins', type=int, default=200, help='Number of bins for histogram. [default=200]')
+    parser.add_argument('-s', '--symbols', type=str, nargs='+', default=None, help='Specify chemical symbols for counting. [default: all species]')
+    # parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in Angstrom unit. Zero means no smearing. [default: 0]')
+    parser.add_argument('-t', '--peak_thres', type=float, default=0.1, help='Threshold for peak print/save. [default: 0.1 times maximum of partial histogram]')
+    parser.add_argument('-c', '--color_list', type=str, nargs='+', default=None, help='Specify colors for partial histogram plots [default: auto].')
+    parser.add_argument('-l', '--no_legend', action='store_false', dest='plot_legend', help='No legend plot [default: plot]')
+    return parser.parse_args()
+
 def get_atom_inten_hist(
     alist,
     direc,
@@ -64,23 +82,6 @@ def get_peaks(
 
     return np.array(peak_pos), np.array(peak_hei)
 
-def argparse():
-    import argparse
-    parser = argparse.ArgumentParser(description = """
-    Plot atomic intensity along a direction.
-    """)
-    # Positional arguments
-    parser.add_argument('inp_file', type=str, help='ASE readable atoms list file name.')
-    parser.add_argument('direc', type=float, nargs=3, help='Directional vector along the axis of plot.')
-    # Optional arguments
-    parser.add_argument('-n', '--image_slice', type=str, default=':', help='Image slice following python convention. [default=":"] e.g. -n :1000:10')
-    parser.add_argument('-b', '--num_bins', type=int, default=200, help='Number of bins for histogram. [default=200]')
-    parser.add_argument('-s', '--symbols', type=str, nargs='+', default=None, help='Specify chemical symbols for counting. [default: all species]')
-    # parser.add_argument('-g', '--gsmear', type=float, default=0., help='Width(simga, STD) of Gaussian smearing in Angstrom unit. Zero means no smearing. [default: 0]')
-    parser.add_argument('-t', '--peak_thres', type=float, default=0.1, help='Threshold for peak print/save. [default: 0.1 times maximum of partial histogram]')
-    parser.add_argument('-c', '--color_list', type=str, nargs='+', default=None, help='Specify colors for partial histogram plots [default: auto].')
-    parser.add_argument('-l', '--no_legend', action='store_false', dest='plot_legend', help='No legend plot [default: plot]')
-    return parser.parse_args()
 
 if __name__ == '__main__':
     ## Intro

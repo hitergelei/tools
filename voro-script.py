@@ -34,12 +34,17 @@ voro = Voronoi(
 # voro.read_fix_phonon_log(fix_pho_log)
 voro.get_A_mat()
 voro.set_eigen_sets(w2, eps)
-voro.plot_LT_VDOS(
-    # nbins=200,
-    # nan_to_zero=True,
-    # plot_imaginary=True,
-    gsmear_std=0.05,
-    xlim=(1e-5, 0.38),
-    xlim_bp=(1e-5, 0.199),
-    ylim=(0., 5.5),
+# voro.plot_LT_VDOS(
+    # # nbins=200,
+    # # nan_to_zero=True,
+    # # plot_imaginary=True,
+    # gsmear_std=0.05,
+    # xlim=(1e-5, 0.38),
+    # xlim_bp=(1e-5, 0.199),
+    # ylim=(0., 5.5),
+    # )
+voro.get_atomic_VDOS(
+    freq_range = (0.375, 0.775),
+    # reduced=True,
+    # show_2d=True,
     )

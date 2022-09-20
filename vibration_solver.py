@@ -3,6 +3,35 @@ import numpy as np
 from subprocess import call
 from ase.io import read, write       
 
+def get_w_from_w2(
+    w2,
+    nan_to_zero=True,
+    imag_to_minus=True,
+    unit='THz',
+    ):
+    w = np.sqrt(w2)
+
+    if unit == 'THz':
+        # ASE unit to THz (below three scalings are equivalent).
+        # from phonopy.units import VaspToTHz
+        # w *= (VaspToTHz)
+        # from ase import units
+        # w *= np.sqrt(units._e *1e20 /units._amu /1e24 /(2*np.pi)**2)
+        from ase.units import fs
+        w *= (fs*1e+3/2/np.pi)
+    elif unit == 'eV':
+        raise NotImplementedError('Not yet implemented.')
+        pass
+
+    if nan_to_zero:
+        w = np.where(np.isnan(w), 0, w)
+    w_plot = np.real(w)
+
+    if imag_to_minus:
+        w_plot -= np.where(np.imag(w) < 0, np.imag(w), 0)
+
+    return w_plot
+
 def _write_lmp(lmp_pos_path, alist, ran):
     for i in range(len(ran)):
         write('{}/disp-{}.lmp'.format(lmp_pos_path, ran[i]+1), alist[i], format='lammps-data')
@@ -215,23 +244,13 @@ class VibSolver():
         """
         
         w2, eps = self.get_eigen_sets()
-        w = np.sqrt(w2)
+        w_plot = get_w_from_w2(
+            w2,
+            nan_to_zero,
+            plot_imaginary,
+            )
 
-        # ASE unit to THz (below three scalings are equivalent).
-        # from phonopy.units import VaspToTHz
-        # w *= (VaspToTHz)
-        from ase.units import fs
-        w *= (fs*1e+3/2/np.pi)
-        # from ase import units
-        # w *= np.sqrt(units._e *1e20 /units._amu /1e24 /(2*np.pi)**2)
-
-        if nan_to_zero:
-            w = np.where(np.isnan(w), 0, w)
-        eigval_plot = np.real(w)
-        if plot_imaginary:
-            eigval_plot -= np.where(np.imag(w) < 0, np.imag(w), 0)
-
-        hist, edges = np.histogram(eigval_plot, bins=nbins, density=True)
+        hist, edges = np.histogram(w_plot, bins=nbins, density=True)
         mids = (edges[0:-1] + edges[1:]) /2.
         dw = mids[1] - mids[0]
         if gsmear_std not in (0., False, None):

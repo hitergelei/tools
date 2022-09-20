@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 from subprocess import call
+from ase.io import read, write
 
 class Voronoi():
     def __init__(
@@ -21,10 +22,10 @@ class Voronoi():
         """.format(time))
 
         self.atoms_file = atoms_file
-        from ase.io import read
         self.atoms = read(atoms_file, -1)
         self.dynmat = None
         self.w2 = None
+        self.w_plot = None
         self.eps = None
         self.f_box = None
         self.f_voro = None
@@ -118,7 +119,7 @@ class Voronoi():
             self.centroid_list = centroid_list
             print('facet_list calculation completed', flush=True)
 
-    def get_A_mat(self, npy_name='A_mat.npy'):
+    def get_A_mat(self):
         r"""
 
                                     S_{ij}
@@ -131,12 +132,15 @@ class Voronoi():
 
         """
         if self.A is None:
+            npy_name = 'A_mat-{}.npy'.format(self.atoms_file)
             try:
                 A = np.load(npy_name)
             except:
                 do_calc = True
+                print('A matrix file NOT loaded.'.format(npy_name), flush=True)
             else:
                 do_calc = False
+                print('A matrix file "{}" loaded.'.format(npy_name), flush=True)
 
             if do_calc:
                 self.get_facet_list()
@@ -166,6 +170,19 @@ class Voronoi():
             self.ul = ul.T
             self.ut = ut.T
 
+    def _get_w_plot(
+        self,
+        nan_to_zero,
+        imag_to_minus,
+        ):
+        if self.w_plot is None:
+            from vibration_solver import get_w_from_w2
+            self.w_plot = get_w_from_w2(
+                self.w2,
+                nan_to_zero=nan_to_zero,
+                imag_to_minus=imag_to_minus,
+                )
+
     def plot_LT_VDOS(
         self,
         nbins=200,
@@ -182,23 +199,15 @@ class Voronoi():
         """
 
         self.LT_decompose()
-        w = np.sqrt(self.w2)
-        from ase.units import fs
-        w *= (fs*1e+3/2/np.pi)
+        self._get_w_plot(nan_to_zero, plot_imaginary)
 
-        if nan_to_zero:
-            w = np.where(np.isnan(w), 0, w)
-        eigval_plot = np.real(w)
-        if plot_imaginary:
-            eigval_plot -= np.where(np.imag(w) < 0, np.imag(w), 0)
-
-        hist_l, edges = np.histogram(eigval_plot, bins=nbins, weights=np.linalg.norm(self.ul, axis=-1)**2)
-        hist_t, edges = np.histogram(eigval_plot, bins=nbins, weights=np.linalg.norm(self.ut, axis=-1)**2)
-        hist_tot, edges = np.histogram(eigval_plot, bins=nbins, density=True)
+        hist_l, edges = np.histogram(self.w_plot, bins=nbins, weights=np.linalg.norm(self.ul, axis=-1)**2)
+        hist_t, edges = np.histogram(self.w_plot, bins=nbins, weights=np.linalg.norm(self.ut, axis=-1)**2)
+        hist_tot, edges = np.histogram(self.w_plot, bins=nbins, density=True)
         mids = (edges[0:-1] + edges[1:]) /2.
         dw = mids[1] -mids[0]
-        hist_l /= len(w) *dw
-        hist_t /= len(w) *dw
+        hist_l /= len(self.w_plot) *dw
+        hist_t /= len(self.w_plot) *dw
 
         if gsmear_std not in (0., False, None):
             print(' Gaussian smearing...', flush=True)
@@ -231,3 +240,88 @@ class Voronoi():
             plt.legend(handlelength=1, fontsize='medium').set_draggable(True)
             plt.grid(alpha=0.5)
         plt.show()
+
+    def get_atomic_VDOS(
+        self,
+        freq_range,
+        reduced=True,
+        show_2d=True,
+        ):
+        """
+        freq_range (tuple of the form (float1, float2))
+            - Frequency range to get VDOS projection.
+            - Must be (float1 < float2)
+            - In THz unit
+            - VDOS will be saved as vdos, vdos_l, vdos_t in atoms._calc.results dict
+        reduced (bool)
+            - Reduced VDOS (=VDOS /w^2).
+        show_2d (bool)
+            - 2-dimensionized images will be written
+        """
+
+        fname = 'vdos-from{}to{}THz-{}.traj'.format(*freq_range, self.atoms_file)
+        if reduced:
+            fname = 'r' + fname
+
+        try:
+            alist = read(fname, ':')
+        except:
+            do_calc = True
+            print('VDOS file NOT loaded.'.format(fname), flush=True)
+        else:
+            do_calc = False
+            print('VDOS file "{}" loaded.'.format(fname), flush=True)
+
+        if do_calc:
+            self.LT_decompose()
+            self._get_w_plot(nan_to_zero=True, imag_to_minus=True)
+
+            mask = freq_range[0] < self.w_plot
+            mask *= self.w_plot < freq_range[1]
+            n_mode = np.sum(mask)
+
+            if reduced:
+                wei = np.expand_dims(self.w_plot[mask]**2, axis=1)
+            else:
+                wei = np.ones((n_mode, 1))
+            vdos = np.sum(np.linalg.norm(self.eps[mask].reshape(n_mode, len(self.atoms), 3), axis=-1)**2 /wei, axis=0)
+            vdos_l = np.sum(np.linalg.norm(self.ul[mask].reshape(n_mode, len(self.atoms), 3), axis=-1)**2 /wei, axis=0)
+            vdos_t = np.sum(np.linalg.norm(self.ut[mask].reshape(n_mode, len(self.atoms), 3), axis=-1)**2 /wei, axis=0)
+
+            alist = []
+            atoms = self.atoms.copy()
+            from ase.calculators.singlepoint import SinglePointCalculator
+            atoms._calc = SinglePointCalculator(atoms, vdos=vdos, vdos_l=vdos_l, vdos_t=vdos_t)
+            alist = [atoms]
+
+            if show_2d:
+                pos = self.atoms.get_positions()
+                from atom_intensity import get_atom_inten_hist, get_peaks
+                direcs = [[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]
+                for i in range(3):
+                    i_hist, edges = get_atom_inten_hist(
+                        [self.atoms],
+                        direcs[i],
+                        nbins=200,
+                        )
+                    peaks, _ = get_peaks(
+                        np.sum(i_hist, axis=0),
+                        (edges[0:-1] + edges[1:]) /2.,
+                        0.2,
+                        )
+                    peak_edges = (peaks[0:-1] + peaks[1:])/2.
+                    cls = np.digitize(pos[:, i], peak_edges)
+                    for j in range(len(peaks)):
+                        atoms = self.atoms.copy()[cls == j]
+                        atoms._calc = SinglePointCalculator(
+                            atoms,
+                            vdos=vdos[cls == j],
+                            vdos_l=vdos_l[cls == j],
+                            vdos_t=vdos_t[cls == j],
+                            )
+                        alist.append(atoms)
+
+            write(fname, alist)
+
+        from ase.visualize import view
+        view(alist)
