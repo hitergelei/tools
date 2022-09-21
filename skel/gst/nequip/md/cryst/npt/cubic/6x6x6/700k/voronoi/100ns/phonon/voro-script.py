@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 
-atoms_file = '10ps.vasp'
+atoms_file = '100ns.vasp'
 # fix_pho_log = 'dynmat.log'
 
 #

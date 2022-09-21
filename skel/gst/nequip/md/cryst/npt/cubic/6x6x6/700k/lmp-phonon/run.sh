@@ -8,8 +8,8 @@ export KMP_BLOCKTIME=0
 #export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:100
 
 lmp_mpi -in input.in -sf intel > out 
-#python ase-md.py > out
+#python pho-phonopy.py
 
 #rm -rf lmp-result.traj
-lmp2traj.py &
-sleep 10
+#lmp2traj.py &
+#sleep 10
