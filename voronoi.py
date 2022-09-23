@@ -241,7 +241,7 @@ class Voronoi():
             plt.grid(alpha=0.5)
         plt.show()
 
-    def get_atomic_VDOS(
+    def get_atomic_VDOS_and_AM(
         self,
         freq_range,
         reduced=True,
@@ -249,10 +249,10 @@ class Voronoi():
         ):
         """
         freq_range (tuple of the form (float1, float2))
-            - Frequency range to get VDOS projection.
+            - Frequency range to get VDOS and AM projection.
             - Must be (float1 < float2)
             - In THz unit
-            - VDOS will be saved as vdos, vdos_l, vdos_t in atoms._calc.results dict
+            - VDOS will be saved as vdos, vdos_l, vdos_t and AAM as aam in atoms._calc.results dict
         reduced (bool)
             - Reduced VDOS (=VDOS /w^2).
         show_2d (bool)
@@ -267,12 +267,13 @@ class Voronoi():
             alist = read(fname, ':')
         except:
             do_calc = True
-            print('VDOS file NOT loaded.'.format(fname), flush=True)
+            print('VDOS and AAM file NOT loaded.'.format(fname), flush=True)
         else:
             do_calc = False
-            print('VDOS file "{}" loaded.'.format(fname), flush=True)
+            print('VDOS and AAM file "{}" loaded.'.format(fname), flush=True)
 
         if do_calc:
+            # VDOS part
             self.LT_decompose()
             self._get_w_plot(nan_to_zero=True, imag_to_minus=True)
 
@@ -288,10 +289,16 @@ class Voronoi():
             vdos_l = np.sum(np.linalg.norm(self.ul[mask].reshape(n_mode, len(self.atoms), 3), axis=-1)**2 /wei, axis=0)
             vdos_t = np.sum(np.linalg.norm(self.ut[mask].reshape(n_mode, len(self.atoms), 3), axis=-1)**2 /wei, axis=0)
 
+            # AAM part
+            from pam import AAM
+            # aam.shape == (n_mode, len(atoms), 3)
+            aam = AAM(np.expand_dims(self.eps[mask], axis=0))[0]
+            aam = np.sum(aam, axis=0)
+
             alist = []
             atoms = self.atoms.copy()
             from ase.calculators.singlepoint import SinglePointCalculator
-            atoms._calc = SinglePointCalculator(atoms, vdos=vdos, vdos_l=vdos_l, vdos_t=vdos_t)
+            atoms._calc = SinglePointCalculator(atoms, vdos=vdos, vdos_l=vdos_l, vdos_t=vdos_t, aam=aam)
             alist = [atoms]
 
             if show_2d:
@@ -318,6 +325,7 @@ class Voronoi():
                             vdos=vdos[cls == j],
                             vdos_l=vdos_l[cls == j],
                             vdos_t=vdos_t[cls == j],
+                            aam=aam[cls == j],
                             )
                         alist.append(atoms)
 

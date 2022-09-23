@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 
-atoms_file = '10ps.vasp'
+atoms_file = '200ns.vasp'
 # fix_pho_log = 'dynmat.log'
 
 #
@@ -9,15 +9,12 @@ from vibration_solver import VibSolver
 vs = VibSolver(
     atoms_file    = atoms_file,
     calc          = 'lmp',
-    displacement  = 0.03,
+    displacement  = 0.01,
     # force_cutoff  = 7e-4,
     # plus_minus    = True,
     set_hermitian = False,
     # cp_files    = [],
     )
-# dm = vs.get_dynamical_matrix()
-# np.save('_dm.npy', dm)
-
 w2, eps = vs.get_eigen_sets()
 # vs.plot_VDOS(
     # nbins=200,

@@ -70,7 +70,7 @@ class VibSolver():
         time = now.strftime('%Y-%m-%d %H:%M:%S')
         print("""
         ### Reference: 
-        ### Vibrational-solver code by Young-Jae Choi @ POSTECH, Republic of Korea
+        ### Vibration-solver code by Young-Jae Choi @ POSTECH, Republic of Korea
         ### Code start time: {}
         """.format(time))
 
@@ -200,7 +200,6 @@ class VibSolver():
         m_vec = self.atoms.get_masses()
         m_mat = np.sqrt(np.outer(m_vec, m_vec))
         dm = fc /np.expand_dims(m_mat, (1,3))
-
         dm = dm.reshape(3*len(self.atoms), 3*len(self.atoms))
         return dm
 

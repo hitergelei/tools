@@ -5,6 +5,39 @@ import numpy as np
 from ase import units
 hbar = 1e-3 *0.6582119569 # (eV*ps)
 k_B = units.kB # (eV/K)
+Mx_T = np.array([
+    [  0,  0,  0],
+    [  0,  0,  1],
+    [  0,  1,  0],
+    ])
+My_T = np.array([
+    [  0,  0,  1],
+    [  0,  0,  0],
+    [  1,  0,  0],
+    ])
+Mz_T = np.array([
+    [  0,  1,  0],
+    [  1,  0,  0],
+    [  0,  0,  0],
+    ])
+M_AT = np.array([Mx_T, My_T, Mz_T])
+
+Mx_M = np.array([
+    [  0,  0,  0],
+    [  0,  0,-1j],
+    [  0, 1j,  0],
+    ])
+My_M = np.array([
+    [  0,  0, 1j],
+    [  0,  0,  0],
+    [-1j,  0,  0],
+    ])
+Mz_M = np.array([
+    [  0,-1j,  0],
+    [ 1j,  0,  0],
+    [  0,  0,  0],
+    ])
+M_AM = np.array([Mx_M, My_M, Mz_M])
 
 def argparse():
     import argparse
@@ -31,6 +64,37 @@ def argparse():
 
     return parser.parse_args()
 
+def AAM(
+    eps,
+    AAT=False,
+    ):
+    r"""
+    Calculate atomic angular momentum. 
+
+    INPUT
+    eps(np.array): Displacement polarization vector of size (len(q), len(\sigma), 3n) where n is number of atoms in a unit cell.
+
+    RETURN
+    l_{\sigma, i, \alpha}(q) (np.array): mode resolved AAM of size (len(q), len(\sigma), len(atoms), 3)
+    """
+    
+    n = eps.shape[-1] //3
+    #eps.shape = (len(k), len(\sigma), n, 3)
+    eps = eps.reshape(eps.shape[0], eps.shape[1], n, 3)
+    if AAT:
+        # M.shape == (3, 3, 3)
+        M = M_AT
+    else:
+        M = M_AM
+    mode_l = []
+    for i in range(3):
+        l = np.expand_dims(eps.conj(), axis=3) @ np.expand_dims(M[i], axis=(0, 1, 2)) @ np.expand_dims(eps, axis=4)
+        mode_l.append(l.reshape(eps.shape[0], eps.shape[1], n, 1))
+    mode_l = np.concatenate(mode_l, axis=3)
+
+    # mode_l.shape == (len(q), len(\sigma), n, 3)
+    return hbar *mode_l
+
 def mode_PAM(
     eps,
     mode_PAT=False,
@@ -49,43 +113,19 @@ def mode_PAM(
     
     n = eps.shape[-1] //3
     if mode_PAT:
-        Mx = np.array([
-            [  0,  0,  0],
-            [  0,  0,  1],
-            [  0,  1,  0],
-            ])
-        My = np.array([
-            [  0,  0,  1],
-            [  0,  0,  0],
-            [  1,  0,  0],
-            ])
-        Mz = np.array([
-            [  0,  1,  0],
-            [  1,  0,  0],
-            [  0,  0,  0],
+        # M.shape == (3, 3n, 3n)
+        M = np.array([
+            np.kron(np.identity(n), Mx_T),
+            np.kron(np.identity(n), My_T),
+            np.kron(np.identity(n), Mz_T),
             ])
     else:
-        Mx = np.array([
-            [  0,  0,  0],
-            [  0,  0,-1j],
-            [  0, 1j,  0],
+        # M.shape == (3, 3n, 3n)
+        M = np.array([
+            np.kron(np.identity(n), Mx_M),
+            np.kron(np.identity(n), My_M),
+            np.kron(np.identity(n), Mz_M),
             ])
-        My = np.array([
-            [  0,  0, 1j],
-            [  0,  0,  0],
-            [-1j,  0,  0],
-            ])
-        Mz = np.array([
-            [  0,-1j,  0],
-            [ 1j,  0,  0],
-            [  0,  0,  0],
-            ])
-    # M.shape == (3, 3n, 3n)
-    M = np.array([
-        np.kron(np.identity(n), Mx),
-        np.kron(np.identity(n), My),
-        np.kron(np.identity(n), Mz),
-        ])
     mode_l = []
     for i in range(eps.shape[0]):
         mode_l.append([])

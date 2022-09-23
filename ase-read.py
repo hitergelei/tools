@@ -59,7 +59,7 @@ if __name__ == '__main__':
     args = argparse()
 
     ##
-    from ase.io import read
+    from ase.io import read, write
     from ase.io.trajectory import Trajectory as Traj
     from ase.visualize import view
 
