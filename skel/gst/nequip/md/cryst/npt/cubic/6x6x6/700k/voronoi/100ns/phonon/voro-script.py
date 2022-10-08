@@ -12,9 +12,12 @@ vs = VibSolver(
     displacement  = 0.01,
     # force_cutoff  = 7e-4,
     # plus_minus    = True,
-    set_hermitian = False,
+    # set_hermitian = True,
     # cp_files    = [],
     )
+# dm = vs.get_dynamical_matrix()
+# np.save('_dm.npy', dm)
+
 w2, eps = vs.get_eigen_sets()
 # vs.plot_VDOS(
     # nbins=200,
@@ -43,7 +46,7 @@ voro.set_eigen_sets(w2, eps)
     # xlim_bp=(1e-5, 0.199),
     # ylim=(0., 5.5),
     # )
-voro.get_atomic_VDOS(
+voro.get_atomic_VDOS_and_AM(
     freq_range = (0.375, 0.775),
     # reduced=True,
     # show_2d=True,

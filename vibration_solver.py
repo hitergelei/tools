@@ -44,7 +44,7 @@ class VibSolver():
         displacement=0.03,
         force_cutoff=0.,
         plus_minus=False,
-        set_hermitian=True,
+        set_hermitian=False,
         cp_files = [],
         ):
         """

@@ -243,7 +243,7 @@ class Voronoi():
 
     def get_atomic_VDOS_and_AM(
         self,
-        freq_range,
+        freq_range=(-np.inf, np.inf),
         reduced=True,
         show_2d=True,
         ):
@@ -252,11 +252,14 @@ class Voronoi():
             - Frequency range to get VDOS and AM projection.
             - Must be (float1 < float2)
             - In THz unit
-            - VDOS will be saved as vdos, vdos_l, vdos_t and AAM as aam in atoms._calc.results dict
         reduced (bool)
             - Reduced VDOS (=VDOS /w^2).
         show_2d (bool)
             - 2-dimensionized images will be written
+
+        Return
+            - VDOS will be saved as vdos, vdos_l, vdos_t and AAM as aam in atoms._calc.results dict
+            - Real part of sum of eigenvertors will be saved as forces.
         """
 
         fname = 'vdos-from{}to{}THz-{}.traj'.format(*freq_range, self.atoms_file)
@@ -294,11 +297,15 @@ class Voronoi():
             # aam.shape == (n_mode, len(atoms), 3)
             aam = AAM(np.expand_dims(self.eps[mask], axis=0))[0]
             aam = np.sum(aam, axis=0)
+            # print(aam.tolist())
+
+            # mode_sum part
+            mode_sum = np.sum(self.eps[mask], axis=0).reshape(len(self.atoms), 3)
 
             alist = []
             atoms = self.atoms.copy()
             from ase.calculators.singlepoint import SinglePointCalculator
-            atoms._calc = SinglePointCalculator(atoms, vdos=vdos, vdos_l=vdos_l, vdos_t=vdos_t, aam=aam)
+            atoms._calc = SinglePointCalculator(atoms, vdos=vdos, vdos_l=vdos_l, vdos_t=vdos_t, aam=aam, forces=mode_sum)
             alist = [atoms]
 
             if show_2d:
@@ -326,6 +333,7 @@ class Voronoi():
                             vdos_l=vdos_l[cls == j],
                             vdos_t=vdos_t[cls == j],
                             aam=aam[cls == j],
+                            forces=mode_sum[cls == j],
                             )
                         alist.append(atoms)
 
@@ -333,3 +341,31 @@ class Voronoi():
 
         from ase.visualize import view
         view(alist)
+
+        # Histogram
+        aam_norm = np.linalg.norm(alist[0].calc.results['aam'], axis=-1)
+        hist, bins = np.histogram(aam_norm, 1000)
+        mids = (bins[1:] + bins[:-1]) /2.
+        from matplotlib import pyplot as plt
+        plt.plot(mids, hist, c='k')
+        plt.xlabel('Atomic angular momentum (eV ps)', fontsize='x-large')
+        plt.ylabel('Population', fontsize='x-large')
+        plt.title('mean: {:.4e}, std: {:.4e}'.format(np.mean(aam_norm), np.std(aam_norm)), fontsize='large')
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
+        plt.grid(alpha=0.5)
+
+        # Histogram (log)
+        aam_norm_log = np.log(aam_norm)
+        hist_log, bins_log = np.histogram(aam_norm_log, 50)
+        mids_log = (bins_log[1:] + bins_log[:-1]) /2.
+        plt.figure()
+        plt.plot(np.exp(mids_log), hist_log, c='k')
+        plt.xscale('log')
+        plt.xlabel('Atomic angular momentum (eV ps)', fontsize='x-large')
+        plt.ylabel('Population', fontsize='x-large')
+        plt.title('mean: {:.4e}, std: {:.4e}'.format(np.mean(aam_norm), np.std(aam_norm)), fontsize='large')
+        plt.tick_params(axis="both",direction="in", labelsize='x-large')
+        plt.subplots_adjust(left=0.20, bottom=0.20, right=0.80, top=0.80, wspace=0.2, hspace=0.2)
+        plt.grid(alpha=0.5)
+        plt.show()
