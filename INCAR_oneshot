@@ -45,7 +45,7 @@
    #LCHARG  =        .FALSE. ! the charge densities (files CHGCAR and CHG) are written
    #LVTOT   =        .TRUE.  ! whether the total local potential is written to the LOCPOT file.
  Non-colinear calculations and spin orbit coupling
-   LSORBIT =        .TRUE.  ! switch on SOC and automatically set LNONCOLLINEAR=.TRUE.
+   #LSORBIT =        .TRUE.  ! switch on SOC and automatically set LNONCOLLINEAR=.TRUE.
    #SAXIS   =         0 0 1  ! quantisation axis for spin
-   GGA_COMPAT =     .FALSE. ! apply spherical cutoff on gradient field
+   #GGA_COMPAT =     .FALSE. ! apply spherical cutoff on gradient field
 
