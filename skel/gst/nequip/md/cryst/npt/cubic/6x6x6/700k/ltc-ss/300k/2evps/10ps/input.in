@@ -35,7 +35,7 @@ fix             1 all nvt temp $T $T 1.00
 # Prepare
 region          sink   block  0.0    3.007065  INF INF  INF INF
 region          source block 36.064 39.071065  INF INF  INF INF
-fix             sing   all heat 1 -2.0 region sink
+fix             sink   all heat 1 -2.0 region sink
 fix             source all heat 1  2.0 region source
 
 thermo_style    custom step temp etotal pe ke vol
