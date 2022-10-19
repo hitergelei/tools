@@ -90,7 +90,7 @@ if __name__ == '__main__':
     else:
         plt.ylabel('Partial RDF$_{{{}}}$'.format(symbol_list[0]+symbol_list[1])+' $(\AA^{-1})$', fontsize='x-large')
     plt.xlabel('Distance $(\AA)$', fontsize='x-large')
-    plt.subplots_adjust(left=0.09, bottom=0.40, right=0.97, top=0.60, wspace=0.2, hspace=0.2)
+    plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=0.60, wspace=0.2, hspace=0.2)
     from math import ceil, floor
     plt.xticks(range(1,int(ceil(rcut))), fontsize='x-large')
     plt.yticks(range(0,int(ceil(np.amax(rdf_arr_list))),1), fontsize='x-large')
