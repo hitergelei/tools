@@ -146,8 +146,8 @@ if __name__ == '__main__':
     ## Plot
     if args.plot_bool:
         import matplotlib.pyplot as plt
-        font = {'family':'Arial'}
-        plt.rc('font', **font)
+        # font = {'family':'Arial'}
+        # plt.rc('font', **font)
         plt.plot(angd,agr,'-',c='k')
         if (symbol1, symbol2, symbol3) == ('a','a','a'):
             plt.ylabel('Total ADF', fontsize='x-large')
