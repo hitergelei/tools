@@ -252,6 +252,8 @@ if __name__ == '__main__':
     title  = '{} slice-{} symb-{},{} nBin-{} rcut-{}'.format(
         args.alist_file, args.image_slice, chem1, chem2, nBin, rcut)
     import matplotlib.pyplot as plt
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
+    plt.rc('font', **font)
     if args.dont_share_y:
         fig, axs = plt.subplots(len(curve_list), sharex=True)
     else:
@@ -269,9 +271,9 @@ if __name__ == '__main__':
         axs[i].plot(curve_list[i][:,0], curve_list[i][:,1], c='k', lw=2)
         #
         if (symbol_sets[i][0], symbol_sets[i][1]) == ('a', 'a'):
-            axs[i].set_ylabel(r'$g_{tot}(r)$', fontsize='x-large')
+            axs[i].set_ylabel(r'$g_{\rm tot} \it (r)$', fontsize='x-large')
         else:
-            axs[i].set_ylabel(r'$g_{{{}}}$(r)'.format(symbol_sets[i][0]+symbol_sets[i][1]), fontsize='x-large')
+            axs[i].set_ylabel(r'$g\rm _{{{}}} \it (r)$'.format(symbol_sets[i][0]+symbol_sets[i][1]), fontsize='x-large')
         #
         if args.xtick_list is not None:
             axs[i].set_xticks(args.xtick_list)
@@ -291,7 +293,7 @@ if __name__ == '__main__':
         axs[i].axhline(1., linestyle='dashed', linewidth=1, c='k')
         axs[i].grid(alpha=0.5)
     axs[-1].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=True)
-    axs[-1].set_xlabel('Distance $(\AA)$', fontsize='x-large')
+    axs[-1].set_xlabel(r'Distance $\rm (\AA)$', fontsize='x-large')
     axs[0].set_title(title, pad=10)
     bottom = (1.-len(axs)*0.1) /2.
     plt.subplots_adjust(left=0.25, bottom=bottom, right=0.75, top=1-bottom, wspace=0.20, hspace=0.20)
@@ -313,9 +315,9 @@ if __name__ == '__main__':
         axs[i].plot(k_list[i], S_list[i], c='k', lw=2)
         #
         if (symbol_sets[i][0], symbol_sets[i][0]) == ('a', 'a'):
-            axs[i].set_ylabel('$S_{tot}(Q)$', fontsize='x-large')
+            axs[i].set_ylabel(r'$S_{\rm tot} (Q)$', fontsize='x-large')
         else:
-            axs[i].set_ylabel('$S_{{{}}}(Q)$'.format(symbol_sets[i][0]+symbol_sets[i][1]), fontsize='x-large')
+            axs[i].set_ylabel(r'$S\rm _{{{}}} (Q)$'.format(symbol_sets[i][0]+symbol_sets[i][1]), fontsize='x-large')
         #
         if args.s_xtick_list is not None:
             axs[i].set_xticks(args.s_xtick_list)
@@ -335,7 +337,7 @@ if __name__ == '__main__':
         axs[i].axhline(1., linestyle='dashed', linewidth=1, c='k')
         axs[i].grid(alpha=0.5)
     axs[-1].tick_params(axis="both",direction="in", labelsize='x-large', labelbottom=True)
-    axs[-1].set_xlabel('Q $(\AA^{-1})$', fontsize='x-large')
+    axs[-1].set_xlabel(r'$\rm Q\ (\AA^{-1})$', fontsize='x-large')
     axs[0].set_title(title, pad=10)
     bottom = (1.-len(axs)*0.1) /2.
     plt.subplots_adjust(left=0.25, bottom=bottom, right=0.75, top=1-bottom, wspace=0.20, hspace=0.20)
