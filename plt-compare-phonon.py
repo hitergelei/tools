@@ -89,7 +89,7 @@ if __name__ == '__main__':
         band_2_E = band_2_E * 4.13567
 
     import matplotlib.pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
 
     ########### plot

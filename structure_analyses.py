@@ -910,7 +910,7 @@ class Structure_analyses(object):
         if xlog:
             time_arr += time_arr[1] - time_arr[0]
         from matplotlib import pyplot as plt
-        font = {'family':'Arial'}
+        font = {'family':'sans-serif', 'sans-serif':'Arial'}
         plt.rc('font', **font)
         fig, ax1 = plt.subplots()
         ax1.plot(
@@ -1035,7 +1035,7 @@ class Structure_analyses(object):
         
         # Plot
         from matplotlib import pyplot as plt
-        font = {'family':'Arial'}
+        font = {'family':'sans-serif', 'sans-serif':'Arial'}
         plt.rc('font', **font)
         for i in range(2):
             fig, ax1 = plt.subplots()
@@ -1165,7 +1165,7 @@ class Structure_analyses(object):
 
         # Plot
         from matplotlib import pyplot as plt
-        font = {'family':'Arial'}
+        font = {'family':'sans-serif', 'sans-serif':'Arial'}
         plt.rc('font', **font)
         fig, [ax_1d_list, ax_2d_list] = plt.subplots(2,len(self.types_unique))
         ax_1d_list = list(ax_1d_list[::-1])
@@ -1312,7 +1312,7 @@ class Structure_analyses(object):
         # Plot
         time_arr = np.arange(len(list(num_bonds.values())[0])) *self.dt 
         from matplotlib import pyplot as plt
-        font = {'family':'Arial'}
+        font = {'family':'sans-serif', 'sans-serif':'Arial'}
         plt.rc('font', **font)
         colors = ['r','b','k','g','m','y']
         colors = colors[::-1]

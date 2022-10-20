@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     ## plot
     from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
     if vector_type:
         fig, (ax, ax_norm) = plt.subplots(1,2)

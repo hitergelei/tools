@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     #
     from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
 
     #

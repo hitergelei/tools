@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     ## Plot
     import matplotlib.pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
     [plt.plot(radii_arr, rdf_arr_list[i], label=label_list[i], linestyle=lstyle_list[i], c=lcolor_list[i]) for i in range(len(rdf_arr_list))]
     if symbol_list == ['a','a']:

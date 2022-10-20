@@ -473,7 +473,7 @@ def plot_band_and_dos(
             proj_edgecolors = [None]* len(proj_eigvec.keys())
 
     from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
     # if labels:
         # from matplotlib import rc
@@ -481,7 +481,7 @@ def plot_band_and_dos(
         # rc('text', usetex=True)
 
     import matplotlib.gridspec as gridspec
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
     # plt.figure(figsize=(10, 10))
     gs = gridspec.GridSpec(1, 2, width_ratios=[4,1])
@@ -668,7 +668,7 @@ def plot_pdos(
 
     ## Plot
     from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
     if mode_projection:
         fig, ax = plt.subplots()

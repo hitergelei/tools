@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
         # Plot
         from matplotlib import pyplot as plt
-        font = {'family':'Arial'}
+        font = {'family':'sans-serif', 'sans-serif':'Arial'}
         plt.rc('font', **font)
         if not cdos_bool and not ados_bool:
             # Plot

@@ -48,7 +48,7 @@ if __name__ == '__main__':
         
     ## plot
     from matplotlib import pyplot as plt
-    font = {'family':'Arial'}
+    font = {'family':'sans-serif', 'sans-serif':'Arial'}
     plt.rc('font', **font)
     # Density
     n, bins, patches = plt.hist(density_arr, bins=100, facecolor='gray', alpha=0.70)

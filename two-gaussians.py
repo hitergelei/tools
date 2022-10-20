@@ -52,7 +52,7 @@ print('  Final | {:7.5f}   {:7.5f}           | {:7.5f}   {:7.5f}           | {:7
     *np.squeeze(sess.run(a)), *np.squeeze(sess.run(mu)), *np.squeeze(sess.run(sigma)), sess.run(cost)))
 
 from matplotlib import pyplot as plt
-font = {'family':'Arial'}
+font = {'family':'sans-serif', 'sans-serif':'Arial'}
 plt.rc('font', **font)
 plt.plot(curve[:,0], curve[:,1], c='k', label='DFT-MD 600K')
 plt.plot(curve[:,0], np.sum(sess.run(y),axis=0), c='r', linestyle='dashed', label='$y_{1}+y_{2}$')

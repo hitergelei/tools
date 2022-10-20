@@ -245,7 +245,7 @@ print('Average similarity = {:6.4f} (Higher is similar)'.format(avrg))
 
 ## Plot
 import matplotlib.pyplot as plt
-font = {'family':'Arial'}
+font = {'family':'sans-serif', 'sans-serif':'Arial'}
 plt.rc('font', **font)
 fig, (ax1, ax2) = plt.subplots(2,1,sharex=True)
 # ax: Subplot only for ylabel

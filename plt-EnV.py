@@ -21,7 +21,7 @@ vol = np.array(vol) /len(atoms)
 #### Plot
 t = np.arange(len(alist), dtype=float) *dt
 from matplotlib import pyplot as plt
-font = {'family':'Arial'}
+font = {'family':'sans-serif', 'sans-serif':'Arial'}
 plt.rc('font', **font)
 fig, ax1 = plt.subplots()
 ax1.plot(t, 1./vol, c='k')

@@ -154,7 +154,7 @@ if dimension == 3:
 
 ## Plot
 import matplotlib.pyplot as plt
-font = {'family':'Arial'}
+font = {'family':'sans-serif', 'sans-serif':'Arial'}
 plt.rc('font', **font)
 plt.tick_params(axis="y",direction="in")
 plt.tick_params(axis="x",direction="in")

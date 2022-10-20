@@ -47,7 +47,7 @@ avg_rel_norm_eff_vol /= float(1+avg_number*2)
 # avg_rel_norm_eff_vol = gaussian_filter1d(avg_rel_norm_eff_vol, gsmear)
 
 from matplotlib import pyplot as plt
-font = {'family':'Arial'}
+font = {'family':'sans-serif', 'sans-serif':'Arial'}
 plt.rc('font', **font)
 fig, ax1 = plt.subplots()
 ax1.plot(temp_arr, rel_norm_eff_vol *100., c='0.7')

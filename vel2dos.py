@@ -395,7 +395,7 @@ if __name__ == '__main__':
             ADOS /= f**2
         ## Plot
         from matplotlib import pyplot as plt
-        font = {'family':'Arial'}
+        font = {'family':'sans-serif', 'sans-serif':'Arial'}
         plt.rc('font', **font)
         plot_total_DOS(
             plt,
