@@ -916,7 +916,7 @@ class Structure_analyses(object):
         ax1.plot(
             time_arr,
             avg_chain,
-            label='Mean of lengths',
+            label='Mean length',
             c='k',
             )
         # # ax1.plot(
@@ -930,7 +930,7 @@ class Structure_analyses(object):
         ax1.tick_params(axis="y",direction="in", labelsize='x-large', labelcolor='k')
         ax1.tick_params(axis="x",direction="in", labelsize='x-large')
         ax1.set_xlabel('Time (ns)', fontsize='x-large')
-        ax1.set_ylabel('Mean of chain lengths', fontsize='x-large')
+        ax1.set_ylabel('Mean chain length', fontsize='x-large')
         if deriv_sigma is not None and not False:
             ax2 = ax1.twinx()
             ax2.plot(
