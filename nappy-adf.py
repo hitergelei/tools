@@ -152,7 +152,10 @@ if __name__ == '__main__':
         if (symbol1, symbol2, symbol3) == ('a','a','a'):
             plt.ylabel('Total ADF', fontsize='x-large')
         else:
-            plt.ylabel(r'$g_{{{}}}$'.format(symbol1+symbol2+symbol3)+r'$(\alpha)$', fontsize='x-large')
+            if symbol1 == 'X': symbol1 = 'V'
+            if symbol2 == 'X': symbol2 = 'V'
+            if symbol3 == 'X': symbol3 = 'V'
+            plt.ylabel(r'$g \rm _{{{}}}$'.format(symbol1+symbol2+symbol3)+r'$ \it (\alpha)$', fontsize='x-large')
         plt.xlabel('Bond angle (deg)', fontsize='x-large')
         if args.large_plot:
             plt.subplots_adjust(left=0.15, bottom=0.28, right=0.95, top=0.75, wspace=0.20, hspace=0.20)
@@ -162,7 +165,7 @@ if __name__ == '__main__':
         plt.xticks(range(30,181,30),fontsize='x-large')
         plt.yticks(fontsize='x-large')
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.xlim(args.x_lower, 180.)
+        plt.xlim(args.x_lower, 185.)
         plt.ylim(args.adf_lower, args.adf_upper)
         plt.title(out_fname[11:-4], pad=10)
         plt.grid(alpha=0.5)

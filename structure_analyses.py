@@ -1623,18 +1623,18 @@ class Structure_analyses(object):
                     if self.types[term_piece_inds[i][j][1]] not in next_to:
                         continue
                 if term_piece_inds[i][j][0] == -1:
-                    direc = -term_piece_direcs[i][j][1]
-                    # direc = np.round(-term_piece_direcs[i][j][1])
-                    # if np.linalg.norm(direc) != 1.:
-                        # continue
-                        # raise RuntimeError('{} {}'.format(-term_piece_direcs[i][j][1], direc))
+                    # direc = -term_piece_direcs[i][j][1]
+                    direc = np.round(-term_piece_direcs[i][j][1])
+                    if np.linalg.norm(direc) != 1.:
+                        continue
+                        raise RuntimeError('{} {}'.format(-term_piece_direcs[i][j][1], direc))
                     vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
                 elif term_piece_inds[i][j][2] == -1:
-                    direc = term_piece_direcs[i][j][0]
-                    # direc = np.round(term_piece_direcs[i][j][0])
-                    # if np.linalg.norm(direc) != 1.:
-                        # continue
-                        # raise RuntimeError('{} {}'.format(term_piece_direcs[i][j][0], direc))
+                    # direc = term_piece_direcs[i][j][0]
+                    direc = np.round(term_piece_direcs[i][j][0])
+                    if np.linalg.norm(direc) != 1.:
+                        continue
+                        raise RuntimeError('{} {}'.format(term_piece_direcs[i][j][0], direc))
                     vac_pos_i.append(all_pos_i[term_piece_inds[i][j][1]] + direc*vac_dist)
                 else:
                     raise RuntimeError('Error should not happen. Something is wrong.')
