@@ -31,6 +31,7 @@ sa = Structure_analyses(
     # dt=0.01,
     dt=10.,
     # dt=100,
+    # log=True,
     )
 
 # sa.plot_avg_coord_nums(

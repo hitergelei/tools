@@ -15,6 +15,7 @@ def argparse():
     parser.add_argument('-n', '--img_slice', type=str, default=':', help='Image range following python convention. default=":" (e.g.) -n :1000:10')
     parser.add_argument('-g', '--gsmear', type=int, default=0, help='Positions will be Gaussian smeared with this sigma before the MSD calculation [default: No smear, 0]')
     parser.add_argument('-c', '--color_list', type=str, nargs='+', help='Color list for the plot')
+    parser.add_argument('-p', '--ps_scale', action='store_true', help='Plot x-scale as ps [default: ns]')
     return parser.parse_args()
 
 def get_MSD(
@@ -69,11 +70,13 @@ def plot_MSD(
     dt,
     gsmear     = None,
     color_list = None,
+    ps_scale   = False,
     ):
     """
     """
     # dt to ns unit
-    # dt /= 1000.
+    if not ps_scale:
+        dt /= 1000.
 
     #
     MSD = get_MSD(
@@ -108,7 +111,7 @@ def plot_MSD(
         plt.figure()
         for i in range(len(chem_unique)):
             if j==0:
-                plt.plot(np.arange(len(avg_MSD[i]))[1:] *dt, avg_MSD[i][1:], c=color_list[i], label=chem_unique[i])
+                plt.plot(np.arange(len(avg_MSD[i])) *dt, avg_MSD[i], c=color_list[i], label=chem_unique[i])
                 plt.ylabel('MSD ($\AA ^2$)', fontsize='x-large')
                 plt.title('NS={}, dt={}, GS={}\n{}'.format(n_sample, dt, gsmear, tit_msd), fontsize='large', pad=5)
             if j==1:
@@ -116,7 +119,10 @@ def plot_MSD(
                 plt.ylabel(r'$B_{\rm iso}$ ($\AA ^2$)', fontsize='x-large')
                 plt.title('NS={}, dt={}, GS={}\n{}'.format(n_sample, dt, gsmear, tit_dw), fontsize='large', pad=5)
         plt.tick_params(axis="both",direction="in", labelsize='x-large')
-        plt.xlabel('Time (ps)', fontsize='x-large')
+        if ps_scale:
+            plt.xlabel('Time (ps)', fontsize='x-large')
+        else:
+            plt.xlabel('Time (ns)', fontsize='x-large')
         plt.subplots_adjust(left=0.30, bottom=0.25, right=0.70, top=0.75, wspace=0.2, hspace=0.2)
         plt.legend(fontsize='large').set_draggable(True)
         plt.grid(alpha=0.5)
@@ -151,4 +157,5 @@ if __name__ == '__main__':
         args.dt,
         args.gsmear,
         args.color_list,
+        args.ps_scale,
         )
