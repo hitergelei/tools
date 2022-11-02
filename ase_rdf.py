@@ -306,8 +306,8 @@ if __name__ == '__main__':
     axs[-1].set_xlabel(r'Distance $\rm (\AA)$', fontsize='x-large')
     axs[0].set_title(title, pad=10)
     bottom = (1.-len(axs)*0.1) /2.
-    # plt.subplots_adjust(left=0.25, bottom=bottom, right=0.75, top=1-bottom, wspace=0.20, hspace=0.20)
-    plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=1-bottom, wspace=0.20, hspace=0.20)
+    plt.subplots_adjust(left=0.25, bottom=bottom, right=0.75, top=1-bottom, wspace=0.20, hspace=0.20)
+    # plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=1-bottom, wspace=0.20, hspace=0.20)
 
     # Plot S(Q)
     if args.s_upper is not None:
@@ -350,6 +350,6 @@ if __name__ == '__main__':
     axs[-1].set_xlabel(r'$\rm Q\ (\AA^{-1})$', fontsize='x-large')
     axs[0].set_title(title, pad=10)
     bottom = (1.-len(axs)*0.1) /2.
-    # plt.subplots_adjust(left=0.25, bottom=bottom, right=0.75, top=1-bottom, wspace=0.20, hspace=0.20)
-    plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=1-bottom, wspace=0.20, hspace=0.20)
+    plt.subplots_adjust(left=0.25, bottom=bottom, right=0.75, top=1-bottom, wspace=0.20, hspace=0.20)
+    # plt.subplots_adjust(left=0.30, bottom=0.40, right=0.70, top=1-bottom, wspace=0.20, hspace=0.20)
     plt.show()
