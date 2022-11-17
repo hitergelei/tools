@@ -11,12 +11,13 @@ def argparse():
     parser.add_argument('data', type=str, help='Path to data file.')
     parser.add_argument('y_axis', nargs='+', type=int, help='Column numbers of y-axis data (python numbering). Multiple-plot is available.')
     # Optional arguments
-    parser.add_argument('-x', '--x_axis', type=int, default=0, help='Column number of x-axis data. Zero(Line number) as default.')
+    parser.add_argument('-x', '--x_axis', type=int, default=None, help='Column number of x-axis data. Line number as default.')
     parser.add_argument('-n', '--line_slice', type=parse_slice, default=':', help='e.g. 200:1000:10  Specified slice of rows of data will be used. Default: automatic')
     parser.add_argument('-l', '--log_scale', action='store_true', help='If provided, Plot y axis as log scale.')
-    parser.add_argument('-c', '--color_list', type=str, nargs='+', default=[], help='Scatter color list. len(color_list) == len(y_axis). [default: Automatic].')
+    parser.add_argument('-c', '--color_list', type=str, nargs='+', default=[], help='Color list. len(color_list) == len(y_axis). [default: Automatic].')
     parser.add_argument('-b', '--label_list', type=str, nargs='+', default=[], help='Legend label list. len(label_list) == len(y_axis). [default: Column number]. If you want no legend, set it "none"')
     parser.add_argument('-d', '--delimiter', type=str, default=' ', help='Specify delimiter. [default: " "]')
+    parser.add_argument('-s', '--scatter_plot', action='store_true', help='Do scatter plot not line plot.')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     args           = argparse()
     fname          = args.data
     y_axis_seq_arr = np.array(args.y_axis, dtype = int)
-    x_axis_seq     = args.x_axis -1
+    x_axis_seq     = args.x_axis
     line_slice     = args.line_slice
     log_bool       = args.log_scale
 
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     #
     if log_bool:
         plt.yscale('log')
-    if x_axis_seq != -1:
+    if x_axis_seq != None:
         for line in data:
             word_list = line.split(args.delimiter)
             try:
@@ -87,7 +88,10 @@ if __name__ == '__main__':
             else:
                 label = 'Column {}'.format(y_axis_seq_arr[i])
 
-            plt.scatter(x, y_list[i], 1, c=color, marker='o', label=label)
+            if args.scatter_plot:
+                plt.scatter(x, y_list[i], 1, c=color, marker='o', label=label)
+            else:
+                plt.plot(x, y_list[i], c=color, label=label)
     else:
         for line in data:
             word_list = line.split(args.delimiter)
@@ -119,7 +123,10 @@ if __name__ == '__main__':
             else:
                 label = 'Column {}'.format(y_axis_seq_arr[i])
 
-            plt.scatter(np.arange(len(y_list[i])), y_list[i], 1, c=color, marker='o', label=label)
+            if args.scatter_plot:
+                plt.scatter(np.arange(len(y_list[i])), y_list[i], 1, c=color, marker='o', label=label)
+            else:
+                plt.plot(np.arange(len(y_list[i])), y_list[i], c=color, label=label)
 
     # Set style
     plt.tick_params(axis="both", direction="in", labelsize='x-large')
