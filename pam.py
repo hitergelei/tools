@@ -325,6 +325,7 @@ if __name__ == '__main__':
     # w.shape == (len(q), len(sigma))
     w = po.qpoints.frequencies
     print('Max frequency={}Thz'.format(np.max(w)))
+    w = w *2. *np.pi
     # eps.shape == (len(q), len(sigma), len(sigma))
     eps = np.transpose(po.qpoints.eigenvectors, [0,2,1])
     # v_g.shape == (len(q), len(sigma), 3)

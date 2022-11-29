@@ -14,8 +14,8 @@ calc = 'lmp'
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
 cp_files = None
-# acou_sum_rule = True
-acou_sum_rule = False
+acou_sum_rule = True
+# acou_sum_rule = False
 # rot_sum_rule = True
 rot_sum_rule = False
 # r_cut = 11.0
@@ -42,8 +42,8 @@ symmetry           = True
 # symmetry           = False
 # nac                = True
 nac                = False
-# run_mode           = 'phonon'
-run_mode           = 'pdos'
+run_mode           = 'phonon'
+# run_mode           = 'pdos'
 # run_mode           = 'jdos'
 # num_freq_points    = 500
 # temp               = np.concatenate([
@@ -87,9 +87,9 @@ reverse_seq        = False
 # plot_adjust        = None
 plot_adjust        = (
     0.25, # left
-    0.40, # bottom
+    0.25, # bottom
     0.75, # right
-    0.85, # top
+    0.75, # top
     0.10, # wspace
     0.20, # hspace
     )

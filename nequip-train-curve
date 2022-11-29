@@ -1,4 +1,0 @@
-#!/usr/bin/env python
-
-from subprocess import call
-call("plt-column-plot metrics_epoch.csv 8 9 -2 -1 -x 0 -d , -b 'F (train)' 'E (train)' 'F (valid)' 'E (valid)'", shell=True)
