@@ -38,14 +38,22 @@ unit               = 'THz'
 legend_bool        = False
 plot_bool          = True
 #
-g_max = 56
-g_min = -3
+g_max = 6.5
+g_min = -9
 # g_max = None
 # g_min = None
 f_max = 5.5
 f_min = 0.0
 # f_max = None
 # f_min = None
+plot_adjust        = (
+    0.25, # left
+    0.25, # bottom
+    0.70, # right
+    0.78, # top
+    0.10, # wspace
+    0.20, # hspace
+    )
 
 #
 if n_snapshots:
@@ -158,18 +166,18 @@ from ase.dft.kpoints import ibz_points
 # path = [[K, G], [G, M]]
 # labels = ['K', '$\Gamma$', 'M',]
 
-# points = ibz_points['hexagonal2']
-points = ibz_points['hexagonal']
-G = points['Gamma']
-M = points['M']
-K = points['K']
-A = points['A']
-L = points['L']
-H = points['H']
-path = [[K, G], [G, M], [M, K]]
-labels = ['K', '$\Gamma$', 'M', 'K']
-# path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
-# labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
+# # points = ibz_points['hexagonal2']
+# points = ibz_points['hexagonal']
+# G = points['Gamma']
+# M = points['M']
+# K = points['K']
+# A = points['A']
+# L = points['L']
+# H = points['H']
+# path = [[K, G], [G, M], [M, K]]
+# labels = ['K', '$\Gamma$', 'M', 'K']
+# # path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
+# # labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
 
 # points = ibz_points['fcc']
 # G = points['Gamma']
@@ -196,6 +204,14 @@ labels = ['K', '$\Gamma$', 'M', 'K']
 # path = [[G, X], [X, U], [K, G], [G, L]]
 # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
+X = [0.3700000000,    0.0         ,   -0.3700000000]
+G = [0.0         ,    0.0         ,    0.0         ]
+Z = [0.5         ,    0.5         ,    0.5         ]
+F = [0.5         ,    0.5         ,    0.0         ]
+L = [0.5         ,    0.0         ,    0.0         ]
+path = [[X, G], [G, Z], [Z, F], [F, L], [L, G]]
+labels = ['X', '$\Gamma$', 'T', 'F', 'L', '$\Gamma$']
+
 N_q = 100
 bands = ssp.make_band(path, N_q)
 gru_pho.set_band_structure(bands)
@@ -214,6 +230,6 @@ plt = plot_gruneisen_band(
     f_min = f_min,
     labels = labels,
     )
-plt.subplots_adjust(left=0.15, right=0.90)
+plt.subplots_adjust(*plot_adjust)
 plt.show()
 
