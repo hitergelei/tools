@@ -6,20 +6,20 @@ import numpy as np
 from ase import units as ase_units
 
     ## Global params
-# calc = 'lmp'
-calc = 'vasp'
+calc = 'lmp'
+# calc = 'vasp'
 # calc = 'ase_calc'
 ## ASE calc
 # ase_calc = Amp.load('es_class-checkpoint.amp', label='es_class')
 # from ase.calculators.lj import LennardJones as LJ
 # ase_calc = LJ(epsilon=120 *ase_units.kB, sigma=0.34 *ase_units.nm)
-# cp_files = ['frozen_model.pb',]
-cp_files = None
+cp_files = ['input-phonon.in',]
+# cp_files = None
 
 ## Params
 from phonopy.interface import vasp
 # atoms = vasp.read_vasp('POSCAR_GeTe_conv')
-atoms = vasp.read_vasp('gete-alpha-prim.vasp')
+atoms = vasp.read_vasp('gete-alpha-prim-mlp.vasp')
 # n_snapshots        = 100 # Enable --> alamode FC fit function
 n_snapshots        = None
 N                  = 4
@@ -38,23 +38,14 @@ unit               = 'THz'
 legend_bool        = False
 plot_bool          = True
 #
-# g_max = 2.0
-# g_min = -3.0
-g_max = None
-g_min = None
-# f_max = 15.5
-# f_min = -0.25
-f_max = None
-f_min = None
-# plot_adjust        = None
-plot_adjust        = (
-    0.25, # left
-    0.25, # bottom
-    0.70, # right
-    0.78, # top
-    0.10, # wspace
-    0.20, # hspace
-    )
+g_max = 56
+g_min = -3
+# g_max = None
+# g_min = None
+f_max = 5.5
+f_min = 0.0
+# f_max = None
+# f_min = None
 
 #
 if n_snapshots:
@@ -156,9 +147,8 @@ gru_pho = PhonopyGruneisen(
     )
 
 ######### Band structure ##########
-
-# points = ibz_points['hexagonal2']
-# # points = ibz_points['hexagonal']
+from ase.dft.kpoints import ibz_points
+# points = ibz_points['hexagonal']
 # G = points['Gamma']
 # M = points['M']
 # K = points['K']
@@ -167,6 +157,17 @@ gru_pho = PhonopyGruneisen(
 # H = points['H']
 # path = [[K, G], [G, M]]
 # labels = ['K', '$\Gamma$', 'M',]
+
+# points = ibz_points['hexagonal2']
+points = ibz_points['hexagonal']
+G = points['Gamma']
+M = points['M']
+K = points['K']
+A = points['A']
+L = points['L']
+H = points['H']
+path = [[K, G], [G, M], [M, K]]
+labels = ['K', '$\Gamma$', 'M', 'K']
 # path = [[G, K], [K, M], [M, G], [G, A], [A, H], [H, L], [L, A],]
 # labels = ['$\Gamma$', 'K', 'M', '$\Gamma$', 'A', 'H', 'L', 'A']
 
@@ -195,14 +196,6 @@ gru_pho = PhonopyGruneisen(
 # path = [[G, X], [X, U], [K, G], [G, L]]
 # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
-X = [0.3700000000,    0.0         ,   -0.3700000000]
-G = [0.0         ,    0.0         ,    0.0         ]
-Z = [0.5         ,    0.5         ,    0.5         ]
-F = [0.5         ,    0.5         ,    0.0         ]
-L = [0.5         ,    0.0         ,    0.0         ]
-path = [[X, G], [G, Z], [Z, F], [F, L], [L, G]]
-labels = ['X', '$\Gamma$', 'T', 'F', 'L', '$\Gamma$']
-
 N_q = 100
 bands = ssp.make_band(path, N_q)
 gru_pho.set_band_structure(bands)
@@ -221,6 +214,6 @@ plt = plot_gruneisen_band(
     f_min = f_min,
     labels = labels,
     )
-plt.subplots_adjust(*plot_adjust)
+plt.subplots_adjust(left=0.15, right=0.90)
 plt.show()
 

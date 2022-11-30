@@ -757,18 +757,18 @@ def plot_gruneisen_band(
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_tick_params(which='both', direction='in')
         ax.yaxis.set_tick_params(which='both', direction='in')
-        GruPho._band_structure.plot(
-            axarr,
-            epsilon=epsilon,
-            color_scheme=color_scheme,
-            labels=labels,
-            )
-    if g_max:
+    GruPho._band_structure.plot(
+        axarr,
+        epsilon=epsilon,
+        color_scheme=color_scheme,
+        labels=labels,
+        )
+    if g_max is not None:
         axarr[0].set_ylim(ymax=g_max)
-    if g_min:
+    if g_min is not None:
         axarr[0].set_ylim(ymin=g_min)
-    if f_max:
+    if f_max is not None:
         axarr[1].set_ylim(ymax=f_max)
-    if f_min:
+    if f_min is not None:
         axarr[1].set_ylim(ymin=f_min)
     return plt

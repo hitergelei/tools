@@ -1,0 +1,15 @@
+# Converted from POSCAR to lammps format
+
+2 atoms
+2 atom types
+
+0.000000    4.412323   xlo xhi
+0.000000    3.709624   ylo yhi
+0.000000    3.473247   zlo zhi
+
+  2.388991    2.388991    1.303022   xy xz yz
+
+Atoms
+
+   1  1      9.190299 5.012642 3.473245
+   2  2      4.289308 2.339507 1.621037

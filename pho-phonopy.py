@@ -226,6 +226,14 @@ labels = ['K', '$\Gamma$', 'M', 'K']
 # path = [[G, X], [X, U], [K, G], [G, L]]
 # labels = ['$\Gamma$', 'X', 'U|K', '$\Gamma$', 'L']
 
+# X = [0.3700000000,    0.0         ,   -0.3700000000]
+# G = [0.0         ,    0.0         ,    0.0         ]
+# Z = [0.5         ,    0.5         ,    0.5         ]
+# F = [0.5         ,    0.5         ,    0.0         ]
+# L = [0.5         ,    0.0         ,    0.0         ]
+# path = [[X, G], [G, Z], [Z, F], [F, L], [L, G]]
+# labels = ['X', '$\Gamma$', 'T', 'F', 'L', '$\Gamma$']
+
 # DOS grid
 # from kpoints_gen import get_grid_num
 # k_grids = get_grid_num(phonon.get_primitive().cell, precision=pdos_precision)
