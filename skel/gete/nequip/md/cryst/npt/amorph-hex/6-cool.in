@@ -5,7 +5,7 @@ atom_style		atomic
 newton          off
 boundary		p p p
 
-#box             tilt large
+box             tilt large
 read_data		structure.in
 
 mass			1 72.64

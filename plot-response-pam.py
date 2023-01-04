@@ -79,7 +79,7 @@ elif not const_tau:
     load_tau = tau
 else:
     tau = const_tau
-    load_tau = 1e12
+    load_tau = tau
 
 
 if calculate:

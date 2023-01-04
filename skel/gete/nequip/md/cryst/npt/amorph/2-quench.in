@@ -32,5 +32,5 @@ dump			1 all custom 1000 out.dump id element mass type x y z fx fy fz vx vy vz c
 dump_modify		1 element Ge Te
 
 timestep		0.01
-run				5000
+run				50000
 
